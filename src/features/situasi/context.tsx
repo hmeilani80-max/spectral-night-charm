@@ -1,3 +1,4 @@
+import type React from "react";
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 
 import { monitoredTopics, systemFindings, type SituationEntry } from "./data";
@@ -11,7 +12,8 @@ type SituationContextValue = {
   addTopic: (topic: NewTopic) => void;
 };
 
-const SituationContext = createContext<SituationContextValue | undefined>(undefined);
+const gs = globalThis as unknown as { __spektraSituationCtx?: React.Context<SituationContextValue | undefined> };
+const SituationContext = gs.__spektraSituationCtx ?? (gs.__spektraSituationCtx = createContext<SituationContextValue | undefined>(undefined));
 
 function slugify(value: string) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
