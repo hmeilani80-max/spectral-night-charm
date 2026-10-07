@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ActiveFilters, MetricGrid, Panel, RecordSheet, SituationNav, SummaryBlock, type ActiveFilter } from "@/features/situasi/components";
 import { actors, clusters, narratives, records, sentimentByPlatform, trend, type DetailRecord } from "@/features/situasi/data";
 
-export const Route = createFileRoute("/situasi/eksplorasi")({ head:()=>({meta:[{title:"Eksplorasi Situasi — SPEKTRA"},{name:"description",content:"Eksplorasi pola aktor, narasi, sentimen, emosi, dan hubungan antar-data."},{property:"og:title",content:"Eksplorasi Situasi — SPEKTRA"},{property:"og:description",content:"Workspace analitis pola aktor, narasi, dan sentimen."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary_large_image"}]}), component: Exploration });
+export const Route = createFileRoute("/situasi/$slug/eksplorasi")({ head:()=>({meta:[{title:"Eksplorasi Situasi — SPEKTRA"},{name:"description",content:"Eksplorasi pola aktor, narasi, sentimen, emosi, dan hubungan antar-data."},{property:"og:title",content:"Eksplorasi Situasi — SPEKTRA"},{property:"og:description",content:"Workspace analitis pola aktor, narasi, dan sentimen."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary_large_image"}]}), component: Exploration });
 const chartConfig={positive:{label:"Positif",color:"var(--color-chart-2)"},neutral:{label:"Netral",color:"var(--color-chart-1)"},negative:{label:"Negatif",color:"var(--color-chart-4)"}};
 
 function Exploration(){

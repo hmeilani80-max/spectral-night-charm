@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import type { DetailRecord } from "./data";
+import type { DetailRecord, SituationEntry } from "./data";
 
 export type ActiveFilter = { type: string; value: string };
 
@@ -24,6 +24,14 @@ export function SituationNav({ slug }: { slug?: string }) {
   return <nav aria-label="Navigasi Situasi" className="mb-6 flex w-full gap-1 overflow-x-auto border-b border-border">
     {links.map((link) => <Button key={link.to} asChild variant="ghost" className={cn("h-11 shrink-0 rounded-none border-b-2 border-transparent px-3 text-xs text-muted-foreground", pathname === link.to.replace("$slug", activeSlug) && "border-primary text-foreground")}><Link to={link.to} params={{ slug: activeSlug }}>{link.label}</Link></Button>)}
   </nav>;
+}
+
+export function SituationMeta({ item }: { item: SituationEntry }) {
+  const isFinding = item.source === "Temuan Sistem";
+  const details = isFinding
+    ? [["Pertama terdeteksi", item.since], ["Alasan ditemukan", item.detectedReason], ["Status warning", item.warningStatus], ["Indikator pemicu", item.triggers?.join(" · ")]]
+    : [["Dibuat oleh", item.createdBy], ["Dipantau sejak", item.since], ["Platform", item.platforms.join(", ")], ["Cakupan wilayah", item.regionScope], ["Keyword", item.keywords.join(", ") || "—"]];
+  return <section className="mb-5 rounded-lg border border-border bg-card p-4"><div className="mb-4 flex flex-wrap items-center gap-2"><span className="rounded-sm bg-accent px-2 py-1 text-[10px] font-semibold text-accent-foreground">Sumber: {item.source}</span>{item.risk && <RiskLabel value={item.risk} />}<span className="rounded-sm bg-secondary px-2 py-1 text-[10px] font-semibold text-secondary-foreground">{item.status}</span></div><dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">{details.map(([label, value]) => <div key={label}><dt className="text-[10px] text-muted-foreground">{label}</dt><dd className="mt-1 text-xs font-medium leading-5">{value ?? "—"}</dd></div>)}</dl></section>;
 }
 
 export function FilterBar({ onAdvanced }: { onAdvanced?: () => void }) {
