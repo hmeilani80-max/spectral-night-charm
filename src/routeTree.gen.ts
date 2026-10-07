@@ -10,33 +10,115 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdministrasiRouteImport } from './routes/administrasi'
+import { Route as AksiRouteImport } from './routes/aksi'
+import { Route as ArsipRouteImport } from './routes/arsip'
+import { Route as DampakRouteImport } from './routes/dampak'
+import { Route as SituasiRouteImport } from './routes/situasi'
+import { Route as StrategiRouteImport } from './routes/strategi'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdministrasiRoute = AdministrasiRouteImport.update({
+  id: '/administrasi',
+  path: '/administrasi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AksiRoute = AksiRouteImport.update({
+  id: '/aksi',
+  path: '/aksi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArsipRoute = ArsipRouteImport.update({
+  id: '/arsip',
+  path: '/arsip',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DampakRoute = DampakRouteImport.update({
+  id: '/dampak',
+  path: '/dampak',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SituasiRoute = SituasiRouteImport.update({
+  id: '/situasi',
+  path: '/situasi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StrategiRoute = StrategiRouteImport.update({
+  id: '/strategi',
+  path: '/strategi',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/administrasi': typeof AdministrasiRoute
+  '/aksi': typeof AksiRoute
+  '/arsip': typeof ArsipRoute
+  '/dampak': typeof DampakRoute
+  '/situasi': typeof SituasiRoute
+  '/strategi': typeof StrategiRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/administrasi': typeof AdministrasiRoute
+  '/aksi': typeof AksiRoute
+  '/arsip': typeof ArsipRoute
+  '/dampak': typeof DampakRoute
+  '/situasi': typeof SituasiRoute
+  '/strategi': typeof StrategiRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/administrasi': typeof AdministrasiRoute
+  '/aksi': typeof AksiRoute
+  '/arsip': typeof ArsipRoute
+  '/dampak': typeof DampakRoute
+  '/situasi': typeof SituasiRoute
+  '/strategi': typeof StrategiRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/administrasi'
+    | '/aksi'
+    | '/arsip'
+    | '/dampak'
+    | '/situasi'
+    | '/strategi'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/administrasi'
+    | '/aksi'
+    | '/arsip'
+    | '/dampak'
+    | '/situasi'
+    | '/strategi'
+  id:
+    | '__root__'
+    | '/'
+    | '/administrasi'
+    | '/aksi'
+    | '/arsip'
+    | '/dampak'
+    | '/situasi'
+    | '/strategi'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdministrasiRoute: typeof AdministrasiRoute
+  AksiRoute: typeof AksiRoute
+  ArsipRoute: typeof ArsipRoute
+  DampakRoute: typeof DampakRoute
+  SituasiRoute: typeof SituasiRoute
+  StrategiRoute: typeof StrategiRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +130,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/administrasi': {
+      id: '/administrasi'
+      path: '/administrasi'
+      fullPath: '/administrasi'
+      preLoaderRoute: typeof AdministrasiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aksi': {
+      id: '/aksi'
+      path: '/aksi'
+      fullPath: '/aksi'
+      preLoaderRoute: typeof AksiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/arsip': {
+      id: '/arsip'
+      path: '/arsip'
+      fullPath: '/arsip'
+      preLoaderRoute: typeof ArsipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dampak': {
+      id: '/dampak'
+      path: '/dampak'
+      fullPath: '/dampak'
+      preLoaderRoute: typeof DampakRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/situasi': {
+      id: '/situasi'
+      path: '/situasi'
+      fullPath: '/situasi'
+      preLoaderRoute: typeof SituasiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/strategi': {
+      id: '/strategi'
+      path: '/strategi'
+      fullPath: '/strategi'
+      preLoaderRoute: typeof StrategiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdministrasiRoute: AdministrasiRoute,
+  AksiRoute: AksiRoute,
+  ArsipRoute: ArsipRoute,
+  DampakRoute: DampakRoute,
+  SituasiRoute: SituasiRoute,
+  StrategiRoute: StrategiRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
