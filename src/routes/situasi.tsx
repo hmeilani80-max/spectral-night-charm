@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Activity, CalendarDays, Filter, Radar } from "lucide-react";
-import { EmptyWorkspace, PageShell } from "@/components/page-shell";
-import { Button } from "@/components/ui/button";
-export const Route = createFileRoute("/situasi")({ head: () => ({ meta: [{title:"Situasi — SPEKTRA"},{name:"description",content:"Workspace pemantauan isu, aktor, narasi, sentimen, wilayah, risiko, dan prediksi."},{property:"og:title",content:"Situasi — SPEKTRA"},{property:"og:description",content:"Memahami apa yang sedang terjadi melalui SPEKTRA."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary_large_image"}] }), component: Situasi });
-function Situasi(){return <PageShell eyebrow="See" title="Situasi" description="Memahami apa yang sedang terjadi melalui pemantauan isu, narasi, aktor, sentimen, wilayah, risiko, dan peringatan dini." actions={<><Button variant="outline"><CalendarDays/>7 Hari Terakhir</Button><Button variant="outline" size="icon" aria-label="Filter lainnya"><Filter/></Button></>}><div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">{[["186.420","Konten Terpantau"],["31.870","Aktor Teridentifikasi"],["18","Narasi Aktif"],["5","Perlu Perhatian"]].map(([v,l])=><div key={l} className="rounded-lg border border-border bg-card p-4"><strong className="font-display text-2xl">{v}</strong><p className="mt-1 text-xs text-muted-foreground">{l}</p></div>)}</div><EmptyWorkspace icon={Radar} title="Analisis situasi" description="Struktur awal untuk brief Situasi berikutnya." steps={["Ringkasan Situasi","Visualisasi Interaktif","Data Detail"]}/><div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground"><Activity className="size-4 text-primary"/> Data terakhir diselaraskan 7 Oktober 2026, 20.42 WIB</div></PageShell>}
+import { createFileRoute, Outlet } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/situasi")({ component: SituasiLayout });
+
+function SituasiLayout() {
+  return <Outlet />;
+}
