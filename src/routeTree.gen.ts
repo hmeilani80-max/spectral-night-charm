@@ -17,6 +17,8 @@ import { Route as DampakRouteImport } from './routes/dampak'
 import { Route as SituasiRouteImport } from './routes/situasi'
 import { Route as StrategiRouteImport } from './routes/strategi'
 import { Route as SituasiIndexRouteImport } from './routes/situasi.index'
+import { Route as SituasiSlugRouteImport } from './routes/situasi.$slug'
+import { Route as SituasiSlugIndexRouteImport } from './routes/situasi.$slug.index'
 import { Route as SituasiSlugEksplorasiRouteImport } from './routes/situasi.$slug.eksplorasi'
 import { Route as SituasiSlugRisikoPrediksiRouteImport } from './routes/situasi.$slug.risiko-prediksi'
 
@@ -60,16 +62,26 @@ const SituasiIndexRoute = SituasiIndexRouteImport.update({
   path: '/',
   getParentRoute: () => SituasiRoute,
 } as any)
-const SituasiSlugEksplorasiRoute = SituasiSlugEksplorasiRouteImport.update({
-  id: '/$slug/eksplorasi',
-  path: '/$slug/eksplorasi',
+const SituasiSlugRoute = SituasiSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
   getParentRoute: () => SituasiRoute,
+} as any)
+const SituasiSlugIndexRoute = SituasiSlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SituasiSlugRoute,
+} as any)
+const SituasiSlugEksplorasiRoute = SituasiSlugEksplorasiRouteImport.update({
+  id: '/eksplorasi',
+  path: '/eksplorasi',
+  getParentRoute: () => SituasiSlugRoute,
 } as any)
 const SituasiSlugRisikoPrediksiRoute =
   SituasiSlugRisikoPrediksiRouteImport.update({
-    id: '/$slug/risiko-prediksi',
-    path: '/$slug/risiko-prediksi',
-    getParentRoute: () => SituasiRoute,
+    id: '/risiko-prediksi',
+    path: '/risiko-prediksi',
+    getParentRoute: () => SituasiSlugRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -80,9 +92,11 @@ export interface FileRoutesByFullPath {
   '/dampak': typeof DampakRoute
   '/situasi': typeof SituasiRouteWithChildren
   '/strategi': typeof StrategiRoute
+  '/situasi/$slug': typeof SituasiSlugRouteWithChildren
   '/situasi/': typeof SituasiIndexRoute
   '/situasi/$slug/eksplorasi': typeof SituasiSlugEksplorasiRoute
   '/situasi/$slug/risiko-prediksi': typeof SituasiSlugRisikoPrediksiRoute
+  '/situasi/$slug/': typeof SituasiSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -94,6 +108,7 @@ export interface FileRoutesByTo {
   '/situasi': typeof SituasiIndexRoute
   '/situasi/$slug/eksplorasi': typeof SituasiSlugEksplorasiRoute
   '/situasi/$slug/risiko-prediksi': typeof SituasiSlugRisikoPrediksiRoute
+  '/situasi/$slug': typeof SituasiSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -104,9 +119,11 @@ export interface FileRoutesById {
   '/dampak': typeof DampakRoute
   '/situasi': typeof SituasiRouteWithChildren
   '/strategi': typeof StrategiRoute
+  '/situasi/$slug': typeof SituasiSlugRouteWithChildren
   '/situasi/': typeof SituasiIndexRoute
   '/situasi/$slug/eksplorasi': typeof SituasiSlugEksplorasiRoute
   '/situasi/$slug/risiko-prediksi': typeof SituasiSlugRisikoPrediksiRoute
+  '/situasi/$slug/': typeof SituasiSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -118,9 +135,11 @@ export interface FileRouteTypes {
     | '/dampak'
     | '/situasi'
     | '/strategi'
+    | '/situasi/$slug'
     | '/situasi/'
     | '/situasi/$slug/eksplorasi'
     | '/situasi/$slug/risiko-prediksi'
+    | '/situasi/$slug/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -132,6 +151,7 @@ export interface FileRouteTypes {
     | '/situasi'
     | '/situasi/$slug/eksplorasi'
     | '/situasi/$slug/risiko-prediksi'
+    | '/situasi/$slug'
   id:
     | '__root__'
     | '/'
@@ -141,9 +161,11 @@ export interface FileRouteTypes {
     | '/dampak'
     | '/situasi'
     | '/strategi'
+    | '/situasi/$slug'
     | '/situasi/'
     | '/situasi/$slug/eksplorasi'
     | '/situasi/$slug/risiko-prediksi'
+    | '/situasi/$slug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -214,33 +236,61 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SituasiIndexRouteImport
       parentRoute: typeof SituasiRoute
     }
+    '/situasi/$slug': {
+      id: '/situasi/$slug'
+      path: '/$slug'
+      fullPath: '/situasi/$slug'
+      preLoaderRoute: typeof SituasiSlugRouteImport
+      parentRoute: typeof SituasiRoute
+    }
+    '/situasi/$slug/': {
+      id: '/situasi/$slug/'
+      path: '/'
+      fullPath: '/situasi/$slug/'
+      preLoaderRoute: typeof SituasiSlugIndexRouteImport
+      parentRoute: typeof SituasiSlugRoute
+    }
     '/situasi/$slug/eksplorasi': {
       id: '/situasi/$slug/eksplorasi'
-      path: '/$slug/eksplorasi'
+      path: '/eksplorasi'
       fullPath: '/situasi/$slug/eksplorasi'
       preLoaderRoute: typeof SituasiSlugEksplorasiRouteImport
-      parentRoute: typeof SituasiRoute
+      parentRoute: typeof SituasiSlugRoute
     }
     '/situasi/$slug/risiko-prediksi': {
       id: '/situasi/$slug/risiko-prediksi'
-      path: '/$slug/risiko-prediksi'
+      path: '/risiko-prediksi'
       fullPath: '/situasi/$slug/risiko-prediksi'
       preLoaderRoute: typeof SituasiSlugRisikoPrediksiRouteImport
-      parentRoute: typeof SituasiRoute
+      parentRoute: typeof SituasiSlugRoute
     }
   }
 }
 
-interface SituasiRouteChildren {
-  SituasiIndexRoute: typeof SituasiIndexRoute
+interface SituasiSlugRouteChildren {
   SituasiSlugEksplorasiRoute: typeof SituasiSlugEksplorasiRoute
   SituasiSlugRisikoPrediksiRoute: typeof SituasiSlugRisikoPrediksiRoute
+  SituasiSlugIndexRoute: typeof SituasiSlugIndexRoute
+}
+
+const SituasiSlugRouteChildren: SituasiSlugRouteChildren = {
+  SituasiSlugEksplorasiRoute: SituasiSlugEksplorasiRoute,
+  SituasiSlugRisikoPrediksiRoute: SituasiSlugRisikoPrediksiRoute,
+  SituasiSlugIndexRoute: SituasiSlugIndexRoute,
+}
+
+const SituasiSlugRouteWithChildren = SituasiSlugRoute._addFileChildren(
+  SituasiSlugRouteChildren,
+)
+
+interface SituasiRouteChildren {
+  SituasiSlugRoute: typeof SituasiSlugRouteWithChildren
+  SituasiIndexRoute: typeof SituasiIndexRoute
 }
 
 const SituasiRouteChildren: SituasiRouteChildren = {
+  SituasiSlugRoute: SituasiSlugRouteWithChildren,
   SituasiIndexRoute: SituasiIndexRoute,
-  SituasiSlugEksplorasiRoute: SituasiSlugEksplorasiRoute,
-  SituasiSlugRisikoPrediksiRoute: SituasiSlugRisikoPrediksiRoute,
 }
 
 const SituasiRouteWithChildren =
