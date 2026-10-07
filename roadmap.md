@@ -8,7 +8,8 @@
 - [x] Build Ringkasan Situasi analytical workspace
 - [x] Build Eksplorasi Situasi tabs and actor network
 - [x] Build Risiko & Prediksi workspace
-- [x] Verify filters, detail drawers, routes, and responsive layouts- [ ] Revise Situasi entry into EWS and monitored-topic catalogue
-- [ ] Add shared detail workspace for EWS and monitored topics
-- [ ] Add create-topic and monitor-EWS prototype interactions
-- [ ] Update routing tests and verify desktop/mobile flows
+- [x] Verify filters, detail drawers, routes, and responsive layouts
+- [x] Revise Situasi entry into EWS and monitored-topic catalogue
+- [x] Add shared detail workspace for EWS and monitored topics
+- [x] Add create-topic and monitor-EWS prototype interactions
+- [x] Update routing tests and verify desktop/mobile flows
