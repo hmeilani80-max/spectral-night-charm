@@ -11,3 +11,4 @@
 
 - Keep all primary SPEKTRA areas as separate TanStack routes inside one shared application shell, so navigation and page metadata remain consistent.
 - Keep Situasi data and reusable analytical UI in a shared feature module, so its three routes remain consistent and traceable.
+- Route Situasi entries through a shared dynamic detail layout, so EWS findings and monitored topics use one analytical workspace without duplicating data.
