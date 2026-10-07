@@ -1,63 +1,90 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, XAxis, YAxis } from "recharts";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState, type FormEvent } from "react";
+import { ArrowRight, BellRing, Plus, Radar, RadioTower } from "lucide-react";
 
 import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ActiveFilters, DetailTable, FilterBar, MetricGrid, Panel, RecordSheet, RiskLabel, SituationNav, SummaryBlock, type ActiveFilter } from "@/features/situasi/components";
-import { actors, issues, narratives, records, regions, sentiment, trend, type DetailRecord } from "@/features/situasi/data";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { FilterBar, MetricGrid, RiskLabel } from "@/features/situasi/components";
+import { useSituations } from "@/features/situasi/context";
+import type { SituationEntry } from "@/features/situasi/data";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/situasi/")({
   head: () => ({ meta: [
-    { title: "Ringkasan Situasi — SPEKTRA" },
-    { name: "description", content: "Gambaran cepat isu, aktor, narasi, sentimen, wilayah, dan data terpantau." },
-    { property: "og:title", content: "Ringkasan Situasi — SPEKTRA" },
-    { property: "og:description", content: "Gambaran menyeluruh situasi informasi terkini." },
-    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
-  ] }), component: SituationSummary,
+    { title: "Situasi — SPEKTRA" },
+    { name: "description", content: "Pantau temuan sistem dan topik strategis yang sedang dipantau." },
+    { property: "og:title", content: "Situasi — SPEKTRA" },
+    { property: "og:description", content: "Temuan EWS dan topik strategis dalam satu area pemantauan." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+  ] }),
+  component: SituationCatalogue,
 });
 
-const chartConfig = { volume: { label: "Volume", color: "var(--color-chart-1)" }, interactions: { label: "Interaksi", color: "var(--color-chart-1)" } };
+const platforms = ["X", "Instagram", "TikTok", "Facebook", "YouTube", "Threads", "News"];
 
-function SituationSummary() {
-  const [filters, setFilters] = useState<ActiveFilter[]>([]);
-  const [selected, setSelected] = useState<DetailRecord>();
-  const setFilter = (type: string, value: string) => setFilters((current) => [...current.filter((filter) => filter.type !== type), { type, value }]);
-  const filteredRecords = useMemo(() => records.filter((row) => filters.every((filter) => {
-    if (filter.type === "actor") return row.actor === filter.value;
-    if (filter.type === "sentiment") return row.sentiment === filter.value;
-    if (filter.type === "region") return row.region === filter.value;
-    if (filter.type === "date") return row.date === filter.value;
-    if (filter.type === "risk") return row.risk === "Tinggi";
-    if (filter.type === "narrative") {
-      const [keyword] = filter.value.split(" ");
-      return keyword ? row.narrative.toLowerCase().includes(keyword.toLowerCase()) : true;
-    }
-    return true;
-  })), [filters]);
-
-  return <PageShell eyebrow="See" title="Ringkasan Situasi" description="Gambaran cepat ruang informasi: isu utama, skala aktivitas, aktor, narasi, serta area yang perlu perhatian." actions={<FilterBar onAdvanced={() => setFilter("risk", "Perlu Perhatian")} />}>
-    <SituationNav />
-    <ActiveFilters filters={filters} remove={(target) => setFilters((current) => current.filter((item) => item !== target))} reset={() => setFilters([])} />
-    <div className="space-y-4">
-      <MetricGrid items={[{value:"186.420",label:"Konten Terpantau"},{value:"31.870",label:"Aktor Teridentifikasi"},{value:"18",label:"Narasi Aktif"},{value:"5",label:"Isu Perlu Perhatian",onClick:()=>setFilter("risk","Perlu Perhatian") }]} />
-      <SummaryBlock title="Ringkasan Situasi" copy="Dalam 7 hari terakhir, percakapan terkait demonstrasi nasional mengalami peningkatan signifikan. Aktivitas meningkat setelah muncul ajakan mobilisasi di beberapa platform dan perluasan pembicaraan ke sejumlah wilayah." highlights={["Volume percakapan meningkat 63% dalam 48 jam terakhir.","Jakarta dan Bandung mengalami peningkatan aktivitas tertinggi.","Narasi “aksi meluas ke sejumlah kota” tumbuh paling cepat.","Empat cluster aktor mendominasi sebagian besar interaksi."]} />
-      <Panel title="Isu Prioritas" description="Pilih isu untuk memfokuskan seluruh tampilan."><Table><TableHeader><TableRow><TableHead>Isu</TableHead><TableHead>Risiko</TableHead><TableHead>Volume</TableHead><TableHead>Pertumbuhan</TableHead><TableHead>Wilayah Dominan</TableHead></TableRow></TableHeader><TableBody>{issues.map((issue) => <TableRow key={issue.name} className="cursor-pointer" onClick={() => setFilter("issue",issue.name)}><TableCell className="font-medium">{issue.name}</TableCell><TableCell><RiskLabel value={issue.risk} /></TableCell><TableCell>{issue.volume}</TableCell><TableCell className="text-chart-2">{issue.growth}</TableCell><TableCell>{issue.region}</TableCell></TableRow>)}</TableBody></Table></Panel>
-      <div className="grid gap-4 xl:grid-cols-[1.55fr_1fr]">
-        <Panel title="Tren Percakapan" description="Volume konten harian"><ChartContainer config={chartConfig} className="h-64 w-full aspect-auto"><LineChart data={trend.slice(0,7)} margin={{left:0,right:12}} onClick={(state) => state?.activePayload?.[0]?.payload?.fullDate && setFilter("date",state.activePayload[0].payload.fullDate)}><CartesianGrid vertical={false}/><XAxis dataKey="date" tickLine={false} axisLine={false}/><YAxis tickLine={false} axisLine={false} width={45}/><ChartTooltip content={<ChartTooltipContent />} /><Line dataKey="volume" stroke="var(--color-volume)" strokeWidth={2} dot={{r:4,fill:"var(--color-chart-1)"}} activeDot={{r:6}} /></LineChart></ChartContainer></Panel>
-        <Panel title="Sentimen" description="Distribusi percakapan"><ChartContainer config={chartConfig} className="h-64 w-full aspect-auto"><PieChart><Pie data={sentiment} dataKey="value" nameKey="name" innerRadius={54} outerRadius={82} paddingAngle={3} onClick={(data) => setFilter("sentiment",data.name)}>{sentiment.map((entry) => <Cell key={entry.name} fill={entry.fill} />)}</Pie><ChartTooltip content={<ChartTooltipContent hideLabel />} /></PieChart></ChartContainer><div className="flex justify-center gap-4">{sentiment.map((item)=><Button key={item.name} variant="ghost" size="sm" onClick={()=>setFilter("sentiment",item.name)}>{item.name} {item.value}%</Button>)}</div></Panel>
-      </div>
-      <div className="grid gap-4 xl:grid-cols-3">
-        <Panel title="Aktor Dominan"><ChartContainer config={chartConfig} className="h-72 w-full aspect-auto"><BarChart data={[...actors]} layout="vertical" margin={{left:20}} onClick={(state)=>state?.activePayload?.[0]?.payload?.name&&setFilter("actor",state.activePayload[0].payload.name)}><XAxis type="number" hide/><YAxis type="category" dataKey="name" width={118} tickLine={false} axisLine={false}/><ChartTooltip content={<ChartTooltipContent />} /><Bar dataKey="interactions" fill="var(--color-chart-1)" radius={3}/></BarChart></ChartContainer></Panel>
-        <Panel title="Narasi Dominan"><div className="space-y-2">{narratives.map((item,index)=><Button key={item.name} variant="ghost" className="h-auto w-full justify-start p-2 text-left" onClick={()=>setFilter("narrative",item.name)}><span className="mr-2 font-display text-lg text-muted-foreground">0{index+1}</span><span className="min-w-0 flex-1"><span className="block truncate text-xs">{item.name}</span><span className="text-[10px] text-muted-foreground">{item.volume.toLocaleString("id-ID")} · {item.growth}</span></span></Button>)}</div></Panel>
-        <Panel title="Wilayah Dominan"><div className="space-y-3">{regions.map((item)=><Button key={item.name} variant="ghost" className="h-auto w-full justify-start px-2 py-1" onClick={()=>setFilter("region",item.name)}><span className="w-20 text-left text-xs">{item.name}</span><span className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted"><span className="block h-full bg-chart-2" style={{width:`${item.volume/600}%`}} /></span><span className="w-12 text-right text-[10px] text-chart-2">{item.growth}</span></Button>)}</div></Panel>
-      </div>
-      <Panel title="Data Detail" description={`${filteredRecords.length} rekam data sesuai filter`}><DetailTable rows={filteredRecords} onSelect={setSelected} /></Panel>
+function FindingCard({ item, monitored, onMonitor }: { item: SituationEntry; monitored: boolean; onMonitor: () => void }) {
+  return <article className="flex h-full flex-col rounded-lg border border-border bg-card p-5">
+    <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-semibold uppercase text-primary">Temuan Sistem</p><h3 className="mt-2 text-base font-semibold">{item.name}</h3></div>{item.risk && <RiskLabel value={item.risk} />}</div>
+    <p className="mt-3 text-xs leading-5 text-muted-foreground">{item.description}</p>
+    <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
+      <div><dt className="text-muted-foreground">Volume</dt><dd className="mt-1 font-semibold text-chart-2">{item.growth}</dd></div>
+      <div><dt className="text-muted-foreground">Cakupan</dt><dd className="mt-1 font-medium">{item.regionsGrowing}</dd></div>
+      <div className="col-span-2"><dt className="text-muted-foreground">Narasi dominan</dt><dd className="mt-1 font-medium">{item.dominantNarrative}</dd></div>
+      <div className="col-span-2"><dt className="text-muted-foreground">Pemicu</dt><dd className="mt-1 font-medium">{item.detectedReason}</dd></div>
+    </dl>
+    <div className="mt-auto flex flex-wrap gap-2 pt-5">
+      <Button asChild size="sm"><Link to="/situasi/$slug" params={{ slug: item.slug }}>Lihat Situasi<ArrowRight /></Link></Button>
+      <Button size="sm" variant="outline" disabled={monitored} onClick={onMonitor}>{monitored ? "Sedang Dipantau" : "Pantau Topik Ini"}</Button>
     </div>
-    <RecordSheet record={selected} onOpenChange={(open)=>!open&&setSelected(undefined)} />
-    <Popover><PopoverTrigger asChild><span className="sr-only">Filter lanjutan</span></PopoverTrigger><PopoverContent /></Popover>
+  </article>;
+}
+
+function TopicCard({ item }: { item: SituationEntry }) {
+  const fromSystem = item.source === "Temuan Sistem";
+  return <article className="flex h-full flex-col rounded-lg border border-border bg-card p-5">
+    <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] text-muted-foreground">{fromSystem ? "Sumber: Temuan Sistem" : `Dipantau sejak ${item.since}`}</p><h3 className="mt-2 text-base font-semibold">{item.name}</h3></div><span className={cn("rounded-sm px-2 py-1 text-[10px] font-semibold", item.status === "Perlu Perhatian" ? "bg-destructive/15 text-destructive" : item.status === "Meningkat" ? "bg-chart-3/15 text-chart-3" : "bg-chart-2/15 text-chart-2")}>{item.status}</span></div>
+    <p className="mt-3 text-xs leading-5 text-muted-foreground">{item.description}</p>
+    <dl className="mt-5 grid grid-cols-3 gap-3 border-y border-border py-4 text-xs"><div><dt className="text-muted-foreground">Konten</dt><dd className="mt-1 font-semibold">{item.volume}</dd></div><div><dt className="text-muted-foreground">Aktor</dt><dd className="mt-1 font-semibold">{item.actors}</dd></div><div><dt className="text-muted-foreground">Narasi</dt><dd className="mt-1 font-semibold">{item.narratives}</dd></div></dl>
+    <Button asChild variant="outline" size="sm" className="mt-5 self-start"><Link to="/situasi/$slug" params={{ slug: item.slug }}>Lihat Situasi<ArrowRight /></Link></Button>
+  </article>;
+}
+
+function SituationCatalogue() {
+  const { findings, topics, monitorFinding, addTopic } = useSituations();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["X", "TikTok", "News"]);
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const name = String(form.get("name") ?? "").trim();
+    const description = String(form.get("description") ?? "").trim();
+    const keyword = String(form.get("keyword") ?? "").trim();
+    if (!name || !description) return;
+    addTopic({ name, description, keywords: keyword ? keyword.split(",").map((item) => item.trim()) : [], platforms: selectedPlatforms });
+    setDialogOpen(false);
+  }
+
+  return <PageShell eyebrow="See" title="Situasi" description="Pantau temuan sistem dan topik strategis yang sedang dipantau." actions={<FilterBar />}>
+    <div className="space-y-10">
+      <section aria-labelledby="ews-title">
+        <div className="mb-5 flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-md bg-destructive/10 text-destructive"><RadioTower className="size-4" /></span><div><h2 id="ews-title" className="text-lg font-semibold">EWS / Temuan Sistem</h2><p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">Situasi yang terdeteksi otomatis berdasarkan lonjakan aktivitas, perubahan pola, risiko, atau indikator tidak biasa.</p></div></div>
+        <MetricGrid items={[{ value: "4", label: "Temuan Aktif" }, { value: "2", label: "Risiko Tinggi" }, { value: "7", label: "Early Warning Aktif" }, { value: "3", label: "Temuan Baru 24 Jam" }]} />
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">{findings.map((item) => <FindingCard key={item.slug} item={item} monitored={topics.some((topic) => topic.slug === item.slug)} onMonitor={() => monitorFinding(item.slug)} />)}</div>
+      </section>
+
+      <section aria-labelledby="topics-title" className="border-t border-border pt-8">
+        <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-start"><div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-md bg-accent text-primary"><Radar className="size-4" /></span><div><h2 id="topics-title" className="text-lg font-semibold">Topik Pantauan</h2><p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">Topik strategis yang ditentukan pengguna untuk dipantau secara berkelanjutan.</p></div></div><Button onClick={() => setDialogOpen(true)}><Plus />Buat Topik Pantauan</Button></div>
+        <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">{topics.map((item) => <TopicCard key={item.slug} item={item} />)}</div>
+      </section>
+    </div>
+
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}><DialogContent className="max-h-[90vh] overflow-y-auto"><DialogHeader><DialogTitle>Buat Topik Pantauan</DialogTitle><DialogDescription>Tentukan topik strategis yang perlu dipantau secara berkelanjutan.</DialogDescription></DialogHeader><form onSubmit={submit} className="space-y-5"><div className="space-y-2"><Label htmlFor="topic-name">Nama Topik</Label><Input id="topic-name" name="name" required placeholder="Contoh: Stabilitas Energi Nasional" /></div><div className="space-y-2"><Label htmlFor="topic-description">Deskripsi Singkat</Label><Textarea id="topic-description" name="description" required placeholder="Jelaskan fokus pemantauan" /></div><div className="space-y-2"><Label htmlFor="topic-keyword">Keyword / Frasa <span className="text-muted-foreground">(opsional)</span></Label><Input id="topic-keyword" name="keyword" placeholder="Pisahkan dengan koma" /></div><fieldset><legend className="mb-3 text-sm font-medium">Platform</legend><div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{platforms.map((platform) => <Label key={platform} className="flex items-center gap-2 font-normal"><Checkbox checked={selectedPlatforms.includes(platform)} onCheckedChange={(checked) => setSelectedPlatforms((current) => checked ? [...current, platform] : current.filter((item) => item !== platform))} />{platform}</Label>)}</div></fieldset><DialogFooter><Button type="button" variant="ghost" onClick={() => setDialogOpen(false)}>Batal</Button><Button type="submit"><BellRing />Mulai Pantau</Button></DialogFooter></form></DialogContent></Dialog>
   </PageShell>;
 }

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useState } from "react";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
@@ -7,17 +7,22 @@ import { Button } from "@/components/ui/button";
 import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ActiveFilters, MetricGrid, Panel, RecordSheet, SituationNav, SummaryBlock, type ActiveFilter } from "@/features/situasi/components";
+import { ActiveFilters, MetricGrid, Panel, RecordSheet, SituationMeta, SituationNav, SummaryBlock, type ActiveFilter } from "@/features/situasi/components";
+import { useSituations } from "@/features/situasi/context";
 import { actors, clusters, narratives, records, sentimentByPlatform, trend, type DetailRecord } from "@/features/situasi/data";
 
-export const Route = createFileRoute("/situasi/eksplorasi")({ head:()=>({meta:[{title:"Eksplorasi Situasi — SPEKTRA"},{name:"description",content:"Eksplorasi pola aktor, narasi, sentimen, emosi, dan hubungan antar-data."},{property:"og:title",content:"Eksplorasi Situasi — SPEKTRA"},{property:"og:description",content:"Workspace analitis pola aktor, narasi, dan sentimen."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary_large_image"}]}), component: Exploration });
+export const Route = createFileRoute("/situasi/$slug/eksplorasi")({ head:()=>({meta:[{title:"Eksplorasi Situasi — SPEKTRA"},{name:"description",content:"Eksplorasi pola aktor, narasi, sentimen, emosi, dan hubungan antar-data."},{property:"og:title",content:"Eksplorasi Situasi — SPEKTRA"},{property:"og:description",content:"Workspace analitis pola aktor, narasi, dan sentimen."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary_large_image"}]}), component: Exploration });
 const chartConfig={positive:{label:"Positif",color:"var(--color-chart-2)"},neutral:{label:"Netral",color:"var(--color-chart-1)"},negative:{label:"Negatif",color:"var(--color-chart-4)"}};
 
 function Exploration(){
+  const { slug } = Route.useParams();
+  const { findings, topics } = useSituations();
+  const situation = [...findings, ...topics].find((item) => item.slug === slug);
+  if (!situation) throw notFound();
   const [filters,setFilters]=useState<ActiveFilter[]>([]); const [selected,setSelected]=useState<DetailRecord>();
   const choose=(type:string,value:string)=>setFilters((current)=>[...current.filter((item)=>item.type!==type),{type,value}]);
-  return <PageShell eyebrow="See · Explore" title="Eksplorasi Situasi" description="Mendalami pola aktor, narasi, sentimen, emosi, dan keterhubungan antar-data.">
-    <SituationNav/><ActiveFilters filters={filters} remove={(target)=>setFilters((current)=>current.filter((item)=>item!==target))} reset={()=>setFilters([])}/>
+  return <PageShell eyebrow={`Situasi / ${situation.name}`} title={`Eksplorasi · ${situation.name}`} description="Siapa yang terlibat dan bagaimana pola informasi berkembang?">
+    <SituationMeta item={situation}/><SituationNav slug={slug}/><ActiveFilters filters={filters} remove={(target)=>setFilters((current)=>current.filter((item)=>item!==target))} reset={()=>setFilters([])}/>
     <Tabs defaultValue="aktor"><TabsList className="mb-4 h-10 w-full justify-start overflow-x-auto bg-card"><TabsTrigger value="aktor">Aktor</TabsTrigger><TabsTrigger value="narasi">Narasi</TabsTrigger><TabsTrigger value="sentimen">Sentimen & Emosi</TabsTrigger></TabsList>
       <TabsContent value="aktor" className="space-y-4">
         <MetricGrid items={[{value:"31.870",label:"Total Aktor"},{value:"8.420",label:"Aktor Aktif"},{value:"126",label:"Aktor Pengaruh Tinggi"},{value:"284.320",label:"Total Interaksi"}]}/>

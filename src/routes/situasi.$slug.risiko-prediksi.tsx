@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useState } from "react";
 import { AlertTriangle, ArrowUpRight, RadioTower } from "lucide-react";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
@@ -7,14 +7,15 @@ import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ActiveFilters, FilterBar, MetricGrid, Panel, RiskLabel, SituationNav, SummaryBlock, type ActiveFilter } from "@/features/situasi/components";
+import { ActiveFilters, FilterBar, MetricGrid, Panel, RiskLabel, SituationMeta, SituationNav, SummaryBlock, type ActiveFilter } from "@/features/situasi/components";
+import { useSituations } from "@/features/situasi/context";
 import { issues, trend } from "@/features/situasi/data";
 
-export const Route = createFileRoute("/situasi/risiko-prediksi")({head:()=>({meta:[{title:"Risiko & Prediksi — SPEKTRA"},{name:"description",content:"Prioritas risiko, early warning, dan proyeksi perkembangan isu berdasarkan pola saat ini."},{property:"og:title",content:"Risiko & Prediksi — SPEKTRA"},{property:"og:description",content:"Membaca risiko dan kemungkinan perkembangan isu."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary_large_image"}]}),component:RiskForecast});
+export const Route = createFileRoute("/situasi/$slug/risiko-prediksi")({head:()=>({meta:[{title:"Risiko & Prediksi — SPEKTRA"},{name:"description",content:"Prioritas risiko, early warning, dan proyeksi perkembangan isu berdasarkan pola saat ini."},{property:"og:title",content:"Risiko & Prediksi — SPEKTRA"},{property:"og:description",content:"Membaca risiko dan kemungkinan perkembangan isu."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary_large_image"}]}),component:RiskForecast});
 const chartConfig={actual:{label:"Aktual",color:"var(--color-chart-1)"},forecast:{label:"Proyeksi",color:"var(--color-chart-3)"}};
 
-function RiskForecast(){const [filters,setFilters]=useState<ActiveFilter[]>([]);const [range,setRange]=useState("7 Hari");const choose=(value:string)=>setFilters([{type:"issue",value}]);return <PageShell eyebrow="See · Anticipate" title="Risiko & Prediksi" description="Memprioritaskan isu berisiko dan membaca kemungkinan perkembangannya berdasarkan pola saat ini." actions={<FilterBar onAdvanced={()=>setFilters([{type:"risk",value:"Risiko Tinggi"}])}/>}>
-  <SituationNav/><ActiveFilters filters={filters} remove={()=>setFilters([])} reset={()=>setFilters([])}/><div className="space-y-4">
+function RiskForecast(){const {slug}=Route.useParams();const {findings,topics}=useSituations();const situation=[...findings,...topics].find((item)=>item.slug===slug);if(!situation)throw notFound();const [filters,setFilters]=useState<ActiveFilter[]>([]);const [range,setRange]=useState("7 Hari");const choose=(value:string)=>setFilters([{type:"issue",value}]);return <PageShell eyebrow={`Situasi / ${situation.name}`} title={`Risiko & Prediksi · ${situation.name}`} description="Apa yang perlu diwaspadai dan bagaimana kemungkinan perkembangannya?" actions={<FilterBar onAdvanced={()=>setFilters([{type:"risk",value:"Risiko Tinggi"}])}/>}> 
+  <SituationMeta item={situation}/><SituationNav slug={slug}/><ActiveFilters filters={filters} remove={()=>setFilters([])} reset={()=>setFilters([])}/><div className="space-y-4">
     <MetricGrid items={[{value:"5",label:"Isu Risiko Tinggi",onClick:()=>setFilters([{type:"risk",value:"Risiko Tinggi"}])},{value:"3",label:"Risiko Meningkat"},{value:"7",label:"Early Warning Aktif"},{value:"4",label:"Isu Diprediksi Tumbuh"}]}/>
     <SummaryBlock title="Ringkasan Risiko" copy="Risiko tertinggi saat ini berasal dari perkembangan narasi terkait perluasan demonstrasi dan informasi tidak terverifikasi mengenai kericuhan. Keduanya menunjukkan peningkatan volume, perluasan wilayah, dan pertumbuhan aktor baru." highlights={["Demonstrasi Nasional berada pada risiko tinggi.","Dugaan serangan siber menunjukkan pertumbuhan 48%.","Terdapat 7 early warning aktif.","4 isu diprediksi meningkat dalam 7 hari ke depan."]}/>
     <Panel title="Isu Prioritas"><Table><TableHeader><TableRow><TableHead>Isu</TableHead><TableHead>Risiko</TableHead><TableHead>Volume</TableHead><TableHead>Growth</TableHead><TableHead>Wilayah</TableHead><TableHead>Status</TableHead></TableRow></TableHeader><TableBody>{issues.slice(0,3).map((issue)=><TableRow key={issue.name} className="cursor-pointer" onClick={()=>choose(issue.name)}><TableCell className="font-medium">{issue.name}</TableCell><TableCell><RiskLabel value={issue.risk}/></TableCell><TableCell>{issue.volume}</TableCell><TableCell className="text-chart-2">{issue.growth}</TableCell><TableCell>{issue.region}</TableCell><TableCell>{issue.status}</TableCell></TableRow>)}</TableBody></Table></Panel>

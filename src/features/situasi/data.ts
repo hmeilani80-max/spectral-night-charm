@@ -11,6 +11,66 @@ export type DetailRecord = {
   date: string;
 };
 
+export type SituationEntry = {
+  slug: string;
+  name: string;
+  source: "Temuan Sistem" | "Topik Pantauan";
+  risk?: "Tinggi" | "Sedang" | "Rendah";
+  status: string;
+  volume: string;
+  actors: string;
+  narratives: string;
+  since: string;
+  description: string;
+  platforms: string[];
+  regionScope: string;
+  keywords: string[];
+  detectedReason?: string;
+  triggers?: string[];
+  growth?: string;
+  regionsGrowing?: string;
+  dominantNarrative?: string;
+  warningStatus?: string;
+  createdBy?: string;
+};
+
+export const systemFindings: SituationEntry[] = [
+  {
+    slug: "demonstrasi-nasional", name: "Demonstrasi Nasional", source: "Temuan Sistem", risk: "Tinggi", status: "Aktif",
+    volume: "186.420", actors: "31.870", narratives: "18", since: "5 Okt 2026, 09:40",
+    description: "Peningkatan percakapan dan mobilisasi terkait demonstrasi di sejumlah wilayah.", platforms: ["X", "TikTok", "Threads", "News"], regionScope: "6 wilayah meningkat", keywords: ["demonstrasi", "aksi nasional", "mobilisasi"],
+    detectedReason: "Lonjakan volume dan perluasan wilayah", triggers: ["Lonjakan volume +63%", "Perluasan ke 6 wilayah", "428 aktor baru dalam 24 jam"], growth: "+63%", regionsGrowing: "6 wilayah meningkat", dominantNarrative: "Aksi meluas ke sejumlah kota", warningStatus: "Early warning aktif",
+  },
+  {
+    slug: "dugaan-serangan-siber", name: "Dugaan Serangan Siber", source: "Temuan Sistem", risk: "Tinggi", status: "Aktif",
+    volume: "94.720", actors: "18.240", narratives: "11", since: "6 Okt 2026, 13:15",
+    description: "Pertumbuhan narasi tidak terverifikasi terkait dugaan kebocoran data.", platforms: ["X", "TikTok", "News"], regionScope: "Nasional", keywords: ["serangan siber", "kebocoran data"],
+    detectedReason: "Pertumbuhan narasi tidak terverifikasi", triggers: ["Volume meningkat +48%", "Penyebaran berskala nasional", "214 aktor baru dalam 24 jam"], growth: "+48%", regionsGrowing: "Skala nasional", dominantNarrative: "Dugaan kebocoran data", warningStatus: "Early warning aktif",
+  },
+  {
+    slug: "gangguan-layanan-publik", name: "Gangguan Layanan Publik", source: "Temuan Sistem", risk: "Sedang", status: "Aktif",
+    volume: "58.340", actors: "10.210", narratives: "8", since: "6 Okt 2026, 16:20",
+    description: "Peningkatan laporan gangguan layanan di beberapa kanal publik.", platforms: ["X", "Instagram", "News"], regionScope: "Jawa Barat", keywords: ["layanan publik", "gangguan"],
+    detectedReason: "Perubahan pola laporan lintas kanal", triggers: ["Volume meningkat +21%", "Tiga layanan disebut berulang", "Aktivitas terkonsentrasi di Jawa Barat"], growth: "+21%", regionsGrowing: "3 wilayah meningkat", dominantNarrative: "Layanan belum kembali normal", warningStatus: "Dalam pemantauan",
+  },
+  {
+    slug: "informasi-bencana", name: "Informasi Tidak Terverifikasi terkait Bencana", source: "Temuan Sistem", risk: "Sedang", status: "Baru",
+    volume: "41.820", actors: "7.940", narratives: "6", since: "7 Okt 2026, 07:10",
+    description: "Informasi belum terverifikasi menyebar setelah kejadian bencana regional.", platforms: ["Facebook", "TikTok", "WhatsApp"], regionScope: "Sulawesi Selatan", keywords: ["bencana", "informasi darurat"],
+    detectedReason: "Lonjakan konten dengan sumber tidak jelas", triggers: ["Volume meningkat +18%", "Dua narasi baru dalam 6 jam", "Sumber primer belum ditemukan"], growth: "+18%", regionsGrowing: "2 wilayah meningkat", dominantNarrative: "Informasi darurat belum terverifikasi", warningStatus: "Perlu verifikasi",
+  },
+];
+
+export const monitoredTopics: SituationEntry[] = [
+  { slug: "stabilitas-harga-pangan", name: "Stabilitas Harga Pangan", source: "Topik Pantauan", status: "Stabil", volume: "42.810", actors: "8.420", narratives: "7", since: "2 Oktober 2026", description: "Pemantauan dinamika harga dan persepsi publik terhadap ketersediaan pangan.", platforms: ["X", "TikTok", "Threads", "News"], regionScope: "Nasional", keywords: ["harga pangan", "beras", "stok pangan"], createdBy: "Analis A" },
+  { slug: "persepsi-kebijakan-strategis", name: "Persepsi terhadap Kebijakan Strategis", source: "Topik Pantauan", status: "Meningkat", volume: "31.240", actors: "6.180", narratives: "5", since: "4 Oktober 2026", description: "Pemantauan respons publik terhadap kebijakan strategis terbaru.", platforms: ["X", "Instagram", "News"], regionScope: "Nasional", keywords: ["kebijakan strategis", "respons publik"], createdBy: "Analis A" },
+  { slug: "isu-keamanan-regional", name: "Isu Keamanan Regional", source: "Topik Pantauan", status: "Perlu Perhatian", volume: "18.920", actors: "3.840", narratives: "4", since: "1 Oktober 2026", description: "Pemantauan perkembangan isu keamanan di kawasan regional.", platforms: ["X", "YouTube", "News"], regionScope: "Regional", keywords: ["keamanan regional", "stabilitas kawasan"], createdBy: "Analis B" },
+];
+
+export function getSituation(slug: string) {
+  return [...systemFindings, ...monitoredTopics].find((item) => item.slug === slug);
+}
+
 export const issues = [
   { name: "Demonstrasi Nasional", risk: "Tinggi", volume: "186.420", growth: "+63%", region: "Jakarta, Bandung", status: "Meningkat" },
   { name: "Dugaan Serangan Siber", risk: "Tinggi", volume: "94.720", growth: "+48%", region: "Nasional", status: "Meningkat" },
