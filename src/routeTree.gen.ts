@@ -16,6 +16,9 @@ import { Route as ArsipRouteImport } from './routes/arsip'
 import { Route as DampakRouteImport } from './routes/dampak'
 import { Route as SituasiRouteImport } from './routes/situasi'
 import { Route as StrategiRouteImport } from './routes/strategi'
+import { Route as SituasiIndexRouteImport } from './routes/situasi.index'
+import { Route as SituasiEksplorasiRouteImport } from './routes/situasi.eksplorasi'
+import { Route as SituasiRisikoPrediksiRouteImport } from './routes/situasi.risiko-prediksi'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -52,6 +55,21 @@ const StrategiRoute = StrategiRouteImport.update({
   path: '/strategi',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SituasiIndexRoute = SituasiIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SituasiRoute,
+} as any)
+const SituasiEksplorasiRoute = SituasiEksplorasiRouteImport.update({
+  id: '/eksplorasi',
+  path: '/eksplorasi',
+  getParentRoute: () => SituasiRoute,
+} as any)
+const SituasiRisikoPrediksiRoute = SituasiRisikoPrediksiRouteImport.update({
+  id: '/risiko-prediksi',
+  path: '/risiko-prediksi',
+  getParentRoute: () => SituasiRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -59,8 +77,11 @@ export interface FileRoutesByFullPath {
   '/aksi': typeof AksiRoute
   '/arsip': typeof ArsipRoute
   '/dampak': typeof DampakRoute
-  '/situasi': typeof SituasiRoute
+  '/situasi': typeof SituasiRouteWithChildren
   '/strategi': typeof StrategiRoute
+  '/situasi/eksplorasi': typeof SituasiEksplorasiRoute
+  '/situasi/risiko-prediksi': typeof SituasiRisikoPrediksiRoute
+  '/situasi/': typeof SituasiIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -68,8 +89,10 @@ export interface FileRoutesByTo {
   '/aksi': typeof AksiRoute
   '/arsip': typeof ArsipRoute
   '/dampak': typeof DampakRoute
-  '/situasi': typeof SituasiRoute
   '/strategi': typeof StrategiRoute
+  '/situasi/eksplorasi': typeof SituasiEksplorasiRoute
+  '/situasi/risiko-prediksi': typeof SituasiRisikoPrediksiRoute
+  '/situasi': typeof SituasiIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -78,8 +101,11 @@ export interface FileRoutesById {
   '/aksi': typeof AksiRoute
   '/arsip': typeof ArsipRoute
   '/dampak': typeof DampakRoute
-  '/situasi': typeof SituasiRoute
+  '/situasi': typeof SituasiRouteWithChildren
   '/strategi': typeof StrategiRoute
+  '/situasi/eksplorasi': typeof SituasiEksplorasiRoute
+  '/situasi/risiko-prediksi': typeof SituasiRisikoPrediksiRoute
+  '/situasi/': typeof SituasiIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,6 +117,9 @@ export interface FileRouteTypes {
     | '/dampak'
     | '/situasi'
     | '/strategi'
+    | '/situasi/eksplorasi'
+    | '/situasi/risiko-prediksi'
+    | '/situasi/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -98,8 +127,10 @@ export interface FileRouteTypes {
     | '/aksi'
     | '/arsip'
     | '/dampak'
-    | '/situasi'
     | '/strategi'
+    | '/situasi/eksplorasi'
+    | '/situasi/risiko-prediksi'
+    | '/situasi'
   id:
     | '__root__'
     | '/'
@@ -109,6 +140,9 @@ export interface FileRouteTypes {
     | '/dampak'
     | '/situasi'
     | '/strategi'
+    | '/situasi/eksplorasi'
+    | '/situasi/risiko-prediksi'
+    | '/situasi/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -117,7 +151,7 @@ export interface RootRouteChildren {
   AksiRoute: typeof AksiRoute
   ArsipRoute: typeof ArsipRoute
   DampakRoute: typeof DampakRoute
-  SituasiRoute: typeof SituasiRoute
+  SituasiRoute: typeof SituasiRouteWithChildren
   StrategiRoute: typeof StrategiRoute
 }
 
@@ -172,8 +206,44 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StrategiRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/situasi/': {
+      id: '/situasi/'
+      path: '/'
+      fullPath: '/situasi/'
+      preLoaderRoute: typeof SituasiIndexRouteImport
+      parentRoute: typeof SituasiRoute
+    }
+    '/situasi/eksplorasi': {
+      id: '/situasi/eksplorasi'
+      path: '/eksplorasi'
+      fullPath: '/situasi/eksplorasi'
+      preLoaderRoute: typeof SituasiEksplorasiRouteImport
+      parentRoute: typeof SituasiRoute
+    }
+    '/situasi/risiko-prediksi': {
+      id: '/situasi/risiko-prediksi'
+      path: '/risiko-prediksi'
+      fullPath: '/situasi/risiko-prediksi'
+      preLoaderRoute: typeof SituasiRisikoPrediksiRouteImport
+      parentRoute: typeof SituasiRoute
+    }
   }
 }
+
+interface SituasiRouteChildren {
+  SituasiEksplorasiRoute: typeof SituasiEksplorasiRoute
+  SituasiRisikoPrediksiRoute: typeof SituasiRisikoPrediksiRoute
+  SituasiIndexRoute: typeof SituasiIndexRoute
+}
+
+const SituasiRouteChildren: SituasiRouteChildren = {
+  SituasiEksplorasiRoute: SituasiEksplorasiRoute,
+  SituasiRisikoPrediksiRoute: SituasiRisikoPrediksiRoute,
+  SituasiIndexRoute: SituasiIndexRoute,
+}
+
+const SituasiRouteWithChildren =
+  SituasiRoute._addFileChildren(SituasiRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -181,7 +251,7 @@ const rootRouteChildren: RootRouteChildren = {
   AksiRoute: AksiRoute,
   ArsipRoute: ArsipRoute,
   DampakRoute: DampakRoute,
-  SituasiRoute: SituasiRoute,
+  SituasiRoute: SituasiRouteWithChildren,
   StrategiRoute: StrategiRoute,
 }
 export const routeTree = rootRouteImport
