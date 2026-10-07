@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { FileSearch, Plus, Target } from "lucide-react";
-import { EmptyWorkspace, PageShell } from "@/components/page-shell";
-import { Button } from "@/components/ui/button";
-export const Route = createFileRoute("/strategi")({head:()=>({meta:[{title:"Strategi — SPEKTRA"},{name:"description",content:"Kajian dan opsi respons untuk keputusan strategis."},{property:"og:title",content:"Strategi — SPEKTRA"},{property:"og:description",content:"Menentukan apa yang perlu dilakukan."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary_large_image"}]}),component:Strategi});
-function Strategi(){return <PageShell eyebrow="Decide" title="Strategi" description="Mendalami kondisi, memeriksa fakta dan klaim, lalu menyusun opsi respons yang dapat diputuskan." actions={<Button><Plus/>Buat kajian</Button>}><div className="mb-4 rounded-lg border border-border bg-card p-5"><div className="flex items-start gap-3"><FileSearch className="mt-0.5 size-5 text-primary"/><div><p className="text-[11px] font-semibold uppercase text-primary">Kajian Prioritas</p><h2 className="mt-2 text-base font-semibold">Perluasan percakapan Demonstrasi Nasional</h2><p className="mt-2 text-sm text-muted-foreground">Kajian aktif · 8 sumber pendukung · diperbarui 18 menit lalu</p></div></div></div><EmptyWorkspace icon={Target} title="Workspace strategi" description="Satu alur ringkas dari kajian menuju rekomendasi." steps={["Fakta & Klaim","Kesimpulan Kajian","Opsi Respons"]}/></PageShell>}
+import { createFileRoute, Outlet } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/strategi")({ component: StrategiLayout });
+
+function StrategiLayout() {
+  return <Outlet />;
+}
