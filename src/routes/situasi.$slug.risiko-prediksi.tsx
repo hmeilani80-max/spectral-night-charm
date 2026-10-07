@@ -9,19 +9,80 @@ import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartToo
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ActiveFilters, FilterBar, MetricGrid, Panel, RiskLabel, SituationMeta, SituationNav, SummaryBlock, type ActiveFilter } from "@/features/situasi/components";
 import { useSituations } from "@/features/situasi/context";
-import { issues, trend } from "@/features/situasi/data";
+import { getRiskProfile, trend } from "@/features/situasi/data";
+import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/situasi/$slug/risiko-prediksi")({head:()=>({meta:[{title:"Risiko & Prediksi — SPEKTRA"},{name:"description",content:"Prioritas risiko, early warning, dan proyeksi perkembangan isu berdasarkan pola saat ini."},{property:"og:title",content:"Risiko & Prediksi — SPEKTRA"},{property:"og:description",content:"Membaca risiko dan kemungkinan perkembangan isu."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary_large_image"}]}),component:RiskForecast});
-const chartConfig={actual:{label:"Aktual",color:"var(--color-chart-1)"},forecast:{label:"Proyeksi",color:"var(--color-chart-3)"}};
+export const Route = createFileRoute("/situasi/$slug/risiko-prediksi")({
+  head: ({ params }) => ({ meta: [
+    { title: `Risiko & Prediksi ${params.slug.replaceAll("-", " ")} — SPEKTRA` },
+    { name: "description", content: "Tingkat risiko, faktor pendorong, early warning, dan proyeksi untuk situasi aktif." },
+    { property: "og:title", content: "Risiko & Prediksi Situasi — SPEKTRA" },
+    { property: "og:description", content: "Analisis risiko dan kemungkinan perkembangan situasi aktif." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+  ] }),
+  component: RiskForecast,
+});
 
-function RiskForecast(){const {slug}=Route.useParams();const {findings,topics}=useSituations();const situation=[...findings,...topics].find((item)=>item.slug===slug);if(!situation)throw notFound();const [filters,setFilters]=useState<ActiveFilter[]>([]);const [range,setRange]=useState("7 Hari");const choose=(value:string)=>setFilters([{type:"issue",value}]);return <PageShell eyebrow={`Situasi / ${situation.name}`} title={`Risiko & Prediksi · ${situation.name}`} description="Apa yang perlu diwaspadai dan bagaimana kemungkinan perkembangannya?" actions={<FilterBar onAdvanced={()=>setFilters([{type:"risk",value:"Risiko Tinggi"}])}/>}> 
-  <SituationMeta item={situation}/><SituationNav slug={slug}/><ActiveFilters filters={filters} remove={()=>setFilters([])} reset={()=>setFilters([])}/><div className="space-y-4">
-    <MetricGrid items={[{value:"5",label:"Isu Risiko Tinggi",onClick:()=>setFilters([{type:"risk",value:"Risiko Tinggi"}])},{value:"3",label:"Risiko Meningkat"},{value:"7",label:"Early Warning Aktif"},{value:"4",label:"Isu Diprediksi Tumbuh"}]}/>
-    <SummaryBlock title="Ringkasan Risiko" copy="Risiko tertinggi saat ini berasal dari perkembangan narasi terkait perluasan demonstrasi dan informasi tidak terverifikasi mengenai kericuhan. Keduanya menunjukkan peningkatan volume, perluasan wilayah, dan pertumbuhan aktor baru." highlights={["Demonstrasi Nasional berada pada risiko tinggi.","Dugaan serangan siber menunjukkan pertumbuhan 48%.","Terdapat 7 early warning aktif.","4 isu diprediksi meningkat dalam 7 hari ke depan."]}/>
-    <Panel title="Isu Prioritas"><Table><TableHeader><TableRow><TableHead>Isu</TableHead><TableHead>Risiko</TableHead><TableHead>Volume</TableHead><TableHead>Growth</TableHead><TableHead>Wilayah</TableHead><TableHead>Status</TableHead></TableRow></TableHeader><TableBody>{issues.slice(0,3).map((issue)=><TableRow key={issue.name} className="cursor-pointer" onClick={()=>choose(issue.name)}><TableCell className="font-medium">{issue.name}</TableCell><TableCell><RiskLabel value={issue.risk}/></TableCell><TableCell>{issue.volume}</TableCell><TableCell className="text-chart-2">{issue.growth}</TableCell><TableCell>{issue.region}</TableCell><TableCell>{issue.status}</TableCell></TableRow>)}</TableBody></Table></Panel>
-    <div className="grid gap-4 xl:grid-cols-2"><Panel title="Matriks Risiko" description="Dampak × Kecepatan Penyebaran"><div className="grid h-80 grid-cols-2 grid-rows-2 gap-px overflow-hidden rounded-md bg-border"><div className="relative bg-destructive/8 p-3 text-[10px] text-muted-foreground">Dampak Tinggi / Penyebaran Rendah<Button variant="outline" size="sm" className="absolute bottom-[22%] left-[38%] h-7 border-chart-3 text-[10px]" onClick={()=>choose("Dugaan Serangan Siber")}>Serangan Siber</Button></div><div className="relative bg-destructive/12 p-3 text-[10px] text-muted-foreground">Dampak Tinggi / Penyebaran Tinggi<Button variant="destructive" size="sm" className="absolute left-[25%] top-[45%] h-7 text-[10px]" onClick={()=>choose("Demonstrasi Nasional")}>Demonstrasi Nasional</Button></div><div className="relative bg-card p-3 text-[10px] text-muted-foreground">Dampak Rendah / Penyebaran Rendah<Button variant="outline" size="sm" className="absolute right-[12%] top-[38%] h-7 text-[10px]" onClick={()=>choose("Gangguan Layanan Publik")}>Gangguan Layanan</Button></div><div className="bg-muted/20 p-3 text-[10px] text-muted-foreground">Dampak Rendah / Penyebaran Tinggi</div></div></Panel>
-      <Panel title="Proyeksi Volume" action={<div className="flex gap-1">{["7 Hari","14 Hari","30 Hari"].map((item)=><Button key={item} size="sm" variant={range===item?"secondary":"ghost"} onClick={()=>setRange(item)}>{item}</Button>)}</div>}><ChartContainer config={chartConfig} className="h-64 w-full aspect-auto"><LineChart data={[...trend]}><CartesianGrid vertical={false}/><XAxis dataKey="date"/><YAxis/><ChartTooltip content={<ChartTooltipContent/>}/><ChartLegend content={<ChartLegendContent/>}/><Line dataKey="actual" stroke="var(--color-actual)" strokeWidth={2}/><Line dataKey="forecast" stroke="var(--color-forecast)" strokeWidth={2} strokeDasharray="5 5"/></LineChart></ChartContainer><p className="mt-3 text-xs leading-5 text-muted-foreground">Volume percakapan diproyeksikan tetap tinggi dalam {range.toLowerCase()} ke depan dan berpotensi meningkat apabila muncul mobilisasi baru, berdasarkan pola saat ini.</p></Panel></div>
-    <div className="grid gap-4 xl:grid-cols-[1fr_1.4fr]"><Panel title="Prediksi Penyebaran"><dl className="grid grid-cols-2 gap-4 text-xs">{[["Isu","Demonstrasi Nasional"],["Potensi Penyebaran","Tinggi"],["Platform Dominan","X, TikTok"],["Wilayah Berkembang","Bandung, Surabaya"],["Aktor Baru","+428 dalam 24 jam"]].map(([label,value])=><div key={label}><dt className="text-muted-foreground">{label}</dt><dd className="mt-1 font-medium">{value}</dd></div>)}</dl></Panel><Panel title="Early Warning" action={<RadioTower className="size-4 text-destructive"/>}><div className="divide-y divide-border">{[["TINGGI","Lonjakan percakapan di Bandung","+86% dalam 3 jam"],["TINGGI","Narasi “aksi meluas” menyebar","Ke 3 platform baru"],["SEDANG","Peningkatan akun baru dalam cluster A","42 menit lalu"],["SEDANG","Sentimen negatif meningkat pada isu ekonomi","1 jam lalu"]].map(([level,title,meta])=><div key={title} className="flex items-start gap-3 py-3"><AlertTriangle className={level==="TINGGI"?"mt-0.5 size-4 text-destructive":"mt-0.5 size-4 text-chart-3"}/><div className="flex-1"><p className="text-xs font-medium">{title}</p><p className="mt-1 text-[10px] text-muted-foreground">{meta}</p></div><span className="text-[9px] font-semibold">{level}</span></div>)}</div></Panel></div>
-    <Panel title="Pola Aktivitas Tidak Biasa" action={<Button variant="outline" size="sm">Lihat Detail<ArrowUpRight/></Button>}><p className="text-sm">37 akun menunjukkan pola waktu unggah yang berdekatan pada narasi yang sama dalam 2 jam terakhir.</p><p className="mt-2 text-xs text-muted-foreground">Terdapat indikasi pola aktivitas terkoordinasi yang memerlukan penelaahan lebih lanjut.</p></Panel>
-    <Panel title="Detail Data Risiko"><Table><TableHeader><TableRow><TableHead>Isu</TableHead><TableHead>Risiko</TableHead><TableHead>Volume</TableHead><TableHead>Growth</TableHead><TableHead>Narasi Dominan</TableHead><TableHead>Aktor Dominan</TableHead><TableHead>Wilayah</TableHead><TableHead>Status</TableHead></TableRow></TableHeader><TableBody>{issues.map((issue,index)=><TableRow key={issue.name}><TableCell>{issue.name}</TableCell><TableCell><RiskLabel value={issue.risk}/></TableCell><TableCell>{issue.volume}</TableCell><TableCell>{issue.growth}</TableCell><TableCell>{index===0?"Aksi meluas":"Informasi tidak terverifikasi"}</TableCell><TableCell>{index===0?"@forum_mahasiswa":"@media_nusantara"}</TableCell><TableCell>{issue.region}</TableCell><TableCell>{issue.status}</TableCell></TableRow>)}</TableBody></Table></Panel>
-  </div></PageShell>}
+const chartConfig = { actual: { label: "Aktual", color: "var(--color-chart-1)" }, forecast: { label: "Proyeksi", color: "var(--color-chart-3)" } };
+
+function RiskForecast() {
+  const { slug } = Route.useParams();
+  const { findings, topics } = useSituations();
+  const situation = [...findings, ...topics].find((item) => item.slug === slug);
+  if (!situation) throw notFound();
+  const profile = getRiskProfile(situation);
+  const [filters, setFilters] = useState<ActiveFilter[]>([]);
+  const [range, setRange] = useState("7 Hari");
+  const choose = (value: string) => setFilters([{ type: "indikator", value }]);
+  const risk = situation.risk ?? "Sedang";
+  const growth = situation.growth ?? profile.factors.find((item) => item.factor === "Pertumbuhan Volume")?.change ?? "—";
+
+  return <PageShell eyebrow={`Situasi / ${situation.name}`} title="Risiko & Prediksi" description="Memahami tingkat risiko, faktor pendorong, dan kemungkinan perkembangan situasi." actions={<FilterBar onAdvanced={() => setFilters([{ type: "risk", value: `Risiko ${risk}` }])} />}>
+    <SituationMeta item={situation} />
+    <SituationNav slug={slug} />
+    <ActiveFilters filters={filters} remove={() => setFilters([])} reset={() => setFilters([])} />
+    <div className="space-y-4">
+      <MetricGrid items={[
+        { value: risk.toUpperCase(), label: "Level Risiko Saat Ini", onClick: () => setFilters([{ type: "risk", value: `Risiko ${risk}` }]) },
+        { value: growth, label: "Pertumbuhan Volume" },
+        { value: profile.activeRegions, label: "Wilayah Aktif" },
+        { value: profile.warningCount, label: "Early Warning Aktif" },
+      ]} />
+
+      <SummaryBlock title="Ringkasan Risiko" copy={`${situation.name} saat ini berada pada tingkat risiko ${risk.toLowerCase()}. Perkembangan terutama dipengaruhi oleh perubahan volume, perluasan aktivitas di ${profile.activeRegions} wilayah, bertambahnya aktor baru, dan penguatan narasi “${profile.drivingNarrative}”.`} highlights={[
+        `Volume berubah ${growth} dibanding periode sebelumnya.`,
+        `Aktivitas terpantau di ${profile.activeRegions} wilayah.`,
+        `${profile.newActors.replace("/", "dalam")} teridentifikasi.`,
+        `Narasi “${profile.drivingNarrative}” menjadi pendorong utama.`,
+      ]} />
+
+      <Panel title="Faktor Pendorong Risiko" description={`Faktor yang membentuk level risiko ${situation.name}`}>
+        <Table><TableHeader><TableRow><TableHead>Faktor</TableHead><TableHead>Kondisi</TableHead><TableHead>Perubahan</TableHead></TableRow></TableHeader><TableBody>{profile.factors.map((item) => <TableRow key={item.factor} className="cursor-pointer" onClick={() => choose(item.factor)}><TableCell className="font-medium">{item.factor}</TableCell><TableCell>{item.condition}</TableCell><TableCell className="text-chart-2">{item.change}</TableCell></TableRow>)}</TableBody></Table>
+      </Panel>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        <Panel title="Matriks Risiko" description="Risiko Dampak × Momentum Narasi">
+          <div className="relative h-80 overflow-hidden rounded-md border border-border bg-muted/10">
+            <div className="absolute inset-x-0 top-1/2 border-t border-border" /><div className="absolute inset-y-0 left-1/2 border-l border-border" />
+            <span className="absolute left-3 top-3 text-[10px] text-muted-foreground">Dampak tinggi</span><span className="absolute bottom-3 left-3 text-[10px] text-muted-foreground">Dampak rendah</span><span className="absolute bottom-3 right-3 text-[10px] text-muted-foreground">Momentum tinggi</span>
+            {profile.dimensions.map((item, index) => <Button key={item.name} variant={item.impact === "Tinggi" ? "destructive" : "outline"} size="sm" className={cn("absolute h-auto max-w-[42%] whitespace-normal px-2 py-1 text-[10px] leading-4", ["left-[56%] top-[18%]", "left-[18%] top-[34%]", "left-[58%] top-[60%]", "left-[14%] top-[74%]"][index])} onClick={() => choose(item.name)}>{item.name}<span className="ml-1 opacity-70">{item.momentum}</span></Button>)}
+          </div>
+        </Panel>
+        <Panel title="Proyeksi Volume" action={<div className="flex gap-1">{["7 Hari", "14 Hari", "30 Hari"].map((item) => <Button key={item} size="sm" variant={range === item ? "secondary" : "ghost"} onClick={() => setRange(item)}>{item}</Button>)}</div>}>
+          <ChartContainer config={chartConfig} className="h-64 w-full aspect-auto"><LineChart data={[...trend]}><CartesianGrid vertical={false} /><XAxis dataKey="date" /><YAxis /><ChartTooltip content={<ChartTooltipContent />} /><ChartLegend content={<ChartLegendContent />} /><Line dataKey="actual" stroke="var(--color-actual)" strokeWidth={2} /><Line dataKey="forecast" stroke="var(--color-forecast)" strokeWidth={2} strokeDasharray="5 5" /></LineChart></ChartContainer>
+          <p className="mt-3 text-xs leading-5 text-muted-foreground">Berdasarkan pola {situation.name} saat ini, volume percakapan diproyeksikan tetap {risk === "Tinggi" ? "tinggi" : "dinamis"} dalam {range.toLowerCase()} ke depan. Pertumbuhan tambahan dapat terjadi apabila narasi “{profile.drivingNarrative}” menguat atau muncul kejadian lapangan baru.</p>
+        </Panel>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1fr_1.4fr]">
+        <Panel title="Prediksi Penyebaran"><dl className="grid grid-cols-2 gap-4 text-xs">{[["Potensi Penyebaran", profile.spreadPotential], ["Platform Dominan", situation.platforms.slice(0, 3).join(", ")], ["Wilayah Berkembang", profile.growingRegions], ["Aktor Baru", profile.newActors], ["Narasi Pendorong", profile.drivingNarrative]].map(([label, value]) => <div key={label} className={label === "Narasi Pendorong" ? "col-span-2" : undefined}><dt className="text-muted-foreground">{label}</dt><dd className="mt-1 font-medium">{value}</dd></div>)}</dl></Panel>
+        <Panel title="Early Warning" action={<RadioTower className="size-4 text-destructive" />}><div className="divide-y divide-border">{profile.warnings.map((warning) => <div key={warning.title} className="flex items-start gap-3 py-3"><AlertTriangle className={warning.level === "TINGGI" ? "mt-0.5 size-4 text-destructive" : "mt-0.5 size-4 text-chart-3"} /><div className="flex-1"><p className="text-xs font-medium">{warning.title}</p><p className="mt-1 text-[10px] text-muted-foreground">{warning.meta}</p></div><span className="text-[9px] font-semibold">{warning.level}</span></div>)}</div></Panel>
+      </div>
+
+      <Panel title="Pola Aktivitas Tidak Biasa" action={<Button variant="outline" size="sm" onClick={() => choose("Indikasi aktivitas terkoordinasi")}>Lihat Detail<ArrowUpRight /></Button>}><p className="text-sm">{profile.unusualActivity}</p><p className="mt-2 text-xs text-muted-foreground">Indikasi aktivitas terkoordinasi — pola ini memerlukan penelaahan lebih lanjut dan tidak menyatakan koordinasi sebagai fakta.</p></Panel>
+
+      <Panel title="Detail Data Risiko" description={`Komponen risiko di dalam ${situation.name}`}><Table><TableHeader><TableRow><TableHead>Narasi / Indikator</TableHead><TableHead>Level</TableHead><TableHead>Volume</TableHead><TableHead>Growth</TableHead><TableHead>Aktor</TableHead><TableHead>Wilayah</TableHead><TableHead>Status</TableHead></TableRow></TableHeader><TableBody>{profile.riskDetails.map((item) => <TableRow key={item.indicator} className="cursor-pointer" onClick={() => choose(item.indicator)}><TableCell className="font-medium">{item.indicator}</TableCell><TableCell><RiskLabel value={item.level} /></TableCell><TableCell>{item.volume}</TableCell><TableCell className="text-chart-2">{item.growth}</TableCell><TableCell>{item.actors}</TableCell><TableCell>{item.region}</TableCell><TableCell>{item.status}</TableCell></TableRow>)}</TableBody></Table></Panel>
+    </div>
+  </PageShell>;
+}

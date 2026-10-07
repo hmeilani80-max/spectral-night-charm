@@ -18,3 +18,17 @@ describe("App routing", () => {
     },
   );
 });
+
+describe("Situation risk profiles", () => {
+  it("keeps Demonstrasi Nasional risk metrics scoped to that situation", async () => {
+    const { getRiskProfile, systemFindings } = await import("@/features/situasi/data");
+    const situation = systemFindings.find((item) => item.slug === "demonstrasi-nasional");
+    expect(situation).toBeDefined();
+    if (!situation) return;
+    const profile = getRiskProfile(situation);
+    expect(profile.activeRegions).toBe("6");
+    expect(profile.warningCount).toBe("7");
+    expect(profile.riskDetails[0]?.indicator).toBe("Aksi meluas ke sejumlah kota");
+    expect(profile.riskDetails.some((item) => item.indicator === "Dugaan Serangan Siber")).toBe(false);
+  });
+});
