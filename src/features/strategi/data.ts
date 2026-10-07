@@ -7,16 +7,16 @@ export type Strategy = {
   slug: string;
   title: string;
   source: "Situasi" | "Input Manual";
-  situationSlug?: string;
-  situationName?: string;
+  situationSlug?: string | undefined;
+  situationName?: string | undefined;
   status: StrategyStatus;
   updated: string;
   objective: string;
-  context?: string;
-  audience?: string;
-  region?: string;
+  context?: string | undefined;
+  audience?: string | undefined;
+  region?: string | undefined;
   platforms: string[];
-  approach?: ChannelApproach;
+  approach?: ChannelApproach | undefined;
 };
 
 export type StrategyTask = { id: string; title: string; type: string; platforms: string[]; count: string; focus: string; priority: "Tinggi" | "Sedang" | "Rendah" };

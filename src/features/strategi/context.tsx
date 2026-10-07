@@ -2,7 +2,7 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from "re
 
 import { getActionPlan, getChannelApproach, initialStrategies, slugify, type Strategy, type StrategyTask } from "./data";
 
-type Handoff = { strategySlug: string; title: string; situationName?: string; tasks: StrategyTask[] };
+type Handoff = { strategySlug: string; title: string; situationName?: string | undefined; tasks: StrategyTask[] };
 
 type Value = {
   strategies: Strategy[];

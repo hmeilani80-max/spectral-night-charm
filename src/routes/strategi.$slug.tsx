@@ -69,7 +69,7 @@ function StrategyDetail() {
             <div className="mb-3 flex items-center justify-between"><h2 className="text-sm font-semibold">Konteks Situasi</h2>{strategy.situationSlug && <Button asChild variant="outline" size="sm"><Link to="/situasi/$slug" params={{ slug: strategy.situationSlug }}>Lihat Data Situasi</Link></Button>}</div>
             <dl className="grid grid-cols-2 gap-4 md:grid-cols-4">
               {[["Sumber", ctx.source], ["Level Risiko", ctx.risk], ["Pertumbuhan", ctx.growth], ["Platform Dominan", ctx.platforms.join(", ")], ["Wilayah Prioritas", ctx.regions], ["Sentimen", ctx.sentiment], ["Narasi Dominan", ctx.narrative], ["Aktor Baru", ctx.newActors]].map(([l, v]) => (
-                <div key={l}><dt className="text-[10px] uppercase text-muted-foreground">{l}</dt><dd className="mt-1 text-sm font-medium">{l === "Level Risiko" && ["Tinggi", "Sedang", "Rendah"].includes(v) ? <RiskLabel value={v} /> : v}</dd></div>
+                <div key={l}><dt className="text-[10px] uppercase text-muted-foreground">{l}</dt><dd className="mt-1 text-sm font-medium">{l === "Level Risiko" && ["Tinggi", "Sedang", "Rendah"].includes(v ?? "") ? <RiskLabel value={v ?? ""} /> : v}</dd></div>
               ))}
             </dl>
           </section>
