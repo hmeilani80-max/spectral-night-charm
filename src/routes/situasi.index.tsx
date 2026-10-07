@@ -26,7 +26,18 @@ function SituationSummary() {
   const [filters, setFilters] = useState<ActiveFilter[]>([]);
   const [selected, setSelected] = useState<DetailRecord>();
   const setFilter = (type: string, value: string) => setFilters((current) => [...current.filter((filter) => filter.type !== type), { type, value }]);
-  const filteredRecords = useMemo(() => records.filter((row) => filters.every((filter) => filter.type === "actor" ? row.actor === filter.value : filter.type === "sentiment" ? row.sentiment === filter.value : filter.type === "region" ? row.region === filter.value : filter.type === "date" ? row.date === filter.value : filter.type === "risk" ? row.risk === "Tinggi" : filter.type === "narrative" ? row.narrative.toLowerCase().includes(filter.value.split(" ")[0].toLowerCase()) : true)), [filters]);
+  const filteredRecords = useMemo(() => records.filter((row) => filters.every((filter) => {
+    if (filter.type === "actor") return row.actor === filter.value;
+    if (filter.type === "sentiment") return row.sentiment === filter.value;
+    if (filter.type === "region") return row.region === filter.value;
+    if (filter.type === "date") return row.date === filter.value;
+    if (filter.type === "risk") return row.risk === "Tinggi";
+    if (filter.type === "narrative") {
+      const [keyword] = filter.value.split(" ");
+      return keyword ? row.narrative.toLowerCase().includes(keyword.toLowerCase()) : true;
+    }
+    return true;
+  })), [filters]);
 
   return <PageShell eyebrow="See" title="Ringkasan Situasi" description="Gambaran cepat ruang informasi: isu utama, skala aktivitas, aktor, narasi, serta area yang perlu perhatian." actions={<FilterBar onAdvanced={() => setFilter("risk", "Perlu Perhatian")} />}>
     <SituationNav />
@@ -40,7 +51,7 @@ function SituationSummary() {
         <Panel title="Sentimen" description="Distribusi percakapan"><ChartContainer config={chartConfig} className="h-64 w-full aspect-auto"><PieChart><Pie data={sentiment} dataKey="value" nameKey="name" innerRadius={54} outerRadius={82} paddingAngle={3} onClick={(data) => setFilter("sentiment",data.name)}>{sentiment.map((entry) => <Cell key={entry.name} fill={entry.fill} />)}</Pie><ChartTooltip content={<ChartTooltipContent hideLabel />} /></PieChart></ChartContainer><div className="flex justify-center gap-4">{sentiment.map((item)=><Button key={item.name} variant="ghost" size="sm" onClick={()=>setFilter("sentiment",item.name)}>{item.name} {item.value}%</Button>)}</div></Panel>
       </div>
       <div className="grid gap-4 xl:grid-cols-3">
-        <Panel title="Aktor Dominan"><ChartContainer config={chartConfig} className="h-72 w-full aspect-auto"><BarChart data={actors} layout="vertical" margin={{left:20}} onClick={(state)=>state?.activePayload?.[0]?.payload?.name&&setFilter("actor",state.activePayload[0].payload.name)}><XAxis type="number" hide/><YAxis type="category" dataKey="name" width={118} tickLine={false} axisLine={false}/><ChartTooltip content={<ChartTooltipContent />} /><Bar dataKey="interactions" fill="var(--color-chart-1)" radius={3}/></BarChart></ChartContainer></Panel>
+        <Panel title="Aktor Dominan"><ChartContainer config={chartConfig} className="h-72 w-full aspect-auto"><BarChart data={[...actors]} layout="vertical" margin={{left:20}} onClick={(state)=>state?.activePayload?.[0]?.payload?.name&&setFilter("actor",state.activePayload[0].payload.name)}><XAxis type="number" hide/><YAxis type="category" dataKey="name" width={118} tickLine={false} axisLine={false}/><ChartTooltip content={<ChartTooltipContent />} /><Bar dataKey="interactions" fill="var(--color-chart-1)" radius={3}/></BarChart></ChartContainer></Panel>
         <Panel title="Narasi Dominan"><div className="space-y-2">{narratives.map((item,index)=><Button key={item.name} variant="ghost" className="h-auto w-full justify-start p-2 text-left" onClick={()=>setFilter("narrative",item.name)}><span className="mr-2 font-display text-lg text-muted-foreground">0{index+1}</span><span className="min-w-0 flex-1"><span className="block truncate text-xs">{item.name}</span><span className="text-[10px] text-muted-foreground">{item.volume.toLocaleString("id-ID")} · {item.growth}</span></span></Button>)}</div></Panel>
         <Panel title="Wilayah Dominan"><div className="space-y-3">{regions.map((item)=><Button key={item.name} variant="ghost" className="h-auto w-full justify-start px-2 py-1" onClick={()=>setFilter("region",item.name)}><span className="w-20 text-left text-xs">{item.name}</span><span className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted"><span className="block h-full bg-chart-2" style={{width:`${item.volume/600}%`}} /></span><span className="w-12 text-right text-[10px] text-chart-2">{item.growth}</span></Button>)}</div></Panel>
       </div>
