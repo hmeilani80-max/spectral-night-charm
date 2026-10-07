@@ -111,7 +111,7 @@ function StrategyDetail() {
           <Panel title="Pendekatan Kanal">
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {Array.from(new Set([...ctx.platforms, ...(approach === "Integrated" ? ["Instagram"] : [])])).filter((p) => channelRoles[p]).map((p) => (
-                <div key={p} className="rounded-md border border-border p-3"><p className="text-sm font-semibold">{p}</p><p className="mt-0.5 text-[11px] text-primary">{channelRoles[p].role}</p><ul className="mt-2 space-y-1 text-xs text-muted-foreground">{channelRoles[p].items.map((i) => <li key={i}>· {i}</li>)}</ul></div>
+                <div key={p} className="rounded-md border border-border p-3"><p className="text-sm font-semibold">{p}</p><p className="mt-0.5 text-[11px] text-primary">{channelRoles[p]?.role}</p><ul className="mt-2 space-y-1 text-xs text-muted-foreground">{(channelRoles[p]?.items ?? []).map((i) => <li key={i}>· {i}</li>)}</ul></div>
               ))}
             </div>
           </Panel>

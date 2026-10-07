@@ -16,3 +16,5 @@
 - [x] Refocus Risiko & Prediksi on the active situation only
 - [x] Add persistent breadcrumbs and situation switching to detail pages
 - [x] Verify per-situation risk content and responsive layouts
+- [x] Build Strategi list, create flow (from Situasi / manual), and detail workspace
+- [x] Channel-based recommendations, scenarios, action plan, and hand-off to Aksi
