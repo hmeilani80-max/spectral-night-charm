@@ -1,5 +1,5 @@
-import { Link, useParams, useRouterState } from "@tanstack/react-router";
-import { CalendarDays, Check, ExternalLink, Filter, RotateCcw, X } from "lucide-react";
+import { Link, useNavigate, useParams, useRouterState } from "@tanstack/react-router";
+import { ArrowLeft, CalendarDays, Check, ChevronRight, ExternalLink, Filter, RotateCcw, X } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -8,22 +8,39 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import type { DetailRecord, SituationEntry } from "./data";
+import { useSituations } from "./context";
 
 export type ActiveFilter = { type: string; value: string };
 
 export function SituationNav({ slug }: { slug?: string }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const navigate = useNavigate();
   const params = useParams({ strict: false });
+  const { findings, topics } = useSituations();
   const activeSlug = slug ?? params.slug;
   if (!activeSlug) return null;
+  const situations = [...topics, ...findings].filter((item, index, items) => items.findIndex((candidate) => candidate.slug === item.slug) === index);
+  const activeSituation = situations.find((item) => item.slug === activeSlug);
+  const section = pathname.endsWith("/eksplorasi") ? "Eksplorasi" : pathname.endsWith("/risiko-prediksi") ? "Risiko & Prediksi" : "Ringkasan";
   const links = [
     { to: "/situasi/$slug", label: "Ringkasan" },
     { to: "/situasi/$slug/eksplorasi", label: "Eksplorasi" },
     { to: "/situasi/$slug/risiko-prediksi", label: "Risiko & Prediksi" },
   ] as const;
-  return <nav aria-label="Navigasi Situasi" className="mb-6 flex w-full gap-1 overflow-x-auto border-b border-border">
-    {links.map((link) => <Button key={link.to} asChild variant="ghost" className={cn("h-11 shrink-0 rounded-none border-b-2 border-transparent px-3 text-xs text-muted-foreground", pathname === link.to.replace("$slug", activeSlug) && "border-primary text-foreground")}><Link to={link.to} params={{ slug: activeSlug }}>{link.label}</Link></Button>)}
-  </nav>;
+  return <div className="mb-6 space-y-4">
+    <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+      <Link to="/situasi" className="transition-colors hover:text-foreground">Situasi</Link><ChevronRight className="size-3" />
+      <Link to="/situasi/$slug" params={{ slug: activeSlug }} className="transition-colors hover:text-foreground">{activeSituation?.name ?? activeSlug}</Link><ChevronRight className="size-3" />
+      <span className="text-foreground">{section}</span>
+    </nav>
+    <div className="flex flex-col gap-3 border-y border-border py-3 sm:flex-row sm:items-center sm:justify-between">
+      <Button asChild variant="ghost" size="sm" className="self-start text-muted-foreground"><Link to="/situasi"><ArrowLeft />Semua Situasi</Link></Button>
+      <div className="flex items-center gap-2"><span className="shrink-0 text-xs text-muted-foreground">Situasi:</span><Select value={activeSlug} onValueChange={(nextSlug) => navigate({ to: pathname.endsWith("/eksplorasi") ? "/situasi/$slug/eksplorasi" : pathname.endsWith("/risiko-prediksi") ? "/situasi/$slug/risiko-prediksi" : "/situasi/$slug", params: { slug: nextSlug } })}><SelectTrigger aria-label="Pilih situasi" className="w-full min-w-0 sm:w-[280px]"><SelectValue /></SelectTrigger><SelectContent>{situations.map((item) => <SelectItem key={item.slug} value={item.slug}>{item.name}</SelectItem>)}</SelectContent></Select></div>
+    </div>
+    <nav aria-label="Navigasi Situasi" className="flex w-full gap-1 overflow-x-auto border-b border-border">
+      {links.map((link) => <Button key={link.to} asChild variant="ghost" className={cn("h-11 shrink-0 rounded-none border-b-2 border-transparent px-3 text-xs text-muted-foreground", pathname === link.to.replace("$slug", activeSlug) && "border-primary text-foreground")}><Link to={link.to} params={{ slug: activeSlug }}>{link.label}</Link></Button>)}
+    </nav>
+  </div>;
 }
 
 export function SituationMeta({ item }: { item: SituationEntry }) {

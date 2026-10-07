@@ -17,7 +17,7 @@ const chartConfig={positive:{label:"Positif",color:"var(--color-chart-2)"},neutr
 function Exploration(){
   const { slug } = Route.useParams();
   const { findings, topics } = useSituations();
-  const situation = [...findings, ...topics].find((item) => item.slug === slug);
+  const situation = [...topics, ...findings].find((item) => item.slug === slug);
   if (!situation) throw notFound();
   const [filters,setFilters]=useState<ActiveFilter[]>([]); const [selected,setSelected]=useState<DetailRecord>();
   const choose=(type:string,value:string)=>setFilters((current)=>[...current.filter((item)=>item.type!==type),{type,value}]);
