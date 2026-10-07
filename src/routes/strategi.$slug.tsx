@@ -31,14 +31,14 @@ function StrategyDetail() {
   const { findings, topics } = useSituations();
   const navigate = useNavigate();
   const strategy = strategies.find((s) => s.slug === slug);
+  const [editing, setEditing] = useState(false);
+  const [objective, setObjective] = useState(strategy?.objective ?? "");
   if (!strategy) throw notFound();
   const situation = [...topics, ...findings].find((s) => s.slug === strategy.situationSlug);
   const ctx = getStrategyContext(strategy, situation);
   const recommended = getChannelApproach(ctx.platforms);
   const approach: ChannelApproach = strategy.approach ?? recommended;
   const tasks = getActionPlan(approachPlatforms(approach, ctx.platforms));
-  const [editing, setEditing] = useState(false);
-  const [objective, setObjective] = useState(strategy.objective);
 
   return (
     <div className="mx-auto w-full max-w-[1500px] px-4 py-6 md:px-8 md:py-8">
