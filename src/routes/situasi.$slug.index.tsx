@@ -25,7 +25,7 @@ const chartConfig = { volume: { label: "Volume", color: "var(--color-chart-1)" }
 function SituationSummary() {
   const { slug } = Route.useParams();
   const { findings, topics } = useSituations();
-  const situation = [...findings, ...topics].find((item) => item.slug === slug);
+  const situation = [...topics, ...findings].find((item) => item.slug === slug);
   if (!situation) throw notFound();
   const [filters, setFilters] = useState<ActiveFilter[]>([]);
   const [selected, setSelected] = useState<DetailRecord>();

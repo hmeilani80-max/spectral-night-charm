@@ -13,6 +13,6 @@
 - [x] Add shared detail workspace for EWS and monitored topics
 - [x] Add create-topic and monitor-EWS prototype interactions
 - [x] Update routing tests and verify desktop/mobile flows
-- [ ] Refocus Risiko & Prediksi on the active situation only
-- [ ] Add persistent breadcrumbs and situation switching to detail pages
-- [ ] Verify per-situation risk content and responsive layouts
+- [x] Refocus Risiko & Prediksi on the active situation only
+- [x] Add persistent breadcrumbs and situation switching to detail pages
+- [x] Verify per-situation risk content and responsive layouts

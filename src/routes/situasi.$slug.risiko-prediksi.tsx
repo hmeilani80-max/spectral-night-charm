@@ -29,7 +29,7 @@ const chartConfig = { actual: { label: "Aktual", color: "var(--color-chart-1)" }
 function RiskForecast() {
   const { slug } = Route.useParams();
   const { findings, topics } = useSituations();
-  const situation = [...findings, ...topics].find((item) => item.slug === slug);
+  const situation = [...topics, ...findings].find((item) => item.slug === slug);
   if (!situation) throw notFound();
   const profile = getRiskProfile(situation);
   const [filters, setFilters] = useState<ActiveFilter[]>([]);

@@ -19,7 +19,7 @@ export function SituationNav({ slug }: { slug?: string }) {
   const { findings, topics } = useSituations();
   const activeSlug = slug ?? params.slug;
   if (!activeSlug) return null;
-  const situations = [...findings, ...topics].filter((item, index, items) => items.findIndex((candidate) => candidate.slug === item.slug) === index);
+  const situations = [...topics, ...findings].filter((item, index, items) => items.findIndex((candidate) => candidate.slug === item.slug) === index);
   const activeSituation = situations.find((item) => item.slug === activeSlug);
   const section = pathname.endsWith("/eksplorasi") ? "Eksplorasi" : pathname.endsWith("/risiko-prediksi") ? "Risiko & Prediksi" : "Ringkasan";
   const links = [
