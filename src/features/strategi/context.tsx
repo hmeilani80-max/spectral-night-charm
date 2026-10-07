@@ -12,7 +12,9 @@ type Value = {
   handoffs: Handoff[];
 };
 
-const Ctx = createContext<Value | undefined>(undefined);
+// Keep one context instance across hot reloads so the root provider and pages always match.
+const g = globalThis as unknown as { __spektraStrategyCtx?: React.Context<Value | undefined> };
+const Ctx = g.__spektraStrategyCtx ?? (g.__spektraStrategyCtx = createContext<Value | undefined>(undefined));
 
 export function StrategyProvider({ children }: { children: ReactNode }) {
   const [strategies, setStrategies] = useState(initialStrategies);
