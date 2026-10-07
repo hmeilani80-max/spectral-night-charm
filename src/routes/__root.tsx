@@ -12,6 +12,8 @@ import { useEffect, type ReactNode } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
+import { SituationProvider } from "@/features/situasi/context";
+import { StrategyProvider } from "@/features/strategi/context";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -126,7 +128,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <AppShell><Outlet /></AppShell>
+      <SituationProvider><StrategyProvider><AppShell><Outlet /></AppShell></StrategyProvider></SituationProvider>
     </QueryClientProvider>
   );
 }
