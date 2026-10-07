@@ -7,7 +7,7 @@ import { routeTree } from "@/routeTree.gen";
 // Match routes without running loaders or rendering: loaders may need a server or
 // network the test run lacks, and jsdom never loads the stylesheets React waits on.
 describe("App routing", () => {
-  it.each(["/", "/situasi", "/situasi/eksplorasi", "/situasi/risiko-prediksi", "/strategi", "/aksi", "/dampak", "/arsip", "/administrasi"])(
+  it.each(["/", "/situasi", "/situasi/demonstrasi-nasional", "/situasi/demonstrasi-nasional/eksplorasi", "/situasi/demonstrasi-nasional/risiko-prediksi", "/strategi", "/aksi", "/dampak", "/arsip", "/administrasi"])(
     "matches a SPEKTRA page for %s instead of falling back to not found",
     (path) => {
     const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
