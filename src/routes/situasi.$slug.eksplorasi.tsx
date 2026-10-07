@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useState } from "react";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
@@ -17,7 +17,8 @@ const chartConfig={positive:{label:"Positif",color:"var(--color-chart-2)"},neutr
 function Exploration(){
   const { slug } = Route.useParams();
   const { findings, topics } = useSituations();
-  const situation = [...findings, ...topics].find((item) => item.slug === slug) ?? findings[0];
+  const situation = [...findings, ...topics].find((item) => item.slug === slug);
+  if (!situation) throw notFound();
   const [filters,setFilters]=useState<ActiveFilter[]>([]); const [selected,setSelected]=useState<DetailRecord>();
   const choose=(type:string,value:string)=>setFilters((current)=>[...current.filter((item)=>item.type!==type),{type,value}]);
   return <PageShell eyebrow={`Situasi / ${situation.name}`} title={`Eksplorasi · ${situation.name}`} description="Siapa yang terlibat dan bagaimana pola informasi berkembang?">
