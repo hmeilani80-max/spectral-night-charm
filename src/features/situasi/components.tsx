@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useParams, useRouterState } from "@tanstack/react-router";
 import { CalendarDays, Check, ExternalLink, Filter, RotateCcw, X } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -11,15 +11,18 @@ import type { DetailRecord } from "./data";
 
 export type ActiveFilter = { type: string; value: string };
 
-export function SituationNav() {
+export function SituationNav({ slug }: { slug?: string }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const params = useParams({ strict: false });
+  const activeSlug = slug ?? params.slug;
+  if (!activeSlug) return null;
   const links = [
-    { to: "/situasi", label: "Ringkasan Situasi" },
-    { to: "/situasi/eksplorasi", label: "Eksplorasi Situasi" },
-    { to: "/situasi/risiko-prediksi", label: "Risiko & Prediksi" },
+    { to: "/situasi/$slug", label: "Ringkasan" },
+    { to: "/situasi/$slug/eksplorasi", label: "Eksplorasi" },
+    { to: "/situasi/$slug/risiko-prediksi", label: "Risiko & Prediksi" },
   ] as const;
   return <nav aria-label="Navigasi Situasi" className="mb-6 flex w-full gap-1 overflow-x-auto border-b border-border">
-    {links.map((link) => <Button key={link.to} asChild variant="ghost" className={cn("h-11 shrink-0 rounded-none border-b-2 border-transparent px-3 text-xs text-muted-foreground", pathname === link.to && "border-primary text-foreground")}><Link to={link.to}>{link.label}</Link></Button>)}
+    {links.map((link) => <Button key={link.to} asChild variant="ghost" className={cn("h-11 shrink-0 rounded-none border-b-2 border-transparent px-3 text-xs text-muted-foreground", pathname === link.to.replace("$slug", activeSlug) && "border-primary text-foreground")}><Link to={link.to} params={{ slug: activeSlug }}>{link.label}</Link></Button>)}
   </nav>;
 }
 
