@@ -1,85 +1,79 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Lock, Send } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, Send } from "lucide-react";
 
 import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
-import { Box, Flow, Lineage, StatusPill, Trail } from "@/features/aksi/components";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Box, Lineage, StatusPill, Trail } from "@/features/aksi/components";
 import { useAksi } from "@/features/aksi/context";
-import { canProduceOutputs, OUTPUT_CATALOG } from "@/features/aksi/data";
+import { approvalLabel, canSubmit, qualityChecks, SOURCES } from "@/features/aksi/data";
 import { aksiHead } from "@/features/aksi/meta";
+import { ChecksList, ProductionWorkspace } from "@/features/aksi/production-workspaces";
 
 export const Route = createFileRoute("/aksi/produksi/$id")({
-  head: aksiHead("Detail Produksi", "Pesan utama, editorial, dan produksi konten turunan."),
+  head: aksiHead("Workspace Produksi", "Generate, review, dan ajukan satu output konten ke Persetujuan."),
   component: ProduksiDetail,
 });
 
-const STEPS = ["Brief Produksi", "Draft Pesan Utama", "Editorial & Verifikasi", "Approval Pesan Utama", "Pilih Output Turunan", "Produksi Konten", "Approval Konten", "Approved Content"];
-
 function ProduksiDetail() {
   const { id } = Route.useParams();
-  const { productions, updateMessage, submitMessage, addOutputs, submitOutput } = useAksi();
+  const { productions, submit } = useAksi();
   const p = productions.find((x) => x.id === id);
-  const [picked, setPicked] = useState<string[]>([]);
   if (!p) return <PageShell title="Produksi tidak ditemukan" description="Item ini tidak tersedia."><Button asChild variant="outline"><Link to="/aksi/produksi"><ArrowLeft />Kembali ke Produksi</Link></Button></PageShell>;
+  const checks = qualityChecks(p);
+  const warnings = checks.filter((c) => !c.ok).length;
+  const destLabel = p.dest.includes("News") ? "Distribusi News" : "Distribusi Sosial";
 
-  const unlocked = canProduceOutputs(p);
-  const step = !p.message ? 1 : p.messageApproval !== "Disetujui" ? (p.messageApproval === "Menunggu" ? 3 : 2) : !p.outputs.length ? 4 : p.outputs.every((o) => o.approval === "Disetujui") ? 7 : p.outputs.some((o) => o.approval) ? 6 : 5;
-  const allTypes = OUTPUT_CATALOG.flatMap((f) => f.items.map((i) => i.type)).filter((t) => !p.outputs.some((o) => o.type === t));
-  const toggle = (t: string) => setPicked((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t]));
-  const editable = p.messageApproval !== "Disetujui" && p.messageApproval !== "Menunggu";
+  const submitButton = canSubmit(p) && <Button onClick={() => submit(p.id)}><Send />{p.approval ? "Ajukan Ulang" : "Ajukan Persetujuan"}</Button>;
 
   return (
-    <PageShell eyebrow="Aksi · Produksi" title={p.title} description={p.brief.split("\n")[0] ?? ""} actions={<Button asChild variant="outline"><Link to="/aksi/produksi"><ArrowLeft />Kembali ke list</Link></Button>}>
+    <PageShell eyebrow={`Aksi · Produksi · ${p.type}`} title={p.title} description={p.brief.message} actions={<div className="flex flex-wrap gap-2">{submitButton}<Button asChild variant="outline"><Link to="/aksi/produksi"><ArrowLeft />Kembali</Link></Button></div>}>
       <Trail items={["Aksi", <Link key="l" to="/aksi/produksi">Produksi</Link>, p.title]} />
-      <div className="grid gap-4">
-        <Lineage steps={[
-          ...(p.situationName ? [{ label: "Situasi", value: p.situationSlug ? <Link to="/situasi/$slug" params={{ slug: p.situationSlug }}>{p.situationName}</Link> : p.situationName }] : []),
-          { label: "Strategi", value: p.strategySlug ? <Link to="/strategi/$slug" params={{ slug: p.strategySlug }}>{p.strategyTitle}</Link> : "Brief Manual" },
-          { label: "Produksi", value: `Pesan Utama v${p.messageVersion}` },
-        ]} />
-        <Flow steps={STEPS} current={step} />
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Box title="Brief Produksi"><p className="whitespace-pre-line text-xs leading-6 text-muted-foreground">{p.brief || "—"}</p></Box>
-          <Box title={`Pesan Utama · v${p.messageVersion}`} action={<StatusPill value={p.messageApproval ? `${p.messageApproval}` : p.messageStatus} />}>
-            <Textarea aria-label="Draft Pesan Utama" value={p.message} disabled={!editable} onChange={(e) => updateMessage(p.id, e.target.value)} placeholder="Tulis draft pesan utama…" className="min-h-28" />
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
-              <span>{p.messageApproval === "Menunggu" ? "Sedang ditinjau di Persetujuan" : p.messageApproval === "Disetujui" ? "Terkunci — sudah disetujui" : "Editorial & verifikasi sebelum diajukan"}</span>
-              {editable && <Button size="sm" disabled={!p.message.trim()} onClick={() => submitMessage(p.id)}><Send />{p.messageApproval ? "Ajukan Kembali" : "Ajukan Approval Pesan Utama"}</Button>}
-            </div>
-          </Box>
-        </div>
-
-        <Box title="Pilih Output Turunan" action={unlocked && allTypes.length > 0 && <div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => setPicked(picked.length === allTypes.length ? [] : allTypes)}>{picked.length === allTypes.length ? "Batal pilih" : "Pilih semua"}</Button><Button size="sm" disabled={!picked.length} onClick={() => { addOutputs(p.id, picked); setPicked([]); }}>Produksi {picked.length || ""} konten</Button></div>}>
-          {!unlocked ? <p className="flex items-center gap-2 text-xs text-muted-foreground"><Lock className="size-4" />Konten turunan baru dapat diproduksi setelah Pesan Utama disetujui.</p> : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">{OUTPUT_CATALOG.map((f) => (
-              <fieldset key={f.family}><legend className="mb-2 text-[11px] font-semibold uppercase text-muted-foreground">{f.family}</legend>
-                {f.items.map((i) => { const done = p.outputs.some((o) => o.type === i.type); return <label key={i.type} className="flex items-center gap-2 py-1 text-xs"><Checkbox checked={done || picked.includes(i.type)} disabled={done} onCheckedChange={() => toggle(i.type)} />{i.type}</label>; })}
-              </fieldset>))}</div>
-          )}
-        </Box>
-
-        <Box title="Konten Turunan">
-          {!p.outputs.length ? <p className="text-xs text-muted-foreground">Belum ada konten turunan.</p> : (
-            <div className="overflow-x-auto"><table className="w-full min-w-[680px] text-left text-xs">
-              <thead className="text-muted-foreground"><tr><th className="py-2 font-medium">Konten</th><th className="py-2 font-medium">Versi</th><th className="py-2 font-medium">Status</th><th className="py-2 font-medium">Content Approval</th><th className="py-2 font-medium">Dapat ke</th><th className="py-2" /></tr></thead>
-              <tbody>{p.outputs.map((o) => (
-                <tr key={o.id} className="border-t border-border">
-                  <td className="py-2.5"><strong>{o.type}</strong><span className="block text-[10px] text-muted-foreground">{o.family} · {o.id}</span></td>
-                  <td>v{o.version}</td><td><StatusPill value={o.status} /></td><td>{o.approval ? <StatusPill value={o.approval} /> : "—"}</td>
-                  <td className="text-muted-foreground">{o.dest.map((d) => `Distribusi ${d}`).join(", ")}</td>
-                  <td className="text-right">
-                    {(o.approval === null || o.approval === "Perlu Revisi" || o.approval === "Ditolak") && <Button size="sm" variant="outline" onClick={() => submitOutput(p.id, o.id)}>{o.approval ? "Ajukan Kembali" : "Ajukan Review"}</Button>}
-                    {o.approval === "Disetujui" && o.dest.includes("Sosial") && <Button size="sm" variant="ghost" asChild><Link to="/aksi/distribusi-sosial">Sosial →</Link></Button>}
-                    {o.approval === "Disetujui" && o.dest.includes("News") && <Button size="sm" variant="ghost" asChild><Link to="/aksi/distribusi-news">News →</Link></Button>}
-                  </td>
-                </tr>))}</tbody>
-            </table></div>
-          )}
-        </Box>
+      <div className="mb-4 flex flex-wrap items-center gap-2 text-xs">
+        <span className="text-muted-foreground">Produksi</span><StatusPill value={p.status} />
+        <span className="ml-2 text-muted-foreground">Approval</span><StatusPill value={approvalLabel(p.approval)} />
+        {p.version > 0 && <span className="text-muted-foreground">· v{p.version}</span>}
+        {p.approval === "Disetujui" && <span className="ml-2 text-chart-2">Siap digunakan di {destLabel} — belum dipublikasikan.</span>}
       </div>
+      <Tabs defaultValue="produksi">
+        <TabsList className="mb-4 flex h-auto flex-wrap justify-start">
+          <TabsTrigger value="brief">Brief</TabsTrigger><TabsTrigger value="produksi">Produksi</TabsTrigger>
+          <TabsTrigger value="editorial">Editorial{warnings ? ` (${warnings})` : ""}</TabsTrigger><TabsTrigger value="approval">Approval</TabsTrigger><TabsTrigger value="riwayat">Riwayat</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="brief" className="grid gap-4">
+          <Lineage steps={p.source === "Strategi" ? [
+            ...(p.situationName ? [{ label: "Situasi", value: p.situationSlug ? <Link to="/situasi/$slug" params={{ slug: p.situationSlug }}>{p.situationName}</Link> : p.situationName }] : []),
+            { label: "Sumber Strategi", value: p.strategySlug ? <Link to="/strategi/$slug" params={{ slug: p.strategySlug }}>{p.strategyTitle}</Link> : (p.strategyTitle ?? "—") },
+            { label: "Produksi", value: p.title },
+          ] : [{ label: "Sumber", value: "Produksi Manual" }, { label: "Produksi", value: p.title }]} />
+          <Box title="Brief Produksi"><dl className="grid gap-4 text-xs sm:grid-cols-2">
+            <div><dt className="text-muted-foreground">Judul / Tema</dt><dd className="mt-1 font-medium">{p.brief.theme}</dd></div>
+            <div><dt className="text-muted-foreground">Arahan Gaya</dt><dd className="mt-1">{p.brief.style.join(", ") || "—"}</dd></div>
+            <div className="sm:col-span-2"><dt className="text-muted-foreground">Pesan Utama</dt><dd className="mt-1 leading-6">{p.brief.message}</dd></div>
+            <div className="sm:col-span-2"><dt className="text-muted-foreground">Poin / Fakta Pendukung</dt><dd className="mt-1"><ul className="list-disc pl-4 leading-6">{p.brief.points.filter(Boolean).map((x) => <li key={x}>{x}</li>)}</ul></dd></div>
+          </dl></Box>
+        </TabsContent>
+
+        <TabsContent value="produksi"><Box title={p.type}><ProductionWorkspace p={p} /></Box></TabsContent>
+
+        <TabsContent value="editorial" className="grid gap-4 lg:grid-cols-2">
+          <Box title="Pemeriksaan Otomatis" action={checks.length > 0 && <StatusPill value={warnings ? "Perlu Revisi" : "Approved"} />}><ChecksList checks={checks} />{checks.length > 0 && <p className="mt-3 text-[11px] text-muted-foreground">{warnings ? "Ada catatan yang sebaiknya ditinjau sebelum diajukan." : "Aman untuk diajukan ke reviewer."}</p>}</Box>
+          <Box title="Sumber yang Digunakan"><table className="w-full text-left text-xs"><thead className="text-muted-foreground"><tr><th className="py-1.5 font-medium">Sumber</th><th className="py-1.5 font-medium">Jenis</th><th className="py-1.5 font-medium">Digunakan untuk</th></tr></thead>
+            <tbody>{(p.source === "Strategi" ? SOURCES : [{ name: "Brief Manual", kind: "Input", use: "Pesan & poin" }]).map((s) => <tr key={s.name} className="border-t border-border"><td className="py-2">{s.name}</td><td>{s.kind}</td><td className="text-muted-foreground">{s.use}</td></tr>)}</tbody></table></Box>
+        </TabsContent>
+
+        <TabsContent value="approval"><Box title="Approval Konten" action={<StatusPill value={approvalLabel(p.approval)} />}>
+          <ol className="mb-4 flex flex-wrap gap-2 text-[11px]">{["Belum Diajukan", "Menunggu Review", "Perlu Revisi / Approved"].map((s, i) => <li key={s} className="rounded-sm border border-border px-2 py-1 text-muted-foreground">{i + 1}. {s}</li>)}</ol>
+          {p.reviewNote && <p className="mb-3 rounded-md bg-accent/50 px-3 py-2 text-xs">Catatan reviewer: “{p.reviewNote}”</p>}
+          <p className="mb-3 text-xs text-muted-foreground">{p.status !== "Generated" ? "Generate konten terlebih dahulu sebelum diajukan." : p.approval === "Menunggu" ? <>Sedang ditinjau di <Link to="/aksi/persetujuan" className="text-primary hover:underline">Persetujuan</Link>.</> : p.approval === "Disetujui" ? <>Approved. Konten siap dipakai di <Link to={p.dest.includes("News") ? "/aksi/distribusi-news" : "/aksi/distribusi-sosial"} className="text-primary hover:underline">{destLabel}</Link>, yang memiliki Approval Distribusi tersendiri.</> : p.approval ? "Perbaiki atau regenerate konten, lalu ajukan ulang." : "Setelah ditinjau, ajukan output ini ke Persetujuan."}</p>
+          {submitButton}
+        </Box></TabsContent>
+
+        <TabsContent value="riwayat"><Box title="Riwayat Versi">
+          {!p.history.length ? <p className="text-xs text-muted-foreground">Belum ada versi.</p> : <ol className="grid gap-2 text-xs">{[...p.history].reverse().map((h, i) => <li key={i} className="flex items-center gap-3"><span className="w-10 text-muted-foreground">{h.at}</span><strong className="w-8">v{h.version}</strong><StatusPill value={h.label} /></li>)}</ol>}
+        </Box></TabsContent>
+      </Tabs>
     </PageShell>
   );
 }
