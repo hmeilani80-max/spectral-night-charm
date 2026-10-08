@@ -146,7 +146,7 @@ export const DEMO_BRIEF: ProductionBrief = {
 export function buildItems(brief: ProductionBrief, types: OutputType[], origin: Pick<ProductionItem, "source" | "strategySlug" | "strategyTitle" | "situationSlug" | "situationName">, firstNumber: number): ProductionItem[] {
   return types.map((type, i) => {
     const m = outputMeta(type);
-    return { id: `PRD-${String(firstNumber + i).padStart(3, "0")}`, title: `${m.prefix} ${brief.theme.replace(/^Respons Informasi /, "")}`, type, family: m.family, dest: [m.dest], ...origin, brief, status: "Draft", approval: null, version: 0, variant: 0, content: emptyContent(type), history: [], updated: "Baru saja" };
+    return { id: `PRD-${String(firstNumber + i).padStart(3, "0")}`, title: `${m.prefix} ${brief.theme.replace(/^Respons /, "")}`, type, family: m.family, dest: [m.dest], ...origin, brief, status: "Draft", approval: null, version: 0, variant: 0, content: emptyContent(type), history: [], updated: "Baru saja" };
   });
 }
 
