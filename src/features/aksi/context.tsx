@@ -38,7 +38,7 @@ export function AksiProvider({ children }: { children: ReactNode }) {
   const [productions, setProductions] = useState(initialProductions);
   const [campaigns, setCampaigns] = useState(initialCampaigns);
   const [orders, setOrders] = useState(initialOrders);
-  const [log, setLog] = useState<LogEntry[]>([{ at: "09:12", text: "Artikel Demonstrasi Nasional v3 disetujui" }]);
+  const [log, setLog] = useState<LogEntry[]>([{ at: "10:05", text: "Publikasi Artikel Demonstrasi diajukan oleh Tim Media" }]);
   const audit = (text: string) => setLog((cur) => [{ at: now(), text }, ...cur].slice(0, 30));
   const patch = (id: string, fn: (p: ProductionItem) => ProductionItem) => setProductions((cur) => cur.map((p) => (p.id === id ? { ...fn(p), updated: "Baru saja" } : p)));
   const hist = (p: ProductionItem, label: HistoryEntry["label"], version = p.version): HistoryEntry[] => [...p.history, { version, label, at: now() }];
