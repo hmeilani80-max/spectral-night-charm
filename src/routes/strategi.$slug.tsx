@@ -58,7 +58,7 @@ function StrategyDetail() {
             <span className="flex items-center gap-1.5">Status: <StatusBadge status={strategy.status} /></span>
           </div>
         </div>
-        <Button onClick={() => { sendToAction(strategy.slug); navigate({ to: "/aksi" }); }}>Lanjutkan ke Aksi<ArrowRight /></Button>
+        <Button onClick={() => { sendToAction(strategy.slug); navigate({ to: "/aksi/produksi" }); }}>Lanjutkan ke Aksi<ArrowRight /></Button>
       </header>
 
       <Tabs defaultValue="ringkasan" className="mt-5">
@@ -139,7 +139,7 @@ function StrategyDetail() {
                 </div>
               ))}
             </div>
-            <div className="mt-4 flex justify-end"><Button onClick={() => { sendToAction(strategy.slug); navigate({ to: "/aksi" }); }}>Lanjutkan ke Aksi<ArrowRight /></Button></div>
+            <div className="mt-4 flex justify-end"><Button onClick={() => { sendToAction(strategy.slug); navigate({ to: "/aksi/produksi" }); }}>Lanjutkan ke Aksi<ArrowRight /></Button></div>
           </Panel>
         </TabsContent>
       </Tabs>
