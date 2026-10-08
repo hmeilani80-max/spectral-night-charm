@@ -43,7 +43,7 @@ export const LABELS = [...new Set(SOCIAL_ACCOUNTS.map((a) => a.label))];
 /** Only Ready accounts may be targeted. */
 export const selectable = (a: Pick<SocialAccount, "status">) => a.status === "Ready";
 
-export type Timing = { mode: "Segera" | "Jadwal"; start: string; end: string; from: string; to: string; windows?: { from: string; to: string }[] };
+export type Timing = { mode: "Segera" | "Jadwal"; start: string; end: string; from: string; to: string; windows?: { from: string; to: string }[] | undefined };
 export type PrepStatus = "Belum Disiapkan" | "Siap" | "Diedit";
 export type PostStatus = "Ready" | "Scheduled" | "Publishing" | "Published" | "Failed" | "Cancelled";
 export type Post = { id: string; accountId: string; handle: string; platform: string; assetId: string; assetType: OutputType; assetTitle: string; date: string; time: string; caption: string; hashtags: string[]; variant: number; prep: PrepStatus; exec: PostStatus; actual?: string | undefined; reason?: string | undefined };

@@ -22,9 +22,9 @@ export function ChecksView({ checks }: { checks: ReadyCheck[] }) {
 }
 
 /** Mock of how the post will appear on its platform. */
-export function PostMock({ post, asset }: { post: Post; asset?: ProductionItem }) {
+export function PostMock({ post, asset }: { post: Post; asset?: ProductionItem | undefined }) {
   return <div className="rounded-md border border-border bg-background p-3">
-    <div className="mb-2 flex items-center justify-between text-[11px]"><span className="font-semibold">{post.handle}</span><span className="text-muted-foreground">{post.platform} · {dateLabel(post.date)} {post.time}</span></div>
+    <div className="mb-2 flex flex-wrap items-center justify-between gap-1 text-[11px]"><span className="font-semibold">{post.handle}</span><span className="text-muted-foreground">{post.platform} · {dateLabel(post.date)} {post.time}</span></div>
     {asset && <AssetThumb asset={asset} />}
     <p className="mt-2 whitespace-pre-line text-xs leading-5">{post.caption}</p>
     <p className="mt-1 text-[11px] text-primary">{post.hashtags.join(" ")}</p>
@@ -51,7 +51,7 @@ export function PostsBrowser({ posts, productions, editable, showExec, onEdit, o
     <div className="overflow-x-auto rounded-md border border-border"><table className="w-full min-w-[720px] text-left text-xs">
       <thead className="border-b border-border text-muted-foreground"><tr><th className="px-3 py-2 font-medium">Akun</th><th className="px-3 py-2 font-medium">Platform</th><th className="px-3 py-2 font-medium">Asset</th><th className="px-3 py-2 font-medium">Jadwal</th><th className="px-3 py-2 font-medium">Caption</th><th className="px-3 py-2 font-medium">Status</th><th className="px-3 py-2" /></tr></thead>
       <tbody>{list.map((p) => <tr key={p.id} className="border-b border-border last:border-0 hover:bg-accent/40">
-        <td className="px-3 py-2 font-medium">{p.handle}</td><td className="px-3 py-2">{p.platform}</td><td className="px-3 py-2"><Button variant="ghost" className="h-auto max-w-[260px] justify-start gap-2 whitespace-normal p-0 text-left" aria-label={`Preview asset ${p.id}`} onClick={() => setOpen({ id: p.id, mode: "preview" })}><span className="block h-14 w-10 shrink-0 overflow-hidden rounded-sm" aria-hidden="true">{productions.find((a) => a.id === p.assetId) && <AssetThumb asset={productions.find((a) => a.id === p.assetId) as ProductionItem} />}</span><span className="grid gap-0.5 text-xs"><span>{p.assetTitle}</span><span className="text-[10px] text-muted-foreground">{p.assetType}</span></span></Button></td>
+        <td className="px-3 py-2 font-medium">{p.handle}</td><td className="px-3 py-2">{p.platform}</td><td className="px-3 py-2"><Button variant="ghost" className="h-auto max-w-[260px] justify-start gap-2 whitespace-normal p-0 text-left" aria-label={`Preview asset ${p.id}`} onClick={() => setOpen({ id: p.id, mode: "preview" })}><span className="block h-16 w-10 shrink-0 overflow-hidden rounded-sm" aria-hidden="true"><span className="block w-[210px] origin-top-left scale-[.19]">{productions.find((a) => a.id === p.assetId) && <AssetThumb asset={productions.find((a) => a.id === p.assetId) as ProductionItem} />}</span></span><span className="grid gap-0.5 text-xs"><span>{p.assetTitle}</span><span className="text-[10px] text-muted-foreground">{p.assetType}</span></span></Button></td>
         <td className="px-3 py-2 whitespace-nowrap">{dateLabel(p.date)} · {p.time}</td>
         <td className="max-w-[260px] truncate px-3 py-2 text-muted-foreground">{p.caption || "—"}</td>
         <td className="px-3 py-2"><StatusPill value={showExec ? p.exec : p.prep} /></td>
