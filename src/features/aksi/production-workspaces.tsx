@@ -135,7 +135,7 @@ function VideoWorkspace({ p }: { p: ProductionItem }) {
     <div>
       {p.status === "Generating" ? <GeneratingState steps={["Script", "Scene Planning", "Visual Generation", "Voice-over", "Subtitle", "Final Video"]} />
         : p.status === "Draft" ? <p className="rounded-md border border-dashed border-border py-10 text-center text-xs text-muted-foreground">Atur durasi dan format, lalu Generate Video. Script, scene, visual, dan subtitle dikerjakan otomatis.</p>
-        : <div className="grid gap-3"><MockPlayer ratio={p.content.format} label={p.content.headline} seconds={p.content.duration} />
+        : <div className="grid gap-3"><VideoPreview ratio={p.content.format} headline={p.content.headline} subtitle={firstLine(p.brief.message)} seconds={p.content.duration} />
           <dl className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">{[["Durasi", `${p.content.duration} detik`], ["Aspect ratio", p.content.format], ["Subtitle", "Tersedia"], ["Voice-over", p.content.voiceOver ? "Tersedia" : "Tidak"]].map(([k, v]) => <div key={k} className="rounded-md border border-border p-2"><dt className="text-muted-foreground">{k}</dt><dd className="font-medium">{v}</dd></div>)}</dl>
           <details className="text-xs"><summary className="cursor-pointer text-muted-foreground">Lihat script yang dihasilkan</summary><p className="mt-2 whitespace-pre-line leading-6">{p.content.transcript}</p></details></div>}
     </div>
@@ -213,7 +213,7 @@ function AudioWorkspace({ p }: { p: ProductionItem }) {
     </div>
     <div>{p.status === "Generating" ? <GeneratingState steps={["Script", "Voice-over", "Intro/Outro", "Transkrip"]} />
       : p.status === "Draft" ? <p className="rounded-md border border-dashed border-border py-10 text-center text-xs text-muted-foreground">Pilih durasi dan gaya suara, lalu Generate Audio.</p>
-      : <div className="grid gap-3"><MockPlayer label={`${p.content.headline} · suara ${p.content.voice}`} seconds={Math.min(p.content.duration, 59)} /><Box title="Transkrip"><p className="whitespace-pre-line text-xs leading-6">{p.content.transcript}</p></Box></div>}</div>
+      : <div className="grid gap-3"><AudioPreview label={`${p.content.headline} · suara ${p.content.voice}`} seconds={p.content.duration} /><p className="text-[11px] text-muted-foreground">Voice-over: tersedia · Gaya {p.content.voice} · {fmt(p.content.duration)}</p><Box title="Transkrip"><p className="whitespace-pre-line text-xs leading-6">{p.content.transcript}</p></Box></div>}</div>
   </div>;
 }
 
