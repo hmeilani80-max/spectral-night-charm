@@ -1,9 +1,10 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 
 import {
-  applyDecision, applySubmit, buildItems, canSubmit, invalidateApproval, generateContent, initialCampaigns, initialOrders, initialProductions,
+  applyDecision, applySubmit, buildItems, canSubmit, invalidateApproval, generateContent, initialOrders, initialProductions,
   type ApprovalStatus, type Campaign, type HistoryEntry, type NewsOrder, type NewsStatus, type OutputType, type ProductionBrief, type ProductionContent, type ProductionItem,
 } from "./data";
+import { advanceExecution, executionDone, initialCampaigns, regeneratePost, retry, statusAfterDecision, type Post } from "./sosial";
 
 export type ApprovalKind = "Konten" | "Distribusi Sosial" | "Distribusi News";
 export type ApprovalRef = { kind: ApprovalKind; id: string };
@@ -18,10 +19,13 @@ type Value = {
   saveContent: (id: string, content: ProductionContent) => void;
   submit: (id: string) => void;
   decide: (ref: ApprovalRef, decision: Exclude<ApprovalStatus, "Menunggu">, note?: string) => void;
-  createCampaign: (c: Omit<Campaign, "id" | "status" | "approval">) => string;
-  updateCampaign: (id: string, patch: Partial<Campaign>) => void;
+  createCampaign: (c: Omit<Campaign, "id" | "status" | "approval" | "history" | "approvals">, submit: boolean) => string;
+  updatePost: (id: string, postId: string, patch: Partial<Post>) => void;
+  regenerate: (id: string, postId: string) => void;
   submitCampaign: (id: string) => void;
-  executeCampaign: (id: string) => boolean;
+  advanceCampaign: (id: string) => boolean;
+  retryPost: (id: string, postId: string) => void;
+  cancelCampaign: (id: string) => void;
   createOrder: (o: Omit<NewsOrder, "id" | "status" | "approval" | "channels"> & { channels: string[] }) => string;
   submitOrder: (id: string) => void;
   sendOrder: (id: string) => boolean;
@@ -41,6 +45,7 @@ export function AksiProvider({ children }: { children: ReactNode }) {
   const [log, setLog] = useState<LogEntry[]>([{ at: "10:05", text: "Publikasi Artikel Demonstrasi diajukan oleh Tim Media" }]);
   const audit = (text: string) => setLog((cur) => [{ at: now(), text }, ...cur].slice(0, 30));
   const patch = (id: string, fn: (p: ProductionItem) => ProductionItem) => setProductions((cur) => cur.map((p) => (p.id === id ? { ...fn(p), updated: "Baru saja" } : p)));
+  const editCampaign = (id: string, fn: (c: Campaign) => Campaign) => setCampaigns((cur) => cur.map((c) => (c.id === id ? fn(c) : c)));
   const hist = (p: ProductionItem, label: HistoryEntry["label"], version = p.version): HistoryEntry[] => [...p.history, { version, label, at: now() }];
 
   const runGeneration = (id: string, settings?: Partial<ProductionContent>) => {
@@ -81,25 +86,49 @@ export function AksiProvider({ children }: { children: ReactNode }) {
       decide: (ref, decision, note) => {
         const at = now();
         if (ref.kind === "Konten") patch(ref.id, (p) => ({ ...applyDecision(p, decision, at, p.version, note), reviewNote: note, history: hist(p, decision === "Disetujui" ? "Approved" : decision) }));
-        if (ref.kind === "Distribusi Sosial") setCampaigns((cur) => cur.map((c) => (c.id === ref.id ? { ...applyDecision(c, decision, at, undefined, note), status: decision === "Disetujui" ? "Approved" : "Draft Campaign" } : c)));
+        if (ref.kind === "Distribusi Sosial") setCampaigns((cur) => cur.map((c) => {
+          if (c.id !== ref.id) return c;
+          const status = statusAfterDecision(decision, c.timing.mode);
+          return { ...applyDecision(c, decision, at, undefined, note), status, posts: decision === "Disetujui" ? c.posts.map((p) => ({ ...p, exec: "Scheduled" as const })) : c.posts, history: [{ at, text: decision === "Disetujui" ? `Distribusi Disetujui — ${status}` : `${status}${note ? ` — “${note}”` : ""}` }, ...c.history] };
+        }));
         if (ref.kind === "Distribusi News") setOrders((cur) => cur.map((o) => (o.id === ref.id ? { ...applyDecision(o, decision, at, undefined, note), status: decision === "Disetujui" ? "Approved" : decision === "Ditolak" ? "Ditolak" : "Draft Order" } : o)));
         audit(`${ref.kind} ${ref.id}: ${decision}${note ? ` — “${note}”` : ""}`);
       },
-      createCampaign: (c) => {
-        const id = `CMP-${String(15 + campaigns.length).padStart(3, "0")}`;
-        setCampaigns((cur) => [{ ...c, id, status: "Draft Campaign", approval: null }, ...cur]);
-        audit(`Campaign ${id} dibuat`);
+      createCampaign: (c, submit) => {
+        const id = `CMP-${String(16 + campaigns.length - 2).padStart(3, "0")}`;
+        const at = now();
+        const history = [{ at, text: "Distribusi dibuat" }, { at, text: `${c.contentIds.length} approved asset dipilih` }, { at, text: `${c.accounts.length} akun target dipilih` }, { at, text: `${c.posts.length} Paket Publikasi disiapkan oleh sistem` }].reverse();
+        const base: Campaign = { ...c, id, status: "Draft", approval: null, approvals: [], history };
+        const item = submit ? { ...applySubmit(base, "Tim Digital", at), status: "Menunggu Persetujuan" as const, history: [{ at, text: "Diajukan untuk Persetujuan Distribusi" }, ...history] } : base;
+        setCampaigns((cur) => [item, ...cur]);
+        audit(`Distribusi ${id} dibuat${submit ? " dan diajukan" : ""}`);
         return id;
       },
-      updateCampaign: (id, p) => setCampaigns((cur) => cur.map((c) => (c.id === id ? { ...c, ...p } : c))),
-      submitCampaign: (id) => { setCampaigns((cur) => cur.map((c) => (c.id === id ? { ...applySubmit(c, c.submittedBy ?? "Tim Digital", now()), status: "Menunggu Approval" } : c))); audit(`Campaign ${id} diajukan untuk Approval Distribusi`); },
-      executeCampaign: (id) => {
+      updatePost: (id, postId, p) => editCampaign(id, (c) => ({ ...c, posts: c.posts.map((x) => (x.id === postId ? { ...x, ...p, prep: "Diedit" } : x)) })),
+      regenerate: (id, postId) => editCampaign(id, (c) => {
+        return { ...c, posts: c.posts.map((x) => { const a = productions.find((p) => p.id === x.assetId); return x.id === postId && a ? regeneratePost(x, a, c.purpose) : x; }) };
+      }),
+      submitCampaign: (id) => {
+        const at = now();
+        editCampaign(id, (c) => ({ ...applySubmit(c, c.submittedBy ?? "Tim Digital", at), status: "Menunggu Persetujuan", history: [{ at, text: c.status === "Perlu Perubahan" ? "Diajukan kembali" : "Diajukan untuk Persetujuan Distribusi" }, ...c.history] }));
+        audit(`Distribusi ${id} diajukan untuk Persetujuan Distribusi`);
+      },
+      advanceCampaign: (id) => {
         const c = campaigns.find((x) => x.id === id);
-        if (!c || c.approval !== "Disetujui") return false;
-        setCampaigns((cur) => cur.map((x) => (x.id === id ? { ...x, status: "Published" } : x)));
-        audit(`Campaign ${id} dipublikasikan otomatis ke ${c.accounts.length} akun`);
+        if (!c || c.approval !== "Disetujui" || (c.status !== "Dijadwalkan" && c.status !== "Sedang Berjalan")) return false;
+        const at = now();
+        editCampaign(id, (x) => {
+          const posts = advanceExecution(x.posts);
+          const done = executionDone(posts);
+          return { ...x, posts, status: done ? "Selesai" : "Sedang Berjalan", history: [...(done ? [{ at, text: "Distribusi selesai" }] : []), { at, text: x.status === "Dijadwalkan" ? "Eksekusi dimulai" : "Gelombang posting diproses" }, ...x.history] };
+        });
         return true;
       },
+      retryPost: (id, postId) => editCampaign(id, (c) => {
+        const posts = c.posts.map((p) => (p.id === postId && p.exec === "Failed" ? retry(p) : p));
+        return { ...c, posts, status: executionDone(posts) ? "Selesai" : c.status, history: [{ at: now(), text: `Posting ${postId} dicoba ulang` }, ...c.history] };
+      }),
+      cancelCampaign: (id) => editCampaign(id, (c) => ({ ...c, status: "Dibatalkan", posts: c.posts.map((p) => (p.exec === "Published" ? p : { ...p, exec: "Cancelled" })), history: [{ at: now(), text: "Distribusi dibatalkan" }, ...c.history] })),
       createOrder: ({ channels, ...o }) => {
         const id = `DN-${String(13 + orders.length - 2).padStart(3, "0")}`;
         setOrders((cur) => [{ ...o, id, channels: channels.map((channel) => ({ channel, status: "Draft Order" })), status: "Draft Order", approval: null }, ...cur]);
