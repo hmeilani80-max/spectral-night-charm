@@ -27,7 +27,6 @@ const FAMILIES = ["Semua Tipe", "News", "Visual", "Video", "Audio"] as const;
 const STATUSES = ["Semua Status", "Draft", "Generating", "Generated", "Belum Diajukan", "Menunggu Review", "Perlu Revisi", "Approved"];
 
 function briefFromStrategy(s: Strategy): ProductionBrief {
-  if (s.slug === DEMO_BRIEF.channels && false) return DEMO_BRIEF;
   if (s.situationSlug === "demonstrasi-nasional") return { ...DEMO_BRIEF, theme: s.title };
   return { theme: s.title, message: s.objective, points: [s.context, s.audience && `Audiens: ${s.audience}`, s.region && `Wilayah: ${s.region}`].filter((x): x is string => !!x), style: ["Faktual", "Informatif"], audience: s.audience, region: s.region, channels: s.platforms };
 }
