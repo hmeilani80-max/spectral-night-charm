@@ -10,6 +10,7 @@ import { useAksi, type ApprovalRef } from "@/features/aksi/context";
 import { APPROVER_ROLE, qualityChecks, SOURCES, type ApprovalRecord, type ApprovalStatus } from "@/features/aksi/data";
 import { aksiHead } from "@/features/aksi/meta";
 import { ChecksList, ContentPreview } from "@/features/aksi/production-workspaces";
+import { PostsBrowser } from "@/features/aksi/sosial-components";
 
 export const Route = createFileRoute("/aksi/persetujuan/$kind/$id")({
   head: aksiHead("Detail Persetujuan", "Preview, konteks, hasil pemeriksaan otomatis, keputusan, dan riwayat keputusan."),
@@ -96,6 +97,7 @@ function Detail() {
             <table className="w-full text-left text-xs"><thead className="text-muted-foreground"><tr><th className="py-1.5 font-medium">Platform</th><th className="py-1.5 font-medium">Posting</th><th className="py-1.5 font-medium">Konten</th></tr></thead>
               <tbody>{c.platforms.map((pl) => <tr key={pl} className="border-t border-border"><td className="py-2">{pl}</td><td className="py-2">{c.posts.filter((x) => x.platform === pl).length} posting</td><td className="py-2 text-muted-foreground">{[...new Set(c.posts.filter((x) => x.platform === pl).map((x) => x.assetType))].join(", ")}</td></tr>)}</tbody></table>
           </Box>
+          <Box title="Paket Publikasi"><PostsBrowser posts={c.posts} productions={productions} editable={false} /></Box>
         </div>
         <div className="grid content-start gap-4">
           <Decision distribution refx={{ kind: "Distribusi Sosial", id: c.id }} status={c.approval} after={c.timing.mode === "Segera" ? "Distribusi langsung mulai dijalankan." : "Distribusi akan berstatus Dijadwalkan dan berjalan otomatis sesuai jadwal."} />
