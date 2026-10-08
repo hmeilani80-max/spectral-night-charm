@@ -50,10 +50,20 @@ describe("Strategy recommendations", () => {
 });
 
 describe("Aksi approval gates", () => {
-  it("blocks derived content until the Pesan Utama is approved", async () => {
-    const { canProduceOutputs } = await import("@/features/aksi/data");
-    expect(canProduceOutputs({ messageApproval: "Menunggu" })).toBe(false);
-    expect(canProduceOutputs({ messageApproval: "Disetujui" })).toBe(true);
+  it("creates one separate Produksi item per selected output", async () => {
+    const { buildItems, DEMO_BRIEF } = await import("@/features/aksi/data");
+    const items = buildItems(DEMO_BRIEF, ["News Article", "Carousel", "Video Pendek"], { source: "Strategi" }, 30);
+    expect(items).toHaveLength(3);
+    expect(new Set(items.map((i) => i.id)).size).toBe(3);
+    expect(items.map((i) => i.dest[0])).toEqual(["News", "Sosial", "Sosial"]);
+    expect(items.every((i) => i.approval === null && i.status === "Draft")).toBe(true);
+  });
+  it("only allows submitting generated content that is not already under review", async () => {
+    const { canSubmit } = await import("@/features/aksi/data");
+    expect(canSubmit({ status: "Draft", approval: null })).toBe(false);
+    expect(canSubmit({ status: "Generated", approval: null })).toBe(true);
+    expect(canSubmit({ status: "Generated", approval: "Menunggu" })).toBe(false);
+    expect(canSubmit({ status: "Generated", approval: "Perlu Revisi" })).toBe(true);
   });
   it("only lets approved, eligible content into each distribution", async () => {
     const { isEligible } = await import("@/features/aksi/data");
