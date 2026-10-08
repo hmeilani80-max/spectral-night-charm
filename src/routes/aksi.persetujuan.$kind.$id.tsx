@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Box, StatusPill, Trail } from "@/features/aksi/components";
 import { useAksi, type ApprovalRef } from "@/features/aksi/context";
-import { APPROVER_ROLE, qualityChecks, SOURCES, type ApprovalRecord, type ApprovalStatus } from "@/features/aksi/data";
+import { APPROVER_ROLE, newsChannelDomain, qualityChecks, SOURCES, type ApprovalRecord, type ApprovalStatus } from "@/features/aksi/data";
 import { aksiHead } from "@/features/aksi/meta";
 import { ChecksList, ContentPreview } from "@/features/aksi/production-workspaces";
 import { PostsBrowser } from "@/features/aksi/sosial-components";
@@ -118,7 +118,7 @@ function Detail() {
       <div className="grid content-start gap-4">
         <Box title="Konten"><div className="flex items-center justify-between gap-2 text-xs">{art ? <Link to="/aksi/persetujuan/$kind/$id" params={{ kind: "konten", id: art.id }} className="hover:underline">{art.title}</Link> : "—"}<span>Content Approval: <StatusPill value={label(art?.approval ?? null)} /></span></div></Box>
         <Box title="Target & Jadwal"><Meta items={[["Target", `${o.channels.length} dari 39 kanal`], ["Coverage", `${national} Nasional · ${o.channels.length - national} Wilayah`], ["Jadwal", o.schedule], ["Adaptasi", o.notes || "—"]]} /></Box>
-        <Box title="Daftar Kanal"><div className="flex flex-wrap gap-1.5">{o.channels.map((ch) => <span key={ch.channel} className="rounded-sm bg-secondary px-2 py-1 text-[11px]">{ch.channel}</span>)}</div></Box>
+        <Box title="Daftar Kanal"><div className="flex flex-wrap gap-1.5">{o.channels.map((ch) => <span key={ch.channel} className="rounded-sm bg-secondary px-2 py-1 text-[11px]">{newsChannelDomain(ch.channel)}</span>)}</div></Box>
       </div>
       <div className="grid content-start gap-4">
         <Decision distribution refx={{ kind: "Distribusi News", id: o.id }} status={o.approval} after="Order dapat dikirim ke pengelola kanal di Distribusi News." />

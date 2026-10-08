@@ -65,6 +65,18 @@ export const REGIONAL_CHANNELS = ["Aceh", "Sumatera Utara", "Sumatera Barat", "R
 export const NATIONAL_CHANNEL = "Nasional";
 export const NEWS_CHANNELS = [NATIONAL_CHANNEL, ...REGIONAL_CHANNELS];
 
+const CHANNEL_DOMAIN_NAMES: Record<string, string> = {
+  Nasional: "nusakanalnasional.com",
+  "DKI Jakarta": "nusakanaljakarta.com",
+  "DI Yogyakarta": "nusakanalyogyakarta.com",
+  "Kepulauan Bangka Belitung": "nusakanalbangkabelitung.com",
+};
+
+/** Public-facing identity for every fixed-network news channel. */
+export function newsChannelDomain(channel: string) {
+  return CHANNEL_DOMAIN_NAMES[channel] ?? `nusakanal${channel.toLocaleLowerCase("id-ID").replace(/[^a-z0-9]+/g, "")}.com`;
+}
+
 export const SOURCES = [
   { name: "Data SPEKTRA", kind: "Internal", use: "Volume percakapan" },
   { name: "Laporan Analyst", kind: "Internal", use: "Konteks" },
@@ -202,7 +214,7 @@ export const initialOrders: NewsOrder[] = [
   { id: "DN-012", title: "Publikasi Artikel Demonstrasi", productionId: "PRD-018", contentId: "PRD-018", channels: sixteen.map((channel) => ({ channel, status: "Draft Order" })), schedule: "8–9 Oktober 2026", notes: "Penyesuaian headline dan konteks wilayah diperbolehkan.", status: "Menunggu Approval", approval: "Menunggu",
     submittedBy: "Tim Media", submittedAt: "31 menit lalu", submittedDay: "Hari ini", approvals: [{ at: "10:05", actor: "Tim Media", decision: "Diajukan" }] },
   { id: "DN-011", title: "Publikasi Edisi Pagi", productionId: "PRD-018", contentId: "PRD-018", channels: [
-    { channel: "Jawa Barat", status: "Menunggu Verifikasi", url: "https://jabar.kanal.id/berita/informasi-aksi" },
+    { channel: "Jawa Barat", status: "Menunggu Verifikasi", url: "https://nusakanaljawabarat.com/berita/informasi-aksi" },
     { channel: "DKI Jakarta", status: "Dalam Pengerjaan" },
     { channel: "Banten", status: "Dikirim" },
   ], schedule: "Hari ini, 09:00 WIB", notes: "Edisi pagi.", status: "Dikirim", approval: "Disetujui",

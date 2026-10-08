@@ -16,3 +16,4 @@
 - Aksi data, approval gates, and state live in `src/features/aksi`; its provider wraps the app in `__root` so the approval queue sees production, social, and news items together.
 - Distribusi Sosial rules (accounts, post planning, readiness, approval→status mapping) live as pure functions in `src/features/aksi/sosial.ts`, so the wizard, detail page, Persetujuan and tests share one source of truth.
 - Read-only distribution asset previews use the shared AssetPreview renderer, so selection, packages, review, and approvals show the same source asset without production controls.
+- News channel domains are derived through the shared `newsChannelDomain` helper, so all 39 fixed-network identities stay consistent across ordering, approval, and verification views.

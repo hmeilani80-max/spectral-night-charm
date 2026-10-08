@@ -78,9 +78,13 @@ describe("Aksi approval gates", () => {
     expect(distributionReadiness(null, "Disetujui")).toBe("Belum dapat didistribusikan");
   });
   it("has 38 regional channels plus 1 national channel", async () => {
-    const { NEWS_CHANNELS, REGIONAL_CHANNELS } = await import("@/features/aksi/data");
+    const { NEWS_CHANNELS, REGIONAL_CHANNELS, newsChannelDomain } = await import("@/features/aksi/data");
     expect(REGIONAL_CHANNELS).toHaveLength(38);
     expect(NEWS_CHANNELS).toHaveLength(39);
+    expect(newsChannelDomain("Nasional")).toBe("nusakanalnasional.com");
+    expect(newsChannelDomain("DKI Jakarta")).toBe("nusakanaljakarta.com");
+    expect(newsChannelDomain("Jawa Barat")).toBe("nusakanaljawabarat.com");
+    expect(new Set(NEWS_CHANNELS.map(newsChannelDomain))).toHaveLength(39);
   });
   it("records every decision per version and keeps old records when a new version voids approval", async () => {
     const { applySubmit, applyDecision, invalidateApproval, initialProductions } = await import("@/features/aksi/data");

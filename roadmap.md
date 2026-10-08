@@ -21,3 +21,4 @@
 - [x] Aksi: Produksi, Persetujuan, Distribusi Sosial, Distribusi News dengan gerbang approval dan jejak sumber
 - [x] Revisi Distribusi Sosial: pilihan asset, preview konsisten, rekomendasi target/waktu/skala, copy kontekstual, dan review
 - [x] Verifikasi revisi hingga persetujuan dan simulasi eksekusi
+- [x] Gunakan domain sesuai nama sebagai identitas 39 kanal Distribusi News
