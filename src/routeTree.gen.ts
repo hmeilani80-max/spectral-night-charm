@@ -19,11 +19,14 @@ import { Route as StrategiRouteImport } from './routes/strategi'
 import { Route as AksiIndexRouteImport } from './routes/aksi.index'
 import { Route as AksiDistribusiNewsRouteImport } from './routes/aksi.distribusi-news'
 import { Route as AksiDistribusiSosialRouteImport } from './routes/aksi.distribusi-sosial'
+import { Route as AksiPersetujuanRouteImport } from './routes/aksi.persetujuan'
 import { Route as AksiProduksiRouteImport } from './routes/aksi.produksi'
 import { Route as SituasiIndexRouteImport } from './routes/situasi.index'
 import { Route as SituasiSlugRouteImport } from './routes/situasi.$slug'
 import { Route as StrategiIndexRouteImport } from './routes/strategi.index'
 import { Route as StrategiSlugRouteImport } from './routes/strategi.$slug'
+import { Route as AksiProduksiIndexRouteImport } from './routes/aksi.produksi.index'
+import { Route as AksiProduksiIdRouteImport } from './routes/aksi.produksi.$id'
 import { Route as SituasiSlugIndexRouteImport } from './routes/situasi.$slug.index'
 import { Route as SituasiSlugEksplorasiRouteImport } from './routes/situasi.$slug.eksplorasi'
 import { Route as SituasiSlugRisikoPrediksiRouteImport } from './routes/situasi.$slug.risiko-prediksi'
@@ -78,6 +81,11 @@ const AksiDistribusiSosialRoute = AksiDistribusiSosialRouteImport.update({
   path: '/distribusi-sosial',
   getParentRoute: () => AksiRoute,
 } as any)
+const AksiPersetujuanRoute = AksiPersetujuanRouteImport.update({
+  id: '/persetujuan',
+  path: '/persetujuan',
+  getParentRoute: () => AksiRoute,
+} as any)
 const AksiProduksiRoute = AksiProduksiRouteImport.update({
   id: '/produksi',
   path: '/produksi',
@@ -102,6 +110,16 @@ const StrategiSlugRoute = StrategiSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => StrategiRoute,
+} as any)
+const AksiProduksiIndexRoute = AksiProduksiIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AksiProduksiRoute,
+} as any)
+const AksiProduksiIdRoute = AksiProduksiIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AksiProduksiRoute,
 } as any)
 const SituasiSlugIndexRoute = SituasiSlugIndexRouteImport.update({
   id: '/',
@@ -130,14 +148,17 @@ export interface FileRoutesByFullPath {
   '/strategi': typeof StrategiRouteWithChildren
   '/aksi/distribusi-news': typeof AksiDistribusiNewsRoute
   '/aksi/distribusi-sosial': typeof AksiDistribusiSosialRoute
-  '/aksi/produksi': typeof AksiProduksiRoute
+  '/aksi/persetujuan': typeof AksiPersetujuanRoute
+  '/aksi/produksi': typeof AksiProduksiRouteWithChildren
   '/situasi/$slug': typeof SituasiSlugRouteWithChildren
   '/strategi/$slug': typeof StrategiSlugRoute
   '/aksi/': typeof AksiIndexRoute
   '/situasi/': typeof SituasiIndexRoute
   '/strategi/': typeof StrategiIndexRoute
+  '/aksi/produksi/$id': typeof AksiProduksiIdRoute
   '/situasi/$slug/eksplorasi': typeof SituasiSlugEksplorasiRoute
   '/situasi/$slug/risiko-prediksi': typeof SituasiSlugRisikoPrediksiRoute
+  '/aksi/produksi/': typeof AksiProduksiIndexRoute
   '/situasi/$slug/': typeof SituasiSlugIndexRoute
 }
 export interface FileRoutesByTo {
@@ -147,13 +168,15 @@ export interface FileRoutesByTo {
   '/dampak': typeof DampakRoute
   '/aksi/distribusi-news': typeof AksiDistribusiNewsRoute
   '/aksi/distribusi-sosial': typeof AksiDistribusiSosialRoute
-  '/aksi/produksi': typeof AksiProduksiRoute
+  '/aksi/persetujuan': typeof AksiPersetujuanRoute
   '/strategi/$slug': typeof StrategiSlugRoute
   '/aksi': typeof AksiIndexRoute
   '/situasi': typeof SituasiIndexRoute
   '/strategi': typeof StrategiIndexRoute
+  '/aksi/produksi/$id': typeof AksiProduksiIdRoute
   '/situasi/$slug/eksplorasi': typeof SituasiSlugEksplorasiRoute
   '/situasi/$slug/risiko-prediksi': typeof SituasiSlugRisikoPrediksiRoute
+  '/aksi/produksi': typeof AksiProduksiIndexRoute
   '/situasi/$slug': typeof SituasiSlugIndexRoute
 }
 export interface FileRoutesById {
@@ -167,14 +190,17 @@ export interface FileRoutesById {
   '/strategi': typeof StrategiRouteWithChildren
   '/aksi/distribusi-news': typeof AksiDistribusiNewsRoute
   '/aksi/distribusi-sosial': typeof AksiDistribusiSosialRoute
-  '/aksi/produksi': typeof AksiProduksiRoute
+  '/aksi/persetujuan': typeof AksiPersetujuanRoute
+  '/aksi/produksi': typeof AksiProduksiRouteWithChildren
   '/situasi/$slug': typeof SituasiSlugRouteWithChildren
   '/strategi/$slug': typeof StrategiSlugRoute
   '/aksi/': typeof AksiIndexRoute
   '/situasi/': typeof SituasiIndexRoute
   '/strategi/': typeof StrategiIndexRoute
+  '/aksi/produksi/$id': typeof AksiProduksiIdRoute
   '/situasi/$slug/eksplorasi': typeof SituasiSlugEksplorasiRoute
   '/situasi/$slug/risiko-prediksi': typeof SituasiSlugRisikoPrediksiRoute
+  '/aksi/produksi/': typeof AksiProduksiIndexRoute
   '/situasi/$slug/': typeof SituasiSlugIndexRoute
 }
 export interface FileRouteTypes {
@@ -189,14 +215,17 @@ export interface FileRouteTypes {
     | '/strategi'
     | '/aksi/distribusi-news'
     | '/aksi/distribusi-sosial'
+    | '/aksi/persetujuan'
     | '/aksi/produksi'
     | '/situasi/$slug'
     | '/strategi/$slug'
     | '/aksi/'
     | '/situasi/'
     | '/strategi/'
+    | '/aksi/produksi/$id'
     | '/situasi/$slug/eksplorasi'
     | '/situasi/$slug/risiko-prediksi'
+    | '/aksi/produksi/'
     | '/situasi/$slug/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -206,13 +235,15 @@ export interface FileRouteTypes {
     | '/dampak'
     | '/aksi/distribusi-news'
     | '/aksi/distribusi-sosial'
-    | '/aksi/produksi'
+    | '/aksi/persetujuan'
     | '/strategi/$slug'
     | '/aksi'
     | '/situasi'
     | '/strategi'
+    | '/aksi/produksi/$id'
     | '/situasi/$slug/eksplorasi'
     | '/situasi/$slug/risiko-prediksi'
+    | '/aksi/produksi'
     | '/situasi/$slug'
   id:
     | '__root__'
@@ -225,14 +256,17 @@ export interface FileRouteTypes {
     | '/strategi'
     | '/aksi/distribusi-news'
     | '/aksi/distribusi-sosial'
+    | '/aksi/persetujuan'
     | '/aksi/produksi'
     | '/situasi/$slug'
     | '/strategi/$slug'
     | '/aksi/'
     | '/situasi/'
     | '/strategi/'
+    | '/aksi/produksi/$id'
     | '/situasi/$slug/eksplorasi'
     | '/situasi/$slug/risiko-prediksi'
+    | '/aksi/produksi/'
     | '/situasi/$slug/'
   fileRoutesById: FileRoutesById
 }
@@ -318,6 +352,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AksiDistribusiSosialRouteImport
       parentRoute: typeof AksiRoute
     }
+    '/aksi/persetujuan': {
+      id: '/aksi/persetujuan'
+      path: '/persetujuan'
+      fullPath: '/aksi/persetujuan'
+      preLoaderRoute: typeof AksiPersetujuanRouteImport
+      parentRoute: typeof AksiRoute
+    }
     '/aksi/produksi': {
       id: '/aksi/produksi'
       path: '/produksi'
@@ -353,6 +394,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StrategiSlugRouteImport
       parentRoute: typeof StrategiRoute
     }
+    '/aksi/produksi/': {
+      id: '/aksi/produksi/'
+      path: '/'
+      fullPath: '/aksi/produksi/'
+      preLoaderRoute: typeof AksiProduksiIndexRouteImport
+      parentRoute: typeof AksiProduksiRoute
+    }
+    '/aksi/produksi/$id': {
+      id: '/aksi/produksi/$id'
+      path: '/$id'
+      fullPath: '/aksi/produksi/$id'
+      preLoaderRoute: typeof AksiProduksiIdRouteImport
+      parentRoute: typeof AksiProduksiRoute
+    }
     '/situasi/$slug/': {
       id: '/situasi/$slug/'
       path: '/'
@@ -377,17 +432,33 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AksiProduksiRouteChildren {
+  AksiProduksiIdRoute: typeof AksiProduksiIdRoute
+  AksiProduksiIndexRoute: typeof AksiProduksiIndexRoute
+}
+
+const AksiProduksiRouteChildren: AksiProduksiRouteChildren = {
+  AksiProduksiIdRoute: AksiProduksiIdRoute,
+  AksiProduksiIndexRoute: AksiProduksiIndexRoute,
+}
+
+const AksiProduksiRouteWithChildren = AksiProduksiRoute._addFileChildren(
+  AksiProduksiRouteChildren,
+)
+
 interface AksiRouteChildren {
   AksiDistribusiNewsRoute: typeof AksiDistribusiNewsRoute
   AksiDistribusiSosialRoute: typeof AksiDistribusiSosialRoute
-  AksiProduksiRoute: typeof AksiProduksiRoute
+  AksiPersetujuanRoute: typeof AksiPersetujuanRoute
+  AksiProduksiRoute: typeof AksiProduksiRouteWithChildren
   AksiIndexRoute: typeof AksiIndexRoute
 }
 
 const AksiRouteChildren: AksiRouteChildren = {
   AksiDistribusiNewsRoute: AksiDistribusiNewsRoute,
   AksiDistribusiSosialRoute: AksiDistribusiSosialRoute,
-  AksiProduksiRoute: AksiProduksiRoute,
+  AksiPersetujuanRoute: AksiPersetujuanRoute,
+  AksiProduksiRoute: AksiProduksiRouteWithChildren,
   AksiIndexRoute: AksiIndexRoute,
 }
 
