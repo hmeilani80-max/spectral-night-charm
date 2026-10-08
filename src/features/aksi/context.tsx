@@ -1,13 +1,13 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 
 import {
-  buildItems, canSubmit, generateContent, initialCampaigns, initialOrders, initialProductions,
+  applyDecision, applySubmit, buildItems, canSubmit, invalidateApproval, generateContent, initialCampaigns, initialOrders, initialProductions,
   type ApprovalStatus, type Campaign, type HistoryEntry, type NewsOrder, type NewsStatus, type OutputType, type ProductionBrief, type ProductionContent, type ProductionItem,
 } from "./data";
 
 export type ApprovalKind = "Konten" | "Distribusi Sosial" | "Distribusi News";
 export type ApprovalRef = { kind: ApprovalKind; id: string };
-export type QueueItem = { key: string; ref: ApprovalRef; title: string; source: string; status: ApprovalStatus; version?: number | undefined };
+export type QueueItem = { key: string; ref: ApprovalRef; title: string; group: "Konten" | "Distribusi"; subtype: string; source: string; status: ApprovalStatus; version?: number | undefined; submittedBy: string; submittedAt: string; submittedDay: string };
 export type LogEntry = { at: string; text: string };
 export type Origin = Pick<ProductionItem, "source" | "strategySlug" | "strategyTitle" | "situationSlug" | "situationName">;
 
@@ -38,7 +38,7 @@ export function AksiProvider({ children }: { children: ReactNode }) {
   const [productions, setProductions] = useState(initialProductions);
   const [campaigns, setCampaigns] = useState(initialCampaigns);
   const [orders, setOrders] = useState(initialOrders);
-  const [log, setLog] = useState<LogEntry[]>([{ at: "09:12", text: "Artikel Demonstrasi Nasional v3 disetujui" }]);
+  const [log, setLog] = useState<LogEntry[]>([{ at: "10:05", text: "Publikasi Artikel Demonstrasi diajukan oleh Tim Media" }]);
   const audit = (text: string) => setLog((cur) => [{ at: now(), text }, ...cur].slice(0, 30));
   const patch = (id: string, fn: (p: ProductionItem) => ProductionItem) => setProductions((cur) => cur.map((p) => (p.id === id ? { ...fn(p), updated: "Baru saja" } : p)));
   const hist = (p: ProductionItem, label: HistoryEntry["label"], version = p.version): HistoryEntry[] => [...p.history, { version, label, at: now() }];
@@ -49,15 +49,17 @@ export function AksiProvider({ children }: { children: ReactNode }) {
       const variant = p.version === 0 ? 0 : p.variant + 1;
       const version = p.version + 1;
       const keep = { duration: p.content.duration, format: p.content.format, voiceOver: p.content.voiceOver, voice: p.content.voice, ...settings };
-      return { ...p, status: "Generated", variant, version, content: generateContent(p.type, p.brief, variant, keep), approval: p.approval === "Disetujui" ? null : p.approval, history: hist(p, p.version === 0 ? "Generated" : "Regenerated", version) };
+      return { ...invalidateApproval(p, now(), p.version, version), status: "Generated", variant, version, content: generateContent(p.type, p.brief, variant, keep), history: hist(p, p.version === 0 ? "Generated" : "Regenerated", version) };
     }), GENERATION_MS);
   };
 
   const value = useMemo<Value>(() => {
     const queue: QueueItem[] = [];
-    for (const p of productions) if (p.approval) queue.push({ key: `c-${p.id}`, ref: { kind: "Konten", id: p.id }, title: `${p.title} (${p.type})`, source: "Produksi", status: p.approval, version: p.version });
-    for (const c of campaigns) if (c.approval) queue.push({ key: `s-${c.id}`, ref: { kind: "Distribusi Sosial", id: c.id }, title: `${c.name} (${c.id})`, source: "Distribusi Sosial", status: c.approval });
-    for (const o of orders) if (o.approval) queue.push({ key: `n-${o.id}`, ref: { kind: "Distribusi News", id: o.id }, title: `Order ${o.id} · Publikasi ${o.channels.length} Kanal`, source: "Distribusi News", status: o.approval });
+    const meta = (x: { submittedBy?: string | undefined; submittedAt?: string | undefined; submittedDay?: string | undefined }) => ({ submittedBy: x.submittedBy ?? "—", submittedAt: x.submittedAt ?? "—", submittedDay: x.submittedDay ?? "Hari ini" });
+    const sub: Record<string, string> = { "News Article": "News", "Video Pendek": "Video", "Audio / Podcast": "Audio", Infografis: "Infografis", Carousel: "Carousel" };
+    for (const p of productions) if (p.approval) queue.push({ key: `c-${p.id}`, ref: { kind: "Konten", id: p.id }, title: p.title, group: "Konten", subtype: sub[p.type] ?? p.type, source: "Produksi", status: p.approval, version: p.version, ...meta(p) });
+    for (const c of campaigns) if (c.approval) queue.push({ key: `s-${c.id}`, ref: { kind: "Distribusi Sosial", id: c.id }, title: c.name, group: "Distribusi", subtype: "Sosial", source: "Distribusi Sosial", status: c.approval, ...meta(c) });
+    for (const o of orders) if (o.approval) queue.push({ key: `n-${o.id}`, ref: { kind: "Distribusi News", id: o.id }, title: o.title ?? `Publikasi ${o.channels.length} Kanal`, group: "Distribusi", subtype: "News", source: "Distribusi News", status: o.approval, ...meta(o) });
 
     return {
       productions, campaigns, orders, queue, log,
@@ -73,13 +75,14 @@ export function AksiProvider({ children }: { children: ReactNode }) {
       submit: (id) => {
         const p = productions.find((x) => x.id === id);
         if (!p || !canSubmit(p)) return;
-        patch(id, (x) => ({ ...x, approval: "Menunggu", reviewNote: undefined, history: hist(x, "Diajukan") }));
+        patch(id, (x) => ({ ...applySubmit(x, x.submittedBy ?? (x.type === "News Article" ? "Tim Editorial" : "Tim Produksi"), now(), x.version), reviewNote: undefined, history: hist(x, "Diajukan") }));
         audit(`${p.title} v${p.version} diajukan ke Persetujuan`);
       },
       decide: (ref, decision, note) => {
-        if (ref.kind === "Konten") patch(ref.id, (p) => ({ ...p, approval: decision, reviewNote: note, history: hist(p, decision === "Disetujui" ? "Approved" : decision) }));
-        if (ref.kind === "Distribusi Sosial") setCampaigns((cur) => cur.map((c) => (c.id === ref.id ? { ...c, approval: decision, status: decision === "Disetujui" ? "Approved" : "Draft Campaign" } : c)));
-        if (ref.kind === "Distribusi News") setOrders((cur) => cur.map((o) => (o.id === ref.id ? { ...o, approval: decision, status: decision === "Disetujui" ? "Approved" : decision === "Ditolak" ? "Ditolak" : "Draft Order" } : o)));
+        const at = now();
+        if (ref.kind === "Konten") patch(ref.id, (p) => ({ ...applyDecision(p, decision, at, p.version, note), reviewNote: note, history: hist(p, decision === "Disetujui" ? "Approved" : decision) }));
+        if (ref.kind === "Distribusi Sosial") setCampaigns((cur) => cur.map((c) => (c.id === ref.id ? { ...applyDecision(c, decision, at, undefined, note), status: decision === "Disetujui" ? "Approved" : "Draft Campaign" } : c)));
+        if (ref.kind === "Distribusi News") setOrders((cur) => cur.map((o) => (o.id === ref.id ? { ...applyDecision(o, decision, at, undefined, note), status: decision === "Disetujui" ? "Approved" : decision === "Ditolak" ? "Ditolak" : "Draft Order" } : o)));
         audit(`${ref.kind} ${ref.id}: ${decision}${note ? ` — “${note}”` : ""}`);
       },
       createCampaign: (c) => {
@@ -89,7 +92,7 @@ export function AksiProvider({ children }: { children: ReactNode }) {
         return id;
       },
       updateCampaign: (id, p) => setCampaigns((cur) => cur.map((c) => (c.id === id ? { ...c, ...p } : c))),
-      submitCampaign: (id) => { setCampaigns((cur) => cur.map((c) => (c.id === id ? { ...c, status: "Menunggu Approval", approval: "Menunggu" } : c))); audit(`Campaign ${id} diajukan untuk Approval Distribusi`); },
+      submitCampaign: (id) => { setCampaigns((cur) => cur.map((c) => (c.id === id ? { ...applySubmit(c, c.submittedBy ?? "Tim Digital", now()), status: "Menunggu Approval" } : c))); audit(`Campaign ${id} diajukan untuk Approval Distribusi`); },
       executeCampaign: (id) => {
         const c = campaigns.find((x) => x.id === id);
         if (!c || c.approval !== "Disetujui") return false;
@@ -103,7 +106,7 @@ export function AksiProvider({ children }: { children: ReactNode }) {
         audit(`Order ${id} dibuat untuk ${channels.length} kanal`);
         return id;
       },
-      submitOrder: (id) => { setOrders((cur) => cur.map((o) => (o.id === id ? { ...o, status: "Menunggu Approval", approval: "Menunggu" } : o))); audit(`Order ${id} diajukan untuk Approval Distribusi`); },
+      submitOrder: (id) => { setOrders((cur) => cur.map((o) => (o.id === id ? { ...applySubmit(o, o.submittedBy ?? "Tim Media", now()), status: "Menunggu Approval" } : o))); audit(`Order ${id} diajukan untuk Approval Distribusi`); },
       sendOrder: (id) => {
         const o = orders.find((x) => x.id === id);
         if (!o || o.approval !== "Disetujui") return false;

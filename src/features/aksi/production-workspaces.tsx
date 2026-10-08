@@ -226,3 +226,33 @@ export function ProductionWorkspace({ p }: { p: ProductionItem }) {
     case "Audio / Podcast": return <AudioWorkspace p={p} />;
   }
 }
+
+/** Read-only final preview for approvers: no editor, no regenerate. */
+export function ContentPreview({ p }: { p: ProductionItem }) {
+  const c = p.content;
+  if (p.status !== "Generated") return <p className="text-xs text-muted-foreground">Konten belum selesai dibuat.</p>;
+  switch (p.type) {
+    case "News Article": return <article className="mx-auto w-full max-w-2xl rounded-md border border-border bg-background p-5">
+      <h1 className="font-display text-2xl font-semibold leading-tight">{c.headline}</h1>
+      <p className="mt-2 text-sm text-muted-foreground">{c.subtitle}</p>
+      <figure className="my-4"><img src={heroImg} alt="Suasana aktivitas publik di depan gedung pemerintahan" width={1536} height={864} className="aspect-[16/8] w-full rounded-md object-cover" /></figure>
+      <p className="text-sm font-medium leading-7">{c.lead}</p>
+      {c.body.split("\n\n").map((para, i) => <p key={i} className="mt-3 text-sm leading-7 text-muted-foreground">{para}</p>)}
+      <div className="mt-4 flex flex-wrap gap-1.5">{c.tags.filter(Boolean).map((t) => <span key={t} className="rounded-sm bg-secondary px-2 py-0.5 text-[10px]">{t}</span>)}</div>
+    </article>;
+    case "Video Pendek": return <div className="grid gap-3"><VideoPreview ratio={c.format} headline={c.headline} subtitle={firstLine(p.brief.message)} seconds={c.duration} />
+      <dl className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">{[["Durasi", `${c.duration} detik`], ["Format", c.format], ["Subtitle", "Tersedia"], ["Voice-over", c.voiceOver ? "Tersedia" : "Tidak"]].map(([k, v]) => <div key={k} className="rounded-md border border-border p-2"><dt className="text-muted-foreground">{k}</dt><dd className="font-medium">{v}</dd></div>)}</dl></div>;
+    case "Audio / Podcast": return <div className="grid gap-3"><AudioPreview label={`${c.headline} · suara ${c.voice}`} seconds={c.duration} /><Box title="Transkrip"><p className="whitespace-pre-line text-xs leading-6">{c.transcript}</p></Box></div>;
+    case "Infografis": return <div className="mx-auto w-full max-w-md overflow-hidden rounded-md border border-border bg-card">
+      <img src={briefingImg} alt="" width={1024} height={1024} className="h-36 w-full object-cover opacity-60" />
+      <div className="p-5"><h3 className="font-display text-xl font-semibold leading-tight">{c.headline}</h3>
+        <p className="mt-3 border-l-2 border-primary pl-3 text-xs leading-5 text-muted-foreground">{firstLine(p.brief.message)}</p>
+        <div className="mt-4 grid gap-2">{p.brief.points.filter(Boolean).slice(0, 3).map((k) => <p key={k} className="rounded-md bg-secondary/60 p-2.5 text-xs">{k}</p>)}</div>
+        <p className="mt-4 border-t border-border pt-3 text-[10px] text-muted-foreground">{c.caption}</p></div>
+    </div>;
+    case "Carousel": return <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">{c.slides.map((s, i) => <div key={i} className="flex aspect-[4/5] flex-col overflow-hidden rounded-md border border-border bg-card">
+      <img src={SLIDE_IMGS[i % 3]} alt="" loading="lazy" className="h-2/5 w-full object-cover opacity-55" />
+      <div className="p-3"><span className="text-[10px] text-muted-foreground">{i + 1}/{c.slides.length} · {s.label}</span><p className="mt-1 font-display text-sm font-semibold leading-snug">{i === 0 ? s.text : SLIDE_HEADS[i % 5]}</p>{i > 0 && <p className="mt-1.5 line-clamp-4 text-[11px] leading-4 text-muted-foreground">{s.text}</p>}</div>
+    </div>)}</div>;
+  }
+}

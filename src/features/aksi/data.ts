@@ -33,11 +33,35 @@ export type ProductionItem = {
   source: "Strategi" | "Manual"; strategySlug?: string | undefined; strategyTitle?: string | undefined; situationSlug?: string | undefined; situationName?: string | undefined;
   brief: ProductionBrief; status: ProductionStatus; approval: ApprovalStatus | null; version: number; variant: number;
   content: ProductionContent; history: HistoryEntry[]; reviewNote?: string | undefined; updated: string;
+  approvals: ApprovalRecord[]; submittedBy?: string | undefined; submittedAt?: string | undefined; submittedDay?: SubmittedDay | undefined;
 };
 
-export type Campaign = { id: string; name: string; productionId: string; contentIds: string[]; platforms: string[]; accounts: string[]; target: string; schedule: string; status: SocialStatus; approval: ApprovalStatus | null };
+/** One entry in the decision audit trail. Records are only ever appended, never overwritten. */
+export type ApprovalRecord = { at: string; actor: string; decision: "Diajukan" | "Diajukan Kembali" | "Disetujui" | "Perlu Revisi" | "Ditolak" | "Tidak Berlaku"; version?: number | undefined; note?: string | undefined };
+export type SubmittedDay = "Hari ini" | "Kemarin";
+type Approvable = { approval: ApprovalStatus | null; approvals?: ApprovalRecord[] | undefined; submittedBy?: string | undefined; submittedAt?: string | undefined; submittedDay?: SubmittedDay | undefined };
+export const APPROVER_ROLE = "Supervisor";
+
+/** Submit (or resubmit) for review; the record names the version it applies to. */
+export function applySubmit<T extends Approvable>(item: T, actor: string, at: string, version?: number): T {
+  const prior = (item.approvals ?? []).some((r) => r.decision === "Diajukan" || r.decision === "Diajukan Kembali");
+  return { ...item, approval: "Menunggu", submittedBy: actor, submittedAt: "Baru saja", submittedDay: "Hari ini", approvals: [...(item.approvals ?? []), { at, actor, decision: prior ? "Diajukan Kembali" : "Diajukan", version }] };
+}
+/** Record an approver decision for the given version. */
+export function applyDecision<T extends Approvable>(item: T, decision: Exclude<ApprovalStatus, "Menunggu">, at: string, version?: number, note?: string, actor = APPROVER_ROLE): T {
+  return { ...item, approval: decision, approvals: [...(item.approvals ?? []), { at, actor, decision, version, note }] };
+}
+/** A new version voids the previous approval but keeps the old records. */
+export function invalidateApproval<T extends Approvable>(item: T, at: string, oldVersion: number, newVersion: number): T {
+  if (item.approval !== "Disetujui") return item;
+  return { ...item, approval: null, approvals: [...(item.approvals ?? []), { at, actor: "Sistem", decision: "Tidak Berlaku", version: oldVersion, note: `Approval v${oldVersion} tidak berlaku untuk v${newVersion}.` }] };
+}
+
+export type Campaign = { id: string; name: string; productionId: string; contentIds: string[]; platforms: string[]; accounts: string[]; target: string; schedule: string; status: SocialStatus; approval: ApprovalStatus | null;
+  pattern?: string | undefined; volume?: Record<string, number> | undefined; approvals?: ApprovalRecord[] | undefined; submittedBy?: string | undefined; submittedAt?: string | undefined; submittedDay?: SubmittedDay | undefined };
 export type ChannelOrder = { channel: string; status: NewsStatus; url?: string | undefined };
-export type NewsOrder = { id: string; productionId: string; contentId: string; channels: ChannelOrder[]; schedule: string; notes: string; status: NewsStatus; approval: ApprovalStatus | null };
+export type NewsOrder = { id: string; productionId: string; contentId: string; channels: ChannelOrder[]; schedule: string; notes: string; status: NewsStatus; approval: ApprovalStatus | null;
+  title?: string | undefined; approvals?: ApprovalRecord[] | undefined; submittedBy?: string | undefined; submittedAt?: string | undefined; submittedDay?: SubmittedDay | undefined };
 
 export const SOCIAL_PLATFORMS = ["X", "Instagram", "TikTok", "Facebook", "YouTube", "Threads"] as const;
 export const SOCIAL_ACCOUNTS: Record<string, string[]> = {
@@ -146,34 +170,54 @@ export const DEMO_BRIEF: ProductionBrief = {
 export function buildItems(brief: ProductionBrief, types: OutputType[], origin: Pick<ProductionItem, "source" | "strategySlug" | "strategyTitle" | "situationSlug" | "situationName">, firstNumber: number): ProductionItem[] {
   return types.map((type, i) => {
     const m = outputMeta(type);
-    return { id: `PRD-${String(firstNumber + i).padStart(3, "0")}`, title: `${m.prefix} ${brief.theme.replace(/^Respons /, "")}`, type, family: m.family, dest: [m.dest], ...origin, brief, status: "Draft", approval: null, version: 0, variant: 0, content: emptyContent(type), history: [], updated: "Baru saja" };
+    return { id: `PRD-${String(firstNumber + i).padStart(3, "0")}`, title: `${m.prefix} ${brief.theme.replace(/^Respons /, "")}`, type, family: m.family, dest: [m.dest], ...origin, brief, status: "Draft", approval: null, version: 0, variant: 0, content: emptyContent(type), history: [], approvals: [], updated: "Baru saja" };
   });
 }
 
 const demoOrigin = { source: "Strategi" as const, strategySlug: "respons-informasi-demonstrasi-nasional", strategyTitle: "Respons Informasi Demonstrasi Nasional", situationSlug: "demonstrasi-nasional", situationName: "Demonstrasi Nasional" };
-const seeded = (id: string, title: string, type: OutputType, approval: ApprovalStatus | null, history: HistoryEntry[], origin: Partial<ProductionItem> = demoOrigin, status: ProductionStatus = "Generated"): ProductionItem => {
+type Seed = { approval: ApprovalStatus | null; history: HistoryEntry[]; approvals?: ApprovalRecord[]; by?: string; at?: string; day?: SubmittedDay; origin?: Partial<ProductionItem>; status?: ProductionStatus; note?: string };
+const seeded = (id: string, title: string, type: OutputType, o: Seed): ProductionItem => {
   const m = outputMeta(type);
+  const origin = o.origin ?? demoOrigin;
+  const status = o.status ?? "Generated";
   const brief = origin.source === "Manual" ? { ...DEMO_BRIEF, theme: "Ringkasan Situasi", channels: undefined } : DEMO_BRIEF;
-  return { id, title, type, family: m.family, dest: [m.dest], source: "Strategi", ...origin, brief, status, approval, version: history.at(-1)?.version ?? 0, variant: 0, content: status === "Generated" ? generateContent(type, brief, 0) : emptyContent(type), history, updated: "15 menit lalu" };
+  return { id, title, type, family: m.family, dest: [m.dest], source: "Strategi", ...origin, brief, status, approval: o.approval, version: o.history.at(-1)?.version ?? 0, variant: 0, content: status === "Generated" ? generateContent(type, brief, 0) : emptyContent(type), history: o.history, approvals: o.approvals ?? [], submittedBy: o.by, submittedAt: o.at, submittedDay: o.day, reviewNote: o.note, updated: "15 menit lalu" };
 };
+const g = (version: number, label: HistoryEntry["label"], at: string): HistoryEntry => ({ version, label, at });
 
 export const initialProductions: ProductionItem[] = [
-  seeded("PRD-021", "Artikel Demonstrasi Nasional", "News Article", "Disetujui", [{ version: 1, label: "Generated", at: "08:40" }, { version: 2, label: "Edited", at: "08:55" }, { version: 3, label: "Approved", at: "09:12" }]),
-  seeded("PRD-022", "Video Penjelasan Situasi", "Video Pendek", "Menunggu", [{ version: 1, label: "Generated", at: "09:20" }, { version: 2, label: "Regenerated", at: "09:41" }, { version: 2, label: "Diajukan", at: "09:45" }]),
-  seeded("PRD-023", "Carousel Informasi Publik", "Carousel", "Disetujui", [{ version: 1, label: "Generated", at: "09:05" }, { version: 1, label: "Approved", at: "09:30" }]),
-  seeded("PRD-024", "Audio Ringkasan Situasi", "Audio / Podcast", null, [], { source: "Manual" }, "Draft"),
+  seeded("PRD-021", "Artikel Informasi Demonstrasi Nasional", "News Article", { approval: "Menunggu", by: "Tim Editorial", at: "12 menit lalu", day: "Hari ini",
+    history: [g(1, "Generated", "08:50"), g(1, "Diajukan", "09:12"), g(1, "Perlu Revisi", "09:35"), g(2, "Edited", "10:02"), g(2, "Diajukan", "10:10")],
+    approvals: [{ at: "09:12", actor: "Tim Editorial", decision: "Diajukan", version: 1 }, { at: "09:35", actor: "Supervisor", decision: "Perlu Revisi", version: 1, note: "Perjelas sumber pada bagian ketiga." }, { at: "10:10", actor: "Tim Editorial", decision: "Diajukan Kembali", version: 2 }] }),
+  seeded("PRD-022", "Video Penjelasan Demonstrasi", "Video Pendek", { approval: "Menunggu", by: "Tim Produksi", at: "18 menit lalu", day: "Hari ini",
+    history: [g(1, "Generated", "09:58"), g(1, "Diajukan", "10:04")], approvals: [{ at: "10:04", actor: "Tim Produksi", decision: "Diajukan", version: 1 }] }),
+  seeded("PRD-023", "Carousel Informasi Demonstrasi", "Carousel", { approval: "Perlu Revisi", by: "Tim Produksi", at: "1 jam lalu", day: "Hari ini", note: "Slide Fakta jangan dibuka dengan angka; utamakan klarifikasi.",
+    history: [g(1, "Generated", "08:30"), g(2, "Edited", "08:52"), g(2, "Diajukan", "09:00"), g(2, "Perlu Revisi", "09:20")],
+    approvals: [{ at: "09:00", actor: "Tim Produksi", decision: "Diajukan", version: 2 }, { at: "09:20", actor: "Supervisor", decision: "Perlu Revisi", version: 2, note: "Slide Fakta jangan dibuka dengan angka; utamakan klarifikasi." }] }),
+  seeded("PRD-024", "Audio Ringkasan Situasi", "Audio / Podcast", { approval: null, history: [], origin: { source: "Manual" }, status: "Draft" }),
+  seeded("PRD-020", "Video Ringkas Demonstrasi", "Video Pendek", { approval: "Disetujui", by: "Tim Produksi", at: "Kemarin", day: "Kemarin",
+    history: [g(1, "Generated", "15:10"), g(1, "Diajukan", "15:20"), g(1, "Approved", "15:42")], approvals: [{ at: "15:20", actor: "Tim Produksi", decision: "Diajukan", version: 1 }, { at: "15:42", actor: "Supervisor", decision: "Disetujui", version: 1 }] }),
+  seeded("PRD-019", "Infografis Informasi Demonstrasi", "Infografis", { approval: "Disetujui", by: "Tim Produksi", at: "Kemarin", day: "Kemarin",
+    history: [g(1, "Generated", "14:30"), g(1, "Diajukan", "14:40"), g(1, "Approved", "15:05")], approvals: [{ at: "14:40", actor: "Tim Produksi", decision: "Diajukan", version: 1 }, { at: "15:05", actor: "Supervisor", decision: "Disetujui", version: 1 }] }),
+  seeded("PRD-018", "Artikel Demonstrasi Nasional — Edisi Pagi", "News Article", { approval: "Disetujui", by: "Tim Editorial", at: "Kemarin", day: "Kemarin",
+    history: [g(1, "Generated", "06:40"), g(1, "Diajukan", "06:55"), g(1, "Approved", "07:12")], approvals: [{ at: "06:55", actor: "Tim Editorial", decision: "Diajukan", version: 1 }, { at: "07:12", actor: "Supervisor", decision: "Disetujui", version: 1 }] }),
 ];
 
+const pick = (platform: string, n: number) => Array.from({ length: n }, (_, i) => `${SOCIAL_ACCOUNTS[platform]?.[i % (SOCIAL_ACCOUNTS[platform]?.length ?? 1)] ?? platform}${i >= (SOCIAL_ACCOUNTS[platform]?.length ?? 0) ? `_${i + 1}` : ""}`);
 export const initialCampaigns: Campaign[] = [
-  { id: "CMP-014", name: "Campaign X & TikTok", productionId: "PRD-023", contentIds: ["PRD-023"], platforms: ["X", "TikTok"], accounts: ["@inforesmi_id", "@pusatinformasi", "@faktadata_id", "@inforesmi.id", "@ceknarasi"], target: "Publik Jakarta & Bandung, 18–45 tahun", schedule: "Hari ini, 16:00 WIB", status: "Menunggu Approval", approval: "Menunggu" },
+  { id: "CMP-014", name: "Campaign Respons Demonstrasi Nasional", productionId: "PRD-020", contentIds: ["PRD-020", "PRD-019"], platforms: ["X", "Instagram", "TikTok"], accounts: [...pick("X", 8), ...pick("Instagram", 5), ...pick("TikTok", 5)], target: "Publik Jakarta & Bandung, 18–45 tahun", schedule: "8 Oktober 2026, 14:00–18:00 WIB", pattern: "Staggered Publishing", volume: { X: 8, Instagram: 5, TikTok: 5 },
+    status: "Menunggu Approval", approval: "Menunggu", submittedBy: "Tim Digital", submittedAt: "25 menit lalu", submittedDay: "Hari ini",
+    approvals: [{ at: "13:10", actor: "Tim Digital", decision: "Diajukan" }, { at: "13:22", actor: "Supervisor", decision: "Perlu Revisi", note: "Ubah jadwal TikTok menjadi setelah 16:00." }, { at: "13:45", actor: "Tim Digital", decision: "Diajukan Kembali" }] },
 ];
 
-const twelve = ["Nasional", "DKI Jakarta", "Jawa Barat", "Jawa Tengah", "Jawa Timur", "Banten", "DI Yogyakarta", "Sumatera Utara", "Sumatera Selatan", "Kalimantan Timur", "Sulawesi Selatan", "Bali"];
+const sixteen = [NATIONAL_CHANNEL, "DKI Jakarta", "Jawa Barat", "Jawa Tengah", "Jawa Timur", "Banten", "DI Yogyakarta", "Sumatera Utara", "Sumatera Selatan", "Lampung", "Kalimantan Timur", "Sulawesi Selatan", "Bali", "Nusa Tenggara Barat", "Riau", "Sulawesi Utara"];
 export const initialOrders: NewsOrder[] = [
-  { id: "DN-012", productionId: "PRD-021", contentId: "PRD-021", channels: twelve.map((channel) => ({ channel, status: "Draft Order" })), schedule: "Besok, 07:00 WIB", notes: "Sesuaikan lead dengan titik aksi setempat.", status: "Menunggu Approval", approval: "Menunggu" },
-  { id: "DN-011", productionId: "PRD-021", contentId: "PRD-021", channels: [
+  { id: "DN-012", title: "Publikasi Artikel Demonstrasi", productionId: "PRD-018", contentId: "PRD-018", channels: sixteen.map((channel) => ({ channel, status: "Draft Order" })), schedule: "8–9 Oktober 2026", notes: "Penyesuaian headline dan konteks wilayah diperbolehkan.", status: "Menunggu Approval", approval: "Menunggu",
+    submittedBy: "Tim Media", submittedAt: "31 menit lalu", submittedDay: "Hari ini", approvals: [{ at: "10:05", actor: "Tim Media", decision: "Diajukan" }] },
+  { id: "DN-011", title: "Publikasi Edisi Pagi", productionId: "PRD-018", contentId: "PRD-018", channels: [
     { channel: "Jawa Barat", status: "Menunggu Verifikasi", url: "https://jabar.kanal.id/berita/informasi-aksi" },
     { channel: "DKI Jakarta", status: "Dalam Pengerjaan" },
     { channel: "Banten", status: "Dikirim" },
-  ], schedule: "Hari ini, 09:00 WIB", notes: "Edisi pagi.", status: "Dikirim", approval: "Disetujui" },
+  ], schedule: "Hari ini, 09:00 WIB", notes: "Edisi pagi.", status: "Dikirim", approval: "Disetujui",
+    submittedBy: "Tim Media", submittedAt: "Kemarin", submittedDay: "Kemarin", approvals: [{ at: "07:20", actor: "Tim Media", decision: "Diajukan" }, { at: "07:41", actor: "Supervisor", decision: "Disetujui" }] },
 ];
