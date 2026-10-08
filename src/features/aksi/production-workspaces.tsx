@@ -168,7 +168,7 @@ function InfographicWorkspace({ p }: { p: ProductionItem }) {
         <h3 className="font-display text-xl font-semibold leading-tight">{p.content.headline}</h3>
         <p className="mt-3 border-l-2 border-primary pl-3 text-xs leading-5 text-muted-foreground">{firstLine(p.brief.message)}</p>
         <p className="mt-5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">3 hal yang perlu diketahui</p>
-        <div className="mt-2 grid gap-2">{know.map((k, i) => { const I = icons[i]; return <div key={k} className="flex items-start gap-3 rounded-md bg-secondary/60 p-2.5"><span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/15 text-primary"><I className="size-3.5" /></span><p className="text-xs leading-5">{k}</p></div>; })}</div>
+        <div className="mt-2 grid gap-2">{know.map((k, i) => { const I = icons[i] ?? Info; return <div key={k} className="flex items-start gap-3 rounded-md bg-secondary/60 p-2.5"><span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/15 text-primary"><I className="size-3.5" /></span><p className="text-xs leading-5">{k}</p></div>; })}</div>
         <div className="mt-3 flex items-start gap-3 rounded-md border border-chart-3/40 p-2.5"><CircleHelp className="size-4 shrink-0 text-chart-3" /><div><p className="text-[10px] font-semibold uppercase text-chart-3">Belum terverifikasi</p><p className="text-xs leading-5">{unverified}</p></div></div>
         <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-[10px] text-muted-foreground"><span>Rujuk kanal informasi resmi pemerintah</span><span className="font-semibold text-foreground">SPEKTRA</span></div>
       </div>
@@ -187,7 +187,7 @@ function CarouselWorkspace({ p }: { p: ProductionItem }) {
   const all = sel.length === p.content.slides.length;
   return <div className="grid gap-3">
     <div className="flex flex-wrap items-center gap-2"><Button size="sm" variant="outline" onClick={() => setSel(all ? [] : p.content.slides.map((_, i) => i))}>{all ? "Batal pilih" : "Pilih semua"}</Button><span className="text-[11px] text-muted-foreground">{sel.length} dari {p.content.slides.length} slide dipilih</span><div className="ml-auto"><GenerateBar p={p} label="Generate Carousel" /></div></div>
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">{p.content.slides.map((s, i) => { const I = SLIDE_ICONS[i % 5]; return (
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">{p.content.slides.map((s, i) => { const I = SLIDE_ICONS[i % 5] ?? Info; return (
       <div key={i} className={cn("flex aspect-[4/5] flex-col overflow-hidden rounded-md border bg-card", sel.includes(i) ? "border-primary" : "border-border")}>
         <div className="relative h-2/5 shrink-0"><img src={SLIDE_IMGS[i % 3]} alt="" loading="lazy" className="size-full object-cover opacity-55" /><div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
           <div className="absolute inset-x-2 top-2 flex items-center justify-between text-[10px]"><span className="rounded-sm bg-background/80 px-1.5 py-0.5">{i + 1}/{p.content.slides.length} · {s.label}</span><Checkbox className="bg-background/80" aria-label={`Pilih slide ${i + 1}`} checked={sel.includes(i)} onCheckedChange={() => setSel((cur) => (cur.includes(i) ? cur.filter((x) => x !== i) : [...cur, i]))} /></div>
