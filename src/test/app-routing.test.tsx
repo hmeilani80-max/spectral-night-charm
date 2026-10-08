@@ -84,7 +84,7 @@ describe("Aksi approval gates", () => {
   });
   it("records every decision per version and keeps old records when a new version voids approval", async () => {
     const { applySubmit, applyDecision, invalidateApproval, initialProductions } = await import("@/features/aksi/data");
-    const base = { ...initialProductions[1]!, approvals: [], approval: null };
+    const base = { ...initialProductions[1]!, approvals: [] as import("@/features/aksi/data").ApprovalRecord[], approval: null };
     let p = applySubmit(base, "Tim Produksi", "09:00", 1);
     p = applyDecision(p, "Perlu Revisi", "09:10", 1, "Perjelas sumber");
     p = applySubmit(p, "Tim Produksi", "09:30", 2);
