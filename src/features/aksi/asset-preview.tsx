@@ -26,7 +26,7 @@ export function AssetPreview({ p, compact = false }: { p: ProductionItem; compac
     <img src={briefingImg} alt="Aktivitas publik dan informasi resmi" className="h-24 w-full object-cover" />
     <div className="p-3"><p className="text-[9px] font-semibold text-primary">SPEKTRA · INFORMASI PUBLIK</p><h3 className="mt-1 text-sm font-semibold leading-snug">{title}</h3><p className="mt-2 text-[11px] leading-4 text-muted-foreground">{message}</p>
       <ol className="mt-3 grid gap-2">{p.brief.points.slice(0, 3).map((point, i) => <li key={i} className="flex gap-2 text-[11px] leading-4"><ShieldCheck className="size-3.5 shrink-0 text-chart-2" />{point}</li>)}</ol>
-      <div className="mt-3 border-l-2 border-chart-3 pl-2 text-[10px] leading-4"><strong className="text-chart-3">Klarifikasi</strong><p>{p.brief.points.find((x) => /belum|klarifikasi/i.test(x)) ?? "Informasi yang belum dikonfirmasi tidak boleh dianggap sebagai fakta."}</p></div>
+      <div className="mt-3 border-l-2 border-chart-3 pl-2 text-[10px] leading-4"><strong className="text-chart-3">Klarifikasi</strong><p>{p.brief.points.find((x) => /\bbelum\b|klarifikasi/i.test(x)) ?? "Informasi yang belum dikonfirmasi tidak boleh dianggap sebagai fakta."}</p></div>
       <p className="mt-3 border-t border-border pt-2 text-[10px] text-primary">Rujuk kanal resmi untuk pembaruan terverifikasi.</p>
     </div></div>;
   if (p.type === "Carousel") {

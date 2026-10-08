@@ -133,7 +133,7 @@ function NewDistribution() {
             {[["Nama Distribusi", name.trim()], ["Approved Content", assets.map((a) => a.title).join(", ")], ["Tujuan", purpose.join(", ")], ["Platform", [...new Set(chosen.map((a) => a.platform))].join(", ")], ["Target Akun", `${chosen.length} akun`], ["Planned Posts", `${posts.length} planned posts`], ["Periode", timing.mode === "Segera" ? "Segera setelah disetujui" : `${periodLabel(timing)} 2026`], ["Waktu", timing.windows?.map((w) => `${w.from}–${w.to}`).join(", ") ?? `${timing.from}–${timing.to}`], ["Pola Penyebaran", staggered ? "Otomatis bertahap" : "Serentak"], ["Potensi Penyebaran", potential]].map(([k, v]) => <div key={k}><dt className="text-muted-foreground">{k}</dt><dd className="mt-0.5 font-medium">{v}</dd></div>)}
           </dl></Box>
           <Box title="Preview Sampel" action={<Button size="sm" variant="ghost" onClick={() => setStep(2)}>Lihat Semua Paket Publikasi</Button>}>
-            <div className="grid gap-3 sm:grid-cols-3">{["X", "Instagram", "TikTok"].map((pl) => posts.find((p) => p.platform === pl)).filter((p): p is Post => !!p).map((p) => <PostMock key={p.id} post={p} asset={productions.find((a) => a.id === p.assetId)} />)}</div>
+            <div className="grid gap-3 sm:grid-cols-3">{["X", "Instagram", "TikTok"].map((pl) => posts.find((p) => p.platform === pl && (pl !== "Instagram" || p.assetType === "Carousel")) ?? posts.find((p) => p.platform === pl)).filter((p): p is Post => !!p).map((p) => <PostMock key={p.id} post={p} asset={productions.find((a) => a.id === p.assetId)} />)}</div>
           </Box>
         </div>
         <div className="grid content-start gap-4">
