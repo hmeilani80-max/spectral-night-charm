@@ -168,7 +168,11 @@ const seeded = (id: string, title: string, type: OutputType, o: Seed): Productio
   const m = outputMeta(type);
   const origin = o.origin ?? demoOrigin;
   const status = o.status ?? "Generated";
-  const brief = origin.source === "Manual" ? { ...DEMO_BRIEF, theme: "Ringkasan Situasi", channels: undefined } : DEMO_BRIEF;
+  const brief = ["PRD-017", "PRD-019", "PRD-020"].includes(id) ? {
+    ...DEMO_BRIEF, theme: "Informasi Demonstrasi Nasional",
+    message: "Perkembangan demonstrasi perlu dipahami melalui kondisi aktual dan sumber terverifikasi. Pisahkan fakta dari kabar yang belum dikonfirmasi.",
+    points: ["Pantau pembaruan kondisi lapangan dari sumber resmi", "Periksa waktu dan lokasi sebelum membagikan informasi", "Utamakan keselamatan dan akses layanan publik", "Kabar yang belum dikonfirmasi perlu diverifikasi melalui kanal resmi"],
+  } : origin.source === "Manual" ? { ...DEMO_BRIEF, theme: "Ringkasan Situasi", channels: undefined } : DEMO_BRIEF;
   return { id, title, type, family: m.family, dest: [m.dest], source: "Strategi", ...origin, brief, status, approval: o.approval, version: o.history.at(-1)?.version ?? 0, variant: 0, content: status === "Generated" ? generateContent(type, brief, 0) : emptyContent(type), history: o.history, approvals: o.approvals ?? [], submittedBy: o.by, submittedAt: o.at, submittedDay: o.day, reviewNote: o.note, updated: "15 menit lalu" };
 };
 const g = (version: number, label: HistoryEntry["label"], at: string): HistoryEntry => ({ version, label, at });
@@ -183,9 +187,9 @@ export const initialProductions: ProductionItem[] = [
     history: [g(1, "Generated", "08:30"), g(2, "Edited", "08:52"), g(2, "Diajukan", "09:00"), g(2, "Perlu Revisi", "09:20")],
     approvals: [{ at: "09:00", actor: "Tim Produksi", decision: "Diajukan", version: 2 }, { at: "09:20", actor: "Supervisor", decision: "Perlu Revisi", version: 2, note: "Slide Fakta jangan dibuka dengan angka; utamakan klarifikasi." }] }),
   seeded("PRD-024", "Audio Ringkasan Situasi", "Audio / Podcast", { approval: null, history: [], origin: { source: "Manual" }, status: "Draft" }),
-  seeded("PRD-020", "Video Ringkas Demonstrasi", "Video Pendek", { approval: "Disetujui", by: "Tim Produksi", at: "Kemarin", day: "Kemarin",
+  seeded("PRD-020", "Video Penjelasan Demonstrasi Nasional", "Video Pendek", { approval: "Disetujui", by: "Tim Produksi", at: "Kemarin", day: "Kemarin",
     history: [g(1, "Generated", "15:10"), g(1, "Diajukan", "15:20"), g(1, "Approved", "15:42")], approvals: [{ at: "15:20", actor: "Tim Produksi", decision: "Diajukan", version: 1 }, { at: "15:42", actor: "Supervisor", decision: "Disetujui", version: 1 }] }),
-  seeded("PRD-019", "Infografis Informasi Demonstrasi", "Infografis", { approval: "Disetujui", by: "Tim Produksi", at: "Kemarin", day: "Kemarin",
+  seeded("PRD-019", "Infografis Informasi Demonstrasi Nasional", "Infografis", { approval: "Disetujui", by: "Tim Produksi", at: "Kemarin", day: "Kemarin",
     history: [g(1, "Generated", "14:30"), g(1, "Diajukan", "14:40"), g(1, "Approved", "15:05")], approvals: [{ at: "14:40", actor: "Tim Produksi", decision: "Diajukan", version: 1 }, { at: "15:05", actor: "Supervisor", decision: "Disetujui", version: 1 }] }),
   seeded("PRD-017", "Carousel Informasi Demonstrasi Nasional", "Carousel", { approval: "Disetujui", by: "Tim Produksi", at: "Kemarin", day: "Kemarin",
     history: [g(1, "Generated", "13:40"), g(1, "Diajukan", "13:55"), g(1, "Approved", "14:20")], approvals: [{ at: "13:55", actor: "Tim Produksi", decision: "Diajukan", version: 1 }, { at: "14:20", actor: "Supervisor", decision: "Disetujui", version: 1 }] }),
