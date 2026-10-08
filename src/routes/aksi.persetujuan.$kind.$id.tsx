@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 
+import { periodLabel } from "@/features/aksi/sosial";
 import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -90,14 +91,14 @@ function Detail() {
       <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
         <div className="grid content-start gap-4">
           <Box title="Konten"><ul className="grid gap-2 text-xs">{contents.map((p) => <li key={p.id} className="flex items-center justify-between gap-2"><Link to="/aksi/persetujuan/$kind/$id" params={{ kind: "konten", id: p.id }} className="hover:underline">{p.title} <span className="text-muted-foreground">· {p.type}</span></Link><StatusPill value={p.approval === "Disetujui" ? "Approved" : label(p.approval)} /></li>)}</ul></Box>
-          <Box title="Rencana Distribusi"><Meta items={[["Platform", c.platforms.join(", ")], ["Target Account", `${c.accounts.length} akun`], ["Jadwal", c.schedule], ["Pola Distribusi", c.pattern ?? "—"]]} /></Box>
+          <Box title="Rencana Distribusi"><Meta items={[["Tujuan", c.purpose.join(", ")], ["Platform", c.platforms.join(", ")], ["Target Account", `${c.accounts.length} akun`], ["Periode", `${c.timing.mode === "Segera" ? "Segera setelah disetujui · " : ""}${periodLabel(c.timing)} · ${c.timing.from}–${c.timing.to}`], ["Pola Distribusi", c.staggered ? "Otomatis bertahap" : "Serentak"], ["Volume", `${c.posts.length} posting`]]} /></Box>
           <Box title="Volume & Content Matrix">
             <table className="w-full text-left text-xs"><thead className="text-muted-foreground"><tr><th className="py-1.5 font-medium">Platform</th><th className="py-1.5 font-medium">Posting</th><th className="py-1.5 font-medium">Konten</th></tr></thead>
-              <tbody>{c.platforms.map((pl) => <tr key={pl} className="border-t border-border"><td className="py-2">{pl}</td><td className="py-2">{c.volume?.[pl] ?? c.accounts.length} posting</td><td className="py-2 text-muted-foreground">{contents.map((p) => p.type).join(", ")}</td></tr>)}</tbody></table>
+              <tbody>{c.platforms.map((pl) => <tr key={pl} className="border-t border-border"><td className="py-2">{pl}</td><td className="py-2">{c.posts.filter((x) => x.platform === pl).length} posting</td><td className="py-2 text-muted-foreground">{[...new Set(c.posts.filter((x) => x.platform === pl).map((x) => x.assetType))].join(", ")}</td></tr>)}</tbody></table>
           </Box>
         </div>
         <div className="grid content-start gap-4">
-          <Decision distribution refx={{ kind: "Distribusi Sosial", id: c.id }} status={c.approval} after="Campaign dapat menjalankan penjadwalan dan auto-post di Distribusi Sosial." />
+          <Decision distribution refx={{ kind: "Distribusi Sosial", id: c.id }} status={c.approval} after={c.timing.mode === "Segera" ? "Distribusi langsung mulai dijalankan." : "Distribusi akan berstatus Dijadwalkan dan berjalan otomatis sesuai jadwal."} />
           <Box title="Riwayat Keputusan"><Timeline records={c.approvals ?? []} /></Box>
         </div>
       </div>
