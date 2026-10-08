@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusPill, Stat, Trail } from "@/features/aksi/components";
 import { findOutput, useAksi } from "@/features/aksi/context";
-import { isEligible, NATIONAL_CHANNEL, NEWS_CHANNELS, REGIONAL_CHANNELS, type NewsStatus } from "@/features/aksi/data";
+import { isEligible, NATIONAL_CHANNEL, NEWS_CHANNELS, newsChannelDomain, REGIONAL_CHANNELS, type NewsStatus } from "@/features/aksi/data";
 import { aksiHead } from "@/features/aksi/meta";
 
 export const Route = createFileRoute("/aksi/distribusi-news/")({
@@ -62,8 +62,8 @@ function Pemesan() {
                 <SelectContent>{eligible.map(({ p, o }) => <SelectItem key={o.id} value={o.id}>{o.type} v{o.version} · {p.title}</SelectItem>)}</SelectContent></Select></div>
             <div>
               <div className="mb-2 flex items-center justify-between"><p className="text-xs font-medium">Kanal tujuan · {channels.length} dipilih</p><Button size="sm" variant="ghost" onClick={() => setChannels(channels.length === NEWS_CHANNELS.length ? [] : NEWS_CHANNELS)}>{channels.length === NEWS_CHANNELS.length ? "Kosongkan" : "Pilih semua 39"}</Button></div>
-              <label className="mb-2 flex items-center gap-2 text-xs font-medium"><Checkbox checked={channels.includes(NATIONAL_CHANNEL)} onCheckedChange={() => flip(NATIONAL_CHANNEL)} />Kanal Nasional</label>
-              <div className="grid max-h-56 grid-cols-2 gap-1 overflow-y-auto rounded-md border border-border p-2 sm:grid-cols-3">{REGIONAL_CHANNELS.map((r) => <label key={r} className="flex items-center gap-2 text-xs"><Checkbox checked={channels.includes(r)} onCheckedChange={() => flip(r)} />{r}</label>)}</div>
+              <label className="mb-2 flex items-center gap-2 text-xs font-medium"><Checkbox checked={channels.includes(NATIONAL_CHANNEL)} onCheckedChange={() => flip(NATIONAL_CHANNEL)} />{newsChannelDomain(NATIONAL_CHANNEL)}</label>
+              <div className="grid max-h-56 grid-cols-2 gap-1 overflow-y-auto rounded-md border border-border p-2 sm:grid-cols-3">{REGIONAL_CHANNELS.map((r) => <label key={r} className="flex items-center gap-2 text-xs"><Checkbox checked={channels.includes(r)} onCheckedChange={() => flip(r)} /><span className="truncate" title={newsChannelDomain(r)}>{newsChannelDomain(r)}</span></label>)}</div>
             </div>
             <div className="grid gap-1.5"><Label htmlFor="sch">Jadwal tayang</Label><Input id="sch" value={schedule} onChange={(e) => setSchedule(e.target.value)} /></div>
           </div>
@@ -98,7 +98,7 @@ function Penerima() {
 
   return <>
     <div className="mb-3 flex flex-wrap items-center gap-2 text-xs"><span className="text-muted-foreground">Masuk sebagai pengelola kanal</span>
-      <Select value={channel} onValueChange={setCh}><SelectTrigger aria-label="Kanal" className="w-[220px]"><SelectValue /></SelectTrigger><SelectContent>{channelOptions.map((c) => <SelectItem key={c} value={c}>Kanal {c}</SelectItem>)}</SelectContent></Select></div>
+      <Select value={channel} onValueChange={setCh}><SelectTrigger aria-label="Kanal" className="w-[250px]"><SelectValue>{newsChannelDomain(channel)}</SelectValue></SelectTrigger><SelectContent>{channelOptions.map((c) => <SelectItem key={c} value={c}>{newsChannelDomain(c)}</SelectItem>)}</SelectContent></Select></div>
     <div className="grid gap-3">
       {!inbox.length && <p className="rounded-lg border border-border bg-card p-6 text-center text-xs text-muted-foreground">Tidak ada order masuk untuk kanal ini.</p>}
       {inbox.map(({ o, c }) => (
@@ -108,7 +108,7 @@ function Penerima() {
             {c.status === "Dikirim" && <><Button size="sm" onClick={() => act(o.id, "Diterima Kanal")}>Terima</Button><Button size="sm" variant="ghost" onClick={() => act(o.id, "Ditolak")}>Tolak</Button></>}
             {(c.status === "Diterima Kanal" || c.status === "Perlu Revisi") && <Button size="sm" onClick={() => act(o.id, "Dalam Pengerjaan")}>Mulai Pengerjaan</Button>}
             {c.status === "Dalam Pengerjaan" && <Button size="sm" onClick={() => act(o.id, "Tayang")}>Tandai Tayang</Button>}
-            {c.status === "Tayang" && <><Input aria-label="URL tayang" className="h-8 w-56" placeholder="https://…" value={urls[o.id] ?? ""} onChange={(e) => setUrls({ ...urls, [o.id]: e.target.value })} /><Button size="sm" disabled={!urls[o.id]?.startsWith("http")} onClick={() => act(o.id, "Menunggu Verifikasi", urls[o.id])}>Submit URL</Button></>}
+            {c.status === "Tayang" && <><Input aria-label="URL tayang" className="h-8 w-72" placeholder={`https://${newsChannelDomain(channel)}/berita/…`} value={urls[o.id] ?? ""} onChange={(e) => setUrls({ ...urls, [o.id]: e.target.value })} /><Button size="sm" disabled={!urls[o.id]?.startsWith("http")} onClick={() => act(o.id, "Menunggu Verifikasi", urls[o.id])}>Submit URL</Button></>}
           </div>
         </section>))}
     </div>

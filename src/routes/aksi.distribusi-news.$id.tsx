@@ -5,7 +5,7 @@ import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { Box, Lineage, StatusPill, Trail } from "@/features/aksi/components";
 import { findOutput, useAksi } from "@/features/aksi/context";
-import { distributionReadiness } from "@/features/aksi/data";
+import { distributionReadiness, newsChannelDomain } from "@/features/aksi/data";
 import { aksiHead } from "@/features/aksi/meta";
 
 export const Route = createFileRoute("/aksi/distribusi-news/$id")({
@@ -51,7 +51,7 @@ function OrderDetail() {
             <thead className="text-muted-foreground"><tr><th className="py-2 font-medium">Kanal</th><th className="py-2 font-medium">Status</th><th className="py-2 font-medium">URL tayang</th><th className="py-2" /></tr></thead>
             <tbody>{o.channels.map((c) => (
               <tr key={c.channel} className="border-t border-border">
-                <td className="py-2.5 font-medium">{c.channel === "Nasional" ? "Kanal Nasional" : `Kanal ${c.channel}`}</td><td><StatusPill value={c.status} /></td>
+                <td className="py-2.5 font-medium">{newsChannelDomain(c.channel)}</td><td><StatusPill value={c.status} /></td>
                 <td className="max-w-64 truncate">{c.url ? <a href={c.url} target="_blank" rel="noreferrer" className="text-primary hover:underline">{c.url}</a> : "—"}</td>
                 <td className="text-right">{c.status === "Menunggu Verifikasi" && <div className="flex justify-end gap-1.5"><Button size="sm" onClick={() => setChannel(o.id, c.channel, "Selesai")}>Verifikasi</Button><Button size="sm" variant="outline" onClick={() => setChannel(o.id, c.channel, "Perlu Revisi")}>Minta Revisi</Button></div>}</td>
               </tr>))}</tbody>
