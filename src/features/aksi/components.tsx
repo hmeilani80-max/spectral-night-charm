@@ -3,10 +3,10 @@ import { Fragment, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-const GOOD = ["Approved", "Disetujui", "Published", "Selesai", "Siap Eksekusi", "Tayang", "Scheduled"];
+const GOOD = ["Generated", "Approved", "Disetujui", "Published", "Selesai", "Siap Eksekusi", "Tayang", "Scheduled"];
 const WARN = ["Perlu Revisi", "Menunggu Verifikasi", "Menunggu Approval Distribusi"];
 const BAD = ["Ditolak", "Failed", "Belum dapat didistribusikan"];
-const ACTIVE = ["Menunggu", "Menunggu Review", "Menunggu Approval", "Dikirim", "Diterima Kanal", "Dalam Pengerjaan", "Publishing", "Dalam Produksi"];
+const ACTIVE = ["Generating", "Menunggu", "Menunggu Review", "Menunggu Approval", "Dikirim", "Diterima Kanal", "Dalam Pengerjaan", "Publishing", "Dalam Produksi"];
 
 export function StatusPill({ value }: { value: string }) {
   return <span className={cn("inline-flex whitespace-nowrap rounded-sm px-2 py-1 text-[10px] font-semibold",
