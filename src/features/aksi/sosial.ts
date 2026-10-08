@@ -5,11 +5,13 @@ export const PURPOSES = ["Diseminasi Informasi", "Klarifikasi", "Penguatan Infor
 
 /** Which platforms each social asset type is suited to. */
 export const PLATFORM_FIT: Partial<Record<OutputType, string[]>> = {
-  "Video Pendek": ["TikTok", "Instagram", "YouTube"],
+  "Video Pendek": ["TikTok", "Instagram", "YouTube", "Facebook"],
   Carousel: ["Instagram", "Facebook", "X"],
   Infografis: ["X", "Instagram", "Facebook"],
 };
-export const fits = (type: OutputType, platform: string) => PLATFORM_FIT[type]?.includes(platform) ?? false;
+export const recommendedPlatforms = (types: OutputType[]) => [...new Set(types.flatMap((type) => PLATFORM_FIT[type] ?? []))];
+export const fits = (type: OutputType, platform: string) => (PLATFORM_FIT[type]?.includes(platform) ?? false) || (platform === "Threads" && ["Carousel", "Infografis", "Video Pendek"].includes(type)) || (type === "Audio / Podcast" && ["YouTube", "Facebook"].includes(platform));
+export const RECOMMENDED_WINDOWS = [{ from: "10:00", to: "12:00" }, { from: "16:00", to: "18:00" }];
 
 export type AccountStatus = "Ready" | "Busy" | "Unavailable";
 export type SocialAccount = { id: string; handle: string; platform: string; group: string; label: string; status: AccountStatus };
@@ -41,7 +43,7 @@ export const LABELS = [...new Set(SOCIAL_ACCOUNTS.map((a) => a.label))];
 /** Only Ready accounts may be targeted. */
 export const selectable = (a: Pick<SocialAccount, "status">) => a.status === "Ready";
 
-export type Timing = { mode: "Segera" | "Jadwal"; start: string; end: string; from: string; to: string };
+export type Timing = { mode: "Segera" | "Jadwal"; start: string; end: string; from: string; to: string; windows?: { from: string; to: string }[] | undefined };
 export type PrepStatus = "Belum Disiapkan" | "Siap" | "Diedit";
 export type PostStatus = "Ready" | "Scheduled" | "Publishing" | "Published" | "Failed" | "Cancelled";
 export type Post = { id: string; accountId: string; handle: string; platform: string; assetId: string; assetType: OutputType; assetTitle: string; date: string; time: string; caption: string; hashtags: string[]; variant: number; prep: PrepStatus; exec: PostStatus; actual?: string | undefined; reason?: string | undefined };
@@ -75,50 +77,64 @@ const OPENERS = ["", "Perlu diketahui: ", "Update resmi: ", "Info penting: ", "S
 const CLOSERS = ["Cek sumber resmi sebelum membagikan.", "Rujuk kanal resmi untuk info terbaru.", "Bantu sebarkan informasi yang terverifikasi.", "Pastikan informasi dari sumber terpercaya."];
 
 /** Platform-specific caption, varied per account but anchored on the same Pesan Utama. */
-export function captionFor(platform: string, asset: Asset, purpose: string[], variant: number) {
+export function captionFor(platform: string, asset: Asset, purpose: string[], variant: number, account?: SocialAccount) {
   const msg = asset.brief.message.trim();
   const open = OPENERS[variant % OPENERS.length] ?? "";
   const close = CLOSERS[variant % CLOSERS.length] ?? "";
   const aim = purpose[0] ?? "Diseminasi Informasi";
+  const context = asset.brief.points.filter((p) => !/belum/i.test(p));
+  const fact = context[variant % Math.max(1, context.length)] ?? asset.brief.theme;
+  const action = asset.type === "Carousel" ? "Geser slide untuk konteks, fakta, dan klarifikasi." : asset.type === "Video Pendek" ? "Simak video penjelasan berikut." : asset.type === "Infografis" ? "Baca tiga poin utama pada infografis." : "Simak ringkasan berikut.";
+  const goal = aim === "Klarifikasi" || aim === "Counter Narrative" ? "Pisahkan fakta dari kabar yang belum dikonfirmasi." : aim === "Edukasi Publik" ? "Kenali konteksnya sebelum mengambil kesimpulan." : "Rujuk pembaruan dari sumber terverifikasi.";
   switch (platform) {
-    case "X": return `${open}${msg} ${close}`.slice(0, 280);
-    case "Instagram": return `${open}${msg}\n\nKonten ini disiapkan untuk ${aim.toLowerCase()} terkait ${asset.brief.theme}. Geser untuk melihat ringkasan lengkapnya.\n\n${close}`;
-    case "TikTok": return `${open}${msg.split(". ")[0]}. Tonton sampai habis! ${close}`;
-    case "Threads": return `Mari bahas bersama — ${msg.charAt(0).toLowerCase()}${msg.slice(1)} Menurutmu, sumber apa yang paling kamu percaya? ${close}`;
-    default: return `${open}${msg}\n\nBerikut penjelasan lengkap mengenai ${asset.brief.theme} untuk membantu masyarakat memperoleh informasi yang akurat. ${close}`;
+    case "X": return (account?.label === "Analisis" ? `Konteks ${asset.brief.theme}: ${fact}. ${goal} ${action}` : `${fact}. ${goal} ${action}`).slice(0, 280);
+    case "Instagram": return `${msg}\n\n${account?.label === "Komunitas" ? "Untuk teman-teman di ruang publik" : "Informasi untuk publik"}: ${fact}.\n${action}\n\n${goal} ${close}`;
+    case "TikTok": return `Sudah cek informasi terbaru? ${fact}. ${action} ${goal}`;
+    case "Threads": return `Kita sering menerima potongan informasi tentang ${asset.brief.theme}. ${fact}. ${goal} ${action}`;
+    default: return `${open}${msg}\n\n${fact}. ${action} ${goal} ${close}`;
   }
 }
 export const hashtagsFor = (platform: string) => ["#InfoResmi", "#CekFakta", ...(platform === "TikTok" ? ["#FYPInfo"] : platform === "Instagram" ? ["#RuangInformasi"] : [])];
 
-/** Approved Content × target account (where the asset fits the platform) = one Paket Publikasi. */
+/** Curate one or two compatible assets per account, rotated to cover the selected content. */
 export function buildPosts(assets: Asset[], accounts: SocialAccount[], purpose: string[], timing: Timing, staggered: boolean): Post[] {
-  const units = accounts.flatMap((a) => assets.filter((x) => fits(x.type, a.platform)).map((x) => ({ a, x })));
-  const days = dayList(timing);
+  const units = accounts.filter(selectable).flatMap((a, i) => {
+    const eligible = assets.filter((x) => fits(x.type, a.platform));
+    const rotated = [...eligible.slice(i % Math.max(1, eligible.length)), ...eligible.slice(0, i % Math.max(1, eligible.length))];
+    const limit = a.platform === "Instagram" || a.platform === "Facebook" || (a.platform === "X" && i % 2 === 1) ? 2 : 1;
+    return rotated.slice(0, limit).map((x) => ({ a, x }));
+  });
+  const days = dayList(timing.mode === "Segera" ? { start: timing.start, end: timing.start } : timing);
   const perDay = Math.max(1, Math.ceil(units.length / days.length));
   const from = toMin(timing.from), span = Math.max(0, toMin(timing.to) - from);
   return units.map(({ a, x }, i) => {
     const k = i % perDay;
-    const minute = staggered ? from + Math.round((k * span) / perDay / 5) * 5 : from;
-    return { id: `P${String(i + 1).padStart(2, "0")}`, accountId: a.id, handle: a.handle, platform: a.platform, assetId: x.id, assetType: x.type, assetTitle: x.title, date: days[Math.min(days.length - 1, Math.floor(i / perDay))] ?? timing.start, time: toHm(minute), caption: captionFor(a.platform, x, purpose, i), hashtags: hashtagsFor(a.platform), variant: i, prep: "Siap", exec: "Ready" };
+    const window = timing.windows?.[k % timing.windows.length];
+    const minute = window && staggered ? toMin(window.from) + Math.round((Math.floor(k / Math.max(1, timing.windows?.length ?? 1)) * (toMin(window.to) - toMin(window.from))) / Math.max(1, Math.ceil(perDay / Math.max(1, timing.windows?.length ?? 1))) / 5) * 5 : staggered ? from + Math.round((k * span) / perDay / 5) * 5 : from;
+    return { id: `P${String(i + 1).padStart(2, "0")}`, accountId: a.id, handle: a.handle, platform: a.platform, assetId: x.id, assetType: x.type, assetTitle: x.title, date: days[Math.min(days.length - 1, Math.floor(i / perDay))] ?? timing.start, time: toHm(minute), caption: captionFor(a.platform, x, purpose, i, a), hashtags: hashtagsFor(a.platform), variant: i, prep: "Siap", exec: "Ready" };
   });
 }
 export function regeneratePost(p: Post, asset: Asset, purpose: string[]): Post {
   const variant = p.variant + 1;
-  return { ...p, variant, caption: captionFor(p.platform, asset, purpose, variant), prep: "Siap" };
+  return { ...p, variant, caption: captionFor(p.platform, asset, purpose, variant, accountById(p.accountId)), prep: "Siap" };
 }
 
 export type ReadyCheck = { ok: boolean; label: string };
-export function readinessChecks(c: Pick<Campaign, "contentIds" | "accounts" | "posts" | "timing">, productions: Pick<ProductionItem, "id" | "approval">[]): ReadyCheck[] {
+export function readinessChecks(c: Pick<Campaign, "contentIds" | "accounts" | "posts" | "timing">, productions: Pick<ProductionItem, "id" | "approval" | "type">[]): ReadyCheck[] {
   const notApproved = c.contentIds.filter((id) => productions.find((p) => p.id === id)?.approval !== "Disetujui").length;
   const unavailable = c.accounts.filter((id) => accountById(id)?.status !== "Ready").length;
   const noCaption = c.posts.filter((p) => !p.caption.trim()).length;
-  const validTime = c.timing.start <= c.timing.end && toMin(c.timing.from) < toMin(c.timing.to);
+  const validHM = (v: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(v);
+  const validTime = Number.isFinite(parse(c.timing.start).getTime()) && Number.isFinite(parse(c.timing.end).getTime()) && c.timing.start <= c.timing.end && validHM(c.timing.from) && validHM(c.timing.to) && toMin(c.timing.from) < toMin(c.timing.to) && (c.timing.windows ?? []).every((w) => validHM(w.from) && validHM(w.to) && toMin(w.from) < toMin(w.to));
+  const uncovered = c.contentIds.map((id) => productions.find((p) => p.id === id)).filter((p) => p && !c.accounts.some((id) => fits(p.type, accountById(id)?.platform ?? "")));
+  const wrongPost = c.posts.some((p) => !c.contentIds.includes(p.assetId) || !c.accounts.includes(p.accountId) || accountById(p.accountId)?.platform !== p.platform || !fits(p.assetType, p.platform));
   return [
     { ok: c.contentIds.length > 0 && !notApproved, label: !c.contentIds.length ? "Belum ada konten dipilih" : notApproved ? `${notApproved} konten belum Approved` : "Semua konten sudah Approved" },
     { ok: c.accounts.length > 0 && !unavailable, label: !c.accounts.length ? "Belum ada akun dipilih" : unavailable ? `${unavailable} akun tidak tersedia` : "Semua akun tersedia" },
-    { ok: c.posts.length > 0, label: c.posts.length ? "Semua paket publikasi sudah siap" : "Paket publikasi belum disiapkan" },
+    { ok: c.posts.length > 0 && c.posts.every((p) => p.prep !== "Belum Disiapkan") && c.contentIds.every((id) => c.posts.some((p) => p.assetId === id)), label: c.posts.length ? "Semua paket publikasi siap" : "Paket publikasi belum disiapkan" },
     { ok: c.posts.length > 0 && !noCaption, label: noCaption ? `${noCaption} posting belum memiliki caption` : "Copy tersedia untuk semua posting" },
     { ok: validTime, label: validTime ? "Jadwal valid" : "Jadwal tidak valid" },
+    { ok: !uncovered.length && !wrongPost, label: uncovered.length ? `${uncovered.map((p) => p?.type).join(", ")} belum memiliki target platform yang sesuai` : wrongPost ? "Ada paket dengan platform atau asset yang tidak sesuai" : "Platform sesuai dengan asset" },
   ];
 }
 export const canSubmitDistribution = (checks: ReadyCheck[]) => checks.every((c) => c.ok);
@@ -146,6 +162,10 @@ export const executionDone = (posts: Post[]) => posts.length > 0 && posts.every(
 export function scale(c: Pick<Campaign, "contentIds" | "accounts" | "platforms" | "timing" | "posts">, plannedPosts = c.posts.length) {
   return { assets: c.contentIds.length, accounts: c.accounts.length, platforms: new Set(c.accounts.map((id) => accountById(id)?.platform)).size || c.platforms.length, days: dayList(c.timing).length, posts: plannedPosts };
 }
+export function spreadPotential(c: Pick<Campaign, "contentIds" | "accounts" | "posts" | "timing">): "Rendah" | "Sedang" | "Tinggi" {
+  const platforms = new Set(c.posts.map((p) => p.platform)).size;
+  return c.contentIds.length >= 3 && c.accounts.length >= 8 && platforms >= 3 ? "Tinggi" : c.accounts.length >= 3 && platforms >= 2 ? "Sedang" : "Rendah";
+}
 
 // ---------- Seeds ----------
 const prod = (id: string) => initialProductions.find((p) => p.id === id) as ProductionItem;
@@ -171,7 +191,7 @@ export const initialCampaigns: Campaign[] = [
     posts: buildPosts(demoContent.map(prod), pickAccounts(demoAccounts), demoPurpose, demoTiming, true),
     status: "Menunggu Persetujuan", approval: "Menunggu", submittedBy: "Tim Digital", submittedAt: "10 menit lalu", submittedDay: "Hari ini",
     approvals: [{ at: "09:15", actor: "Tim Digital", decision: "Diajukan" }, { at: "09:35", actor: "Supervisor", decision: "Perlu Revisi", note: "Kurangi distribusi TikTok menjadi 3 akun." }, { at: "09:52", actor: "Tim Digital", decision: "Diajukan Kembali" }],
-    history: [{ at: "09:52", text: "Diajukan kembali" }, { at: "09:48", text: "Rencana diperbarui" }, { at: "09:35", text: "Perlu Perubahan — “Kurangi distribusi TikTok menjadi 3 akun.”" }, { at: "09:15", text: "Diajukan untuk Persetujuan Distribusi" }, { at: "09:08", text: "24 Paket Publikasi disiapkan oleh sistem" }, { at: "09:02", text: "12 akun target dipilih" }, { at: "08:51", text: "3 approved asset dipilih" }, { at: "08:40", text: "Distribusi dibuat" }] },
+    history: [{ at: "09:52", text: "Diajukan kembali" }, { at: "09:48", text: "Rencana diperbarui" }, { at: "09:35", text: "Perlu Perubahan — “Kurangi distribusi TikTok menjadi 3 akun.”" }, { at: "09:15", text: "Diajukan untuk Persetujuan Distribusi" }, { at: "09:08", text: "18 Paket Publikasi disiapkan oleh sistem" }, { at: "09:02", text: "12 akun target dipilih" }, { at: "08:51", text: "3 approved asset dipilih" }, { at: "08:40", text: "Distribusi dibuat" }] },
   { id: "CMP-014", name: "Klarifikasi Informasi Publik", productionId: "PRD-020", contentIds: ["PRD-020"], purpose: ["Klarifikasi"], direction: "",
     platforms: ["Instagram", "TikTok"], accounts: clarAccounts, timing: clarTiming, staggered: true, posts: clarPosts,
     status: "Sedang Berjalan", approval: "Disetujui", submittedBy: "Tim Digital", submittedAt: "Kemarin", submittedDay: "Kemarin",

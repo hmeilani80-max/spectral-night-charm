@@ -19,3 +19,5 @@
 - [x] Build Strategi list, create flow (from Situasi / manual), and detail workspace
 - [x] Channel-based recommendations, scenarios, action plan, and hand-off to Aksi
 - [x] Aksi: Produksi, Persetujuan, Distribusi Sosial, Distribusi News dengan gerbang approval dan jejak sumber
+- [x] Revisi Distribusi Sosial: pilihan asset, preview konsisten, rekomendasi target/waktu/skala, copy kontekstual, dan review
+- [x] Verifikasi revisi hingga persetujuan dan simulasi eksekusi

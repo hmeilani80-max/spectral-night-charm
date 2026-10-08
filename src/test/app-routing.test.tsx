@@ -98,11 +98,11 @@ describe("Aksi approval gates", () => {
 });
 
 describe("Distribusi Sosial rules", () => {
-  it("plans 24 posts for the demo scenario (3 assets, 12 accounts)", async () => {
+  it("recommends 18 curated posts for 3 assets and 12 accounts", async () => {
     const { initialCampaigns } = await import("@/features/aksi/sosial");
     const c = initialCampaigns.find((x) => x.id === "CMP-015");
     expect(c?.accounts.length).toBe(12);
-    expect(c?.posts.length).toBe(24);
+    expect(c?.posts.length).toBe(18);
   });
   it("only lets Ready accounts be selected", async () => {
     const { selectable } = await import("@/features/aksi/sosial");

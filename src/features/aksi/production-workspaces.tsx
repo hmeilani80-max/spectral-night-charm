@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 import { Box } from "./components";
+import { AssetPreview } from "./asset-preview";
 import { useAksi } from "./context";
 import type { Check, ProductionContent, ProductionItem } from "./data";
 
@@ -231,6 +232,7 @@ export function ProductionWorkspace({ p }: { p: ProductionItem }) {
 export function ContentPreview({ p }: { p: ProductionItem }) {
   const c = p.content;
   if (p.status !== "Generated") return <p className="text-xs text-muted-foreground">Konten belum selesai dibuat.</p>;
+  if (["Video Pendek", "Carousel", "Infografis"].includes(p.type)) return <AssetPreview p={p} />;
   switch (p.type) {
     case "News Article": return <article className="mx-auto w-full max-w-2xl rounded-md border border-border bg-background p-5">
       <h1 className="font-display text-2xl font-semibold leading-tight">{c.headline}</h1>
