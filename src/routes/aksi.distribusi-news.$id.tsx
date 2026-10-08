@@ -30,7 +30,7 @@ function OrderDetail() {
         <Lineage steps={[
           ...(prod?.situationName ? [{ label: "Situasi", value: prod.situationSlug ? <Link to="/situasi/$slug" params={{ slug: prod.situationSlug }}>{prod.situationName}</Link> : prod.situationName }] : []),
           ...(prod?.strategySlug ? [{ label: "Strategi", value: <Link to="/strategi/$slug" params={{ slug: prod.strategySlug }}>{prod.strategyTitle}</Link> }] : []),
-          ...(prod ? [{ label: "Produksi", value: <Link to="/aksi/produksi/$id" params={{ id: prod.id }}>Pesan Utama v{prod.messageVersion} → {found?.output.type} v{found?.output.version}</Link> }] : []),
+          ...(prod ? [{ label: "Produksi", value: <Link to="/aksi/produksi/$id" params={{ id: prod.id }}>{prod.title} · v{prod.version}</Link> }] : []),
           { label: "Distribusi News", value: `Order #${o.id}` },
           { label: "Kanal", value: `${o.channels.length} kanal` },
         ]} />
