@@ -7,7 +7,7 @@ import { routeTree } from "@/routeTree.gen";
 // Match routes without running loaders or rendering: loaders may need a server or
 // network the test run lacks, and jsdom never loads the stylesheets React waits on.
 describe("App routing", () => {
-  it.each(["/", "/situasi", "/situasi/demonstrasi-nasional", "/situasi/demonstrasi-nasional/eksplorasi", "/situasi/demonstrasi-nasional/risiko-prediksi", "/strategi", "/strategi/respons-informasi-demonstrasi-nasional", "/aksi/produksi", "/aksi/produksi/PRD-021", "/aksi/persetujuan", "/aksi/persetujuan/konten/PRD-021", "/aksi/persetujuan/sosial/CMP-014", "/aksi/distribusi-sosial", "/aksi/distribusi-sosial/CMP-014", "/aksi/distribusi-news", "/aksi/distribusi-news/DN-012", "/dampak", "/arsip", "/administrasi"])(
+  it.each(["/", "/situasi", "/situasi/demonstrasi-nasional", "/situasi/demonstrasi-nasional/eksplorasi", "/situasi/demonstrasi-nasional/risiko-prediksi", "/strategi", "/strategi/respons-informasi-demonstrasi-nasional", "/aksi/produksi", "/aksi/produksi/PRD-021", "/aksi/persetujuan", "/aksi/persetujuan/konten/PRD-021", "/aksi/persetujuan/sosial/CMP-014", "/aksi/distribusi-sosial", "/aksi/distribusi-sosial/CMP-014", "/aksi/distribusi-sosial/baru", "/aksi/distribusi-news", "/aksi/distribusi-news/DN-012", "/dampak", "/arsip", "/administrasi"])(
     "matches a SPEKTRA page for %s instead of falling back to not found",
     (path) => {
     const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
@@ -94,5 +94,37 @@ describe("Aksi approval gates", () => {
     expect(v3.approval).toBeNull();
     expect(v3.approvals).toHaveLength(5);
     expect(v3.approvals[3]?.decision).toBe("Disetujui");
+  });
+});
+
+describe("Distribusi Sosial rules", () => {
+  it("plans 24 posts for the demo scenario (3 assets, 12 accounts)", async () => {
+    const { initialCampaigns } = await import("@/features/aksi/sosial");
+    const c = initialCampaigns.find((x) => x.id === "CMP-015");
+    expect(c?.accounts.length).toBe(12);
+    expect(c?.posts.length).toBe(24);
+  });
+  it("only lets Ready accounts be selected", async () => {
+    const { selectable } = await import("@/features/aksi/sosial");
+    expect(selectable({ status: "Ready" })).toBe(true);
+    expect(selectable({ status: "Busy" })).toBe(false);
+    expect(selectable({ status: "Unavailable" })).toBe(false);
+  });
+  it("blocks submission when an account is unavailable or a caption is missing", async () => {
+    const { readinessChecks, canSubmitDistribution, initialCampaigns } = await import("@/features/aksi/sosial");
+    const { initialProductions } = await import("@/features/aksi/data");
+    const c = initialCampaigns[0]!;
+    expect(canSubmitDistribution(readinessChecks(c, initialProductions))).toBe(true);
+    expect(canSubmitDistribution(readinessChecks({ ...c, accounts: [...c.accounts, "Instagram:@info_aksi"] }, initialProductions))).toBe(false);
+    expect(canSubmitDistribution(readinessChecks({ ...c, posts: c.posts.map((p, i) => (i === 0 ? { ...p, caption: "" } : p)) }, initialProductions))).toBe(false);
+  });
+  it("cannot execute before Distribution Approval and maps decisions to statuses", async () => {
+    const { canExecute, statusAfterDecision } = await import("@/features/aksi/sosial");
+    expect(canExecute({ approval: "Menunggu", status: "Menunggu Persetujuan" })).toBe(false);
+    expect(canExecute({ approval: "Disetujui", status: "Dijadwalkan" })).toBe(true);
+    expect(statusAfterDecision("Disetujui", "Segera")).toBe("Sedang Berjalan");
+    expect(statusAfterDecision("Disetujui", "Jadwal")).toBe("Dijadwalkan");
+    expect(statusAfterDecision("Perlu Revisi", "Jadwal")).toBe("Perlu Perubahan");
+    expect(statusAfterDecision("Ditolak", "Jadwal")).toBe("Ditolak");
   });
 });

@@ -1,7 +1,6 @@
 export type ApprovalStatus = "Menunggu" | "Disetujui" | "Ditolak" | "Perlu Revisi";
 export type ProductionStatus = "Draft" | "Generating" | "Generated";
 export type Destination = "Sosial" | "News";
-export type SocialStatus = "Draft Campaign" | "Menunggu Approval" | "Approved" | "Scheduled" | "Publishing" | "Published" | "Failed";
 export type NewsStatus = "Draft Order" | "Menunggu Approval" | "Approved" | "Dikirim" | "Diterima Kanal" | "Dalam Pengerjaan" | "Tayang" | "Menunggu Verifikasi" | "Selesai" | "Perlu Revisi" | "Ditolak";
 
 export type OutputType = "News Article" | "Infografis" | "Carousel" | "Video Pendek" | "Audio / Podcast";
@@ -57,21 +56,10 @@ export function invalidateApproval<T extends Approvable>(item: T, at: string, ol
   return { ...item, approval: null, approvals: [...(item.approvals ?? []), { at, actor: "Sistem", decision: "Tidak Berlaku", version: oldVersion, note: `Approval v${oldVersion} tidak berlaku untuk v${newVersion}.` }] };
 }
 
-export type Campaign = { id: string; name: string; productionId: string; contentIds: string[]; platforms: string[]; accounts: string[]; target: string; schedule: string; status: SocialStatus; approval: ApprovalStatus | null;
-  pattern?: string | undefined; volume?: Record<string, number> | undefined; approvals?: ApprovalRecord[] | undefined; submittedBy?: string | undefined; submittedAt?: string | undefined; submittedDay?: SubmittedDay | undefined };
+export type { Campaign } from "./sosial";
 export type ChannelOrder = { channel: string; status: NewsStatus; url?: string | undefined };
 export type NewsOrder = { id: string; productionId: string; contentId: string; channels: ChannelOrder[]; schedule: string; notes: string; status: NewsStatus; approval: ApprovalStatus | null;
   title?: string | undefined; approvals?: ApprovalRecord[] | undefined; submittedBy?: string | undefined; submittedAt?: string | undefined; submittedDay?: SubmittedDay | undefined };
-
-export const SOCIAL_PLATFORMS = ["X", "Instagram", "TikTok", "Facebook", "YouTube", "Threads"] as const;
-export const SOCIAL_ACCOUNTS: Record<string, string[]> = {
-  X: ["@inforesmi_id", "@pusatinformasi", "@faktadata_id"],
-  Instagram: ["@inforesmi.id", "@ruangfakta"],
-  TikTok: ["@inforesmi.id", "@ceknarasi"],
-  Facebook: ["Info Resmi Indonesia"],
-  YouTube: ["Info Resmi TV"],
-  Threads: ["@inforesmi.id"],
-};
 
 export const REGIONAL_CHANNELS = ["Aceh", "Sumatera Utara", "Sumatera Barat", "Riau", "Kepulauan Riau", "Jambi", "Sumatera Selatan", "Kepulauan Bangka Belitung", "Bengkulu", "Lampung", "DKI Jakarta", "Banten", "Jawa Barat", "Jawa Tengah", "DI Yogyakarta", "Jawa Timur", "Bali", "Nusa Tenggara Barat", "Nusa Tenggara Timur", "Kalimantan Barat", "Kalimantan Tengah", "Kalimantan Selatan", "Kalimantan Timur", "Kalimantan Utara", "Sulawesi Utara", "Gorontalo", "Sulawesi Tengah", "Sulawesi Barat", "Sulawesi Selatan", "Sulawesi Tenggara", "Maluku", "Maluku Utara", "Papua", "Papua Barat", "Papua Barat Daya", "Papua Selatan", "Papua Tengah", "Papua Pegunungan"];
 export const NATIONAL_CHANNEL = "Nasional";
@@ -199,15 +187,10 @@ export const initialProductions: ProductionItem[] = [
     history: [g(1, "Generated", "15:10"), g(1, "Diajukan", "15:20"), g(1, "Approved", "15:42")], approvals: [{ at: "15:20", actor: "Tim Produksi", decision: "Diajukan", version: 1 }, { at: "15:42", actor: "Supervisor", decision: "Disetujui", version: 1 }] }),
   seeded("PRD-019", "Infografis Informasi Demonstrasi", "Infografis", { approval: "Disetujui", by: "Tim Produksi", at: "Kemarin", day: "Kemarin",
     history: [g(1, "Generated", "14:30"), g(1, "Diajukan", "14:40"), g(1, "Approved", "15:05")], approvals: [{ at: "14:40", actor: "Tim Produksi", decision: "Diajukan", version: 1 }, { at: "15:05", actor: "Supervisor", decision: "Disetujui", version: 1 }] }),
+  seeded("PRD-017", "Carousel Informasi Demonstrasi Nasional", "Carousel", { approval: "Disetujui", by: "Tim Produksi", at: "Kemarin", day: "Kemarin",
+    history: [g(1, "Generated", "13:40"), g(1, "Diajukan", "13:55"), g(1, "Approved", "14:20")], approvals: [{ at: "13:55", actor: "Tim Produksi", decision: "Diajukan", version: 1 }, { at: "14:20", actor: "Supervisor", decision: "Disetujui", version: 1 }] }),
   seeded("PRD-018", "Artikel Demonstrasi Nasional — Edisi Pagi", "News Article", { approval: "Disetujui", by: "Tim Editorial", at: "Kemarin", day: "Kemarin",
     history: [g(1, "Generated", "06:40"), g(1, "Diajukan", "06:55"), g(1, "Approved", "07:12")], approvals: [{ at: "06:55", actor: "Tim Editorial", decision: "Diajukan", version: 1 }, { at: "07:12", actor: "Supervisor", decision: "Disetujui", version: 1 }] }),
-];
-
-const pick = (platform: string, n: number) => Array.from({ length: n }, (_, i) => `${SOCIAL_ACCOUNTS[platform]?.[i % (SOCIAL_ACCOUNTS[platform]?.length ?? 1)] ?? platform}${i >= (SOCIAL_ACCOUNTS[platform]?.length ?? 0) ? `_${i + 1}` : ""}`);
-export const initialCampaigns: Campaign[] = [
-  { id: "CMP-014", name: "Campaign Respons Demonstrasi Nasional", productionId: "PRD-020", contentIds: ["PRD-020", "PRD-019"], platforms: ["X", "Instagram", "TikTok"], accounts: [...pick("X", 8), ...pick("Instagram", 5), ...pick("TikTok", 5)], target: "Publik Jakarta & Bandung, 18–45 tahun", schedule: "8 Oktober 2026, 14:00–18:00 WIB", pattern: "Staggered Publishing", volume: { X: 8, Instagram: 5, TikTok: 5 },
-    status: "Menunggu Approval", approval: "Menunggu", submittedBy: "Tim Digital", submittedAt: "25 menit lalu", submittedDay: "Hari ini",
-    approvals: [{ at: "13:10", actor: "Tim Digital", decision: "Diajukan" }, { at: "13:22", actor: "Supervisor", decision: "Perlu Revisi", note: "Ubah jadwal TikTok menjadi setelah 16:00." }, { at: "13:45", actor: "Tim Digital", decision: "Diajukan Kembali" }] },
 ];
 
 const sixteen = [NATIONAL_CHANNEL, "DKI Jakarta", "Jawa Barat", "Jawa Tengah", "Jawa Timur", "Banten", "DI Yogyakarta", "Sumatera Utara", "Sumatera Selatan", "Lampung", "Kalimantan Timur", "Sulawesi Selatan", "Bali", "Nusa Tenggara Barat", "Riau", "Sulawesi Utara"];
