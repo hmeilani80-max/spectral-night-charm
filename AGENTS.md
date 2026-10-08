@@ -13,3 +13,4 @@
 - Keep Situasi data, per-situation risk profiles, and reusable analytical UI in a shared feature module, so its three routes remain consistent and traceable.
 - Route Situasi entries through a shared dynamic detail layout, so EWS findings and monitored topics use one analytical workspace without duplicating data.
 - Strategy data, recommendation logic, and state live in `src/features/strategi`; Situation and Strategy providers wrap the app in `__root` so context carries Situasi → Strategi → Aksi.
+- Aksi data, approval gates, and state live in `src/features/aksi`; its provider wraps the app in `__root` so the approval queue sees production, social, and news items together.
