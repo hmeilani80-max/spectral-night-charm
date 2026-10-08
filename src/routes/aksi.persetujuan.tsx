@@ -11,11 +11,11 @@ import { aksiHead } from "@/features/aksi/meta";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/aksi/persetujuan")({
-  head: aksiHead("Persetujuan", "Antrian approval terpusat untuk Pesan Utama, Konten, dan Distribusi."),
+  head: aksiHead("Persetujuan", "Antrian approval terpusat untuk Konten per output dan Distribusi."),
   component: Persetujuan,
 });
 
-const KINDS: ("Semua" | ApprovalKind)[] = ["Semua", "Pesan Utama", "Konten", "Distribusi Sosial", "Distribusi News"];
+const KINDS: ("Semua" | ApprovalKind)[] = ["Semua", "Konten", "Distribusi Sosial", "Distribusi News"];
 
 function SourceLink({ item }: { item: QueueItem }) {
   if (item.ref.kind === "Distribusi Sosial") return <Link to="/aksi/distribusi-sosial/$id" params={{ id: item.ref.id }} className="text-primary hover:underline">Buka sumber</Link>;
@@ -35,7 +35,7 @@ function Persetujuan() {
       <Trail items={["Aksi", "Persetujuan"]} />
       <div className="mb-5 grid gap-3 sm:grid-cols-4">
         <Stat value={queue.filter((q) => q.status === "Menunggu").length} label="Menunggu keputusan" />
-        <Stat value={queue.filter((q) => q.ref.kind === "Pesan Utama" && q.status === "Menunggu").length} label="Pesan Utama" />
+        <Stat value={queue.filter((q) => q.status === "Disetujui").length} label="Sudah disetujui" />
         <Stat value={queue.filter((q) => q.ref.kind === "Konten" && q.status === "Menunggu").length} label="Konten" />
         <Stat value={queue.filter((q) => q.ref.kind.startsWith("Distribusi") && q.status === "Menunggu").length} label="Distribusi" />
       </div>

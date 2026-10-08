@@ -21,7 +21,7 @@ export const Route = createFileRoute("/aksi/distribusi-sosial/")({
 function DistribusiSosial() {
   const { campaigns, productions, createCampaign } = useAksi();
   const navigate = useNavigate();
-  const eligible = productions.flatMap((p) => p.outputs.filter((o) => isEligible(o, "Sosial")).map((o) => ({ p, o })));
+  const eligible = productions.filter((o) => isEligible(o, "Sosial")).map((o) => ({ p: o, o }));
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [content, setContent] = useState<string[]>([]);

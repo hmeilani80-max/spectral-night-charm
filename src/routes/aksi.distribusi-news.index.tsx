@@ -43,7 +43,7 @@ function DistribusiNews() {
 function Pemesan() {
   const { orders, productions, createOrder } = useAksi();
   const navigate = useNavigate();
-  const eligible = productions.flatMap((p) => p.outputs.filter((o) => isEligible(o, "News")).map((o) => ({ p, o })));
+  const eligible = productions.filter((o) => isEligible(o, "News")).map((o) => ({ p: o, o }));
   const [open, setOpen] = useState(false);
   const [content, setContent] = useState("");
   const [channels, setChannels] = useState<string[]>([NATIONAL_CHANNEL]);
