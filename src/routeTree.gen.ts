@@ -25,6 +25,8 @@ import { Route as SituasiIndexRouteImport } from './routes/situasi.index'
 import { Route as SituasiSlugRouteImport } from './routes/situasi.$slug'
 import { Route as StrategiIndexRouteImport } from './routes/strategi.index'
 import { Route as StrategiSlugRouteImport } from './routes/strategi.$slug'
+import { Route as AksiDistribusiNewsIndexRouteImport } from './routes/aksi.distribusi-news.index'
+import { Route as AksiDistribusiNewsIdRouteImport } from './routes/aksi.distribusi-news.$id'
 import { Route as AksiDistribusiSosialIndexRouteImport } from './routes/aksi.distribusi-sosial.index'
 import { Route as AksiDistribusiSosialIdRouteImport } from './routes/aksi.distribusi-sosial.$id'
 import { Route as AksiProduksiIndexRouteImport } from './routes/aksi.produksi.index'
@@ -113,6 +115,16 @@ const StrategiSlugRoute = StrategiSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => StrategiRoute,
 } as any)
+const AksiDistribusiNewsIndexRoute = AksiDistribusiNewsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AksiDistribusiNewsRoute,
+} as any)
+const AksiDistribusiNewsIdRoute = AksiDistribusiNewsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AksiDistribusiNewsRoute,
+} as any)
 const AksiDistribusiSosialIndexRoute =
   AksiDistribusiSosialIndexRouteImport.update({
     id: '/',
@@ -159,7 +171,7 @@ export interface FileRoutesByFullPath {
   '/dampak': typeof DampakRoute
   '/situasi': typeof SituasiRouteWithChildren
   '/strategi': typeof StrategiRouteWithChildren
-  '/aksi/distribusi-news': typeof AksiDistribusiNewsRoute
+  '/aksi/distribusi-news': typeof AksiDistribusiNewsRouteWithChildren
   '/aksi/distribusi-sosial': typeof AksiDistribusiSosialRouteWithChildren
   '/aksi/persetujuan': typeof AksiPersetujuanRoute
   '/aksi/produksi': typeof AksiProduksiRouteWithChildren
@@ -168,10 +180,12 @@ export interface FileRoutesByFullPath {
   '/aksi/': typeof AksiIndexRoute
   '/situasi/': typeof SituasiIndexRoute
   '/strategi/': typeof StrategiIndexRoute
+  '/aksi/distribusi-news/$id': typeof AksiDistribusiNewsIdRoute
   '/aksi/distribusi-sosial/$id': typeof AksiDistribusiSosialIdRoute
   '/aksi/produksi/$id': typeof AksiProduksiIdRoute
   '/situasi/$slug/eksplorasi': typeof SituasiSlugEksplorasiRoute
   '/situasi/$slug/risiko-prediksi': typeof SituasiSlugRisikoPrediksiRoute
+  '/aksi/distribusi-news/': typeof AksiDistribusiNewsIndexRoute
   '/aksi/distribusi-sosial/': typeof AksiDistribusiSosialIndexRoute
   '/aksi/produksi/': typeof AksiProduksiIndexRoute
   '/situasi/$slug/': typeof SituasiSlugIndexRoute
@@ -181,16 +195,17 @@ export interface FileRoutesByTo {
   '/administrasi': typeof AdministrasiRoute
   '/arsip': typeof ArsipRoute
   '/dampak': typeof DampakRoute
-  '/aksi/distribusi-news': typeof AksiDistribusiNewsRoute
   '/aksi/persetujuan': typeof AksiPersetujuanRoute
   '/strategi/$slug': typeof StrategiSlugRoute
   '/aksi': typeof AksiIndexRoute
   '/situasi': typeof SituasiIndexRoute
   '/strategi': typeof StrategiIndexRoute
+  '/aksi/distribusi-news/$id': typeof AksiDistribusiNewsIdRoute
   '/aksi/distribusi-sosial/$id': typeof AksiDistribusiSosialIdRoute
   '/aksi/produksi/$id': typeof AksiProduksiIdRoute
   '/situasi/$slug/eksplorasi': typeof SituasiSlugEksplorasiRoute
   '/situasi/$slug/risiko-prediksi': typeof SituasiSlugRisikoPrediksiRoute
+  '/aksi/distribusi-news': typeof AksiDistribusiNewsIndexRoute
   '/aksi/distribusi-sosial': typeof AksiDistribusiSosialIndexRoute
   '/aksi/produksi': typeof AksiProduksiIndexRoute
   '/situasi/$slug': typeof SituasiSlugIndexRoute
@@ -204,7 +219,7 @@ export interface FileRoutesById {
   '/dampak': typeof DampakRoute
   '/situasi': typeof SituasiRouteWithChildren
   '/strategi': typeof StrategiRouteWithChildren
-  '/aksi/distribusi-news': typeof AksiDistribusiNewsRoute
+  '/aksi/distribusi-news': typeof AksiDistribusiNewsRouteWithChildren
   '/aksi/distribusi-sosial': typeof AksiDistribusiSosialRouteWithChildren
   '/aksi/persetujuan': typeof AksiPersetujuanRoute
   '/aksi/produksi': typeof AksiProduksiRouteWithChildren
@@ -213,10 +228,12 @@ export interface FileRoutesById {
   '/aksi/': typeof AksiIndexRoute
   '/situasi/': typeof SituasiIndexRoute
   '/strategi/': typeof StrategiIndexRoute
+  '/aksi/distribusi-news/$id': typeof AksiDistribusiNewsIdRoute
   '/aksi/distribusi-sosial/$id': typeof AksiDistribusiSosialIdRoute
   '/aksi/produksi/$id': typeof AksiProduksiIdRoute
   '/situasi/$slug/eksplorasi': typeof SituasiSlugEksplorasiRoute
   '/situasi/$slug/risiko-prediksi': typeof SituasiSlugRisikoPrediksiRoute
+  '/aksi/distribusi-news/': typeof AksiDistribusiNewsIndexRoute
   '/aksi/distribusi-sosial/': typeof AksiDistribusiSosialIndexRoute
   '/aksi/produksi/': typeof AksiProduksiIndexRoute
   '/situasi/$slug/': typeof SituasiSlugIndexRoute
@@ -240,10 +257,12 @@ export interface FileRouteTypes {
     | '/aksi/'
     | '/situasi/'
     | '/strategi/'
+    | '/aksi/distribusi-news/$id'
     | '/aksi/distribusi-sosial/$id'
     | '/aksi/produksi/$id'
     | '/situasi/$slug/eksplorasi'
     | '/situasi/$slug/risiko-prediksi'
+    | '/aksi/distribusi-news/'
     | '/aksi/distribusi-sosial/'
     | '/aksi/produksi/'
     | '/situasi/$slug/'
@@ -253,16 +272,17 @@ export interface FileRouteTypes {
     | '/administrasi'
     | '/arsip'
     | '/dampak'
-    | '/aksi/distribusi-news'
     | '/aksi/persetujuan'
     | '/strategi/$slug'
     | '/aksi'
     | '/situasi'
     | '/strategi'
+    | '/aksi/distribusi-news/$id'
     | '/aksi/distribusi-sosial/$id'
     | '/aksi/produksi/$id'
     | '/situasi/$slug/eksplorasi'
     | '/situasi/$slug/risiko-prediksi'
+    | '/aksi/distribusi-news'
     | '/aksi/distribusi-sosial'
     | '/aksi/produksi'
     | '/situasi/$slug'
@@ -284,10 +304,12 @@ export interface FileRouteTypes {
     | '/aksi/'
     | '/situasi/'
     | '/strategi/'
+    | '/aksi/distribusi-news/$id'
     | '/aksi/distribusi-sosial/$id'
     | '/aksi/produksi/$id'
     | '/situasi/$slug/eksplorasi'
     | '/situasi/$slug/risiko-prediksi'
+    | '/aksi/distribusi-news/'
     | '/aksi/distribusi-sosial/'
     | '/aksi/produksi/'
     | '/situasi/$slug/'
@@ -417,6 +439,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StrategiSlugRouteImport
       parentRoute: typeof StrategiRoute
     }
+    '/aksi/distribusi-news/': {
+      id: '/aksi/distribusi-news/'
+      path: '/'
+      fullPath: '/aksi/distribusi-news/'
+      preLoaderRoute: typeof AksiDistribusiNewsIndexRouteImport
+      parentRoute: typeof AksiDistribusiNewsRoute
+    }
+    '/aksi/distribusi-news/$id': {
+      id: '/aksi/distribusi-news/$id'
+      path: '/$id'
+      fullPath: '/aksi/distribusi-news/$id'
+      preLoaderRoute: typeof AksiDistribusiNewsIdRouteImport
+      parentRoute: typeof AksiDistribusiNewsRoute
+    }
     '/aksi/distribusi-sosial/': {
       id: '/aksi/distribusi-sosial/'
       path: '/'
@@ -469,6 +505,19 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AksiDistribusiNewsRouteChildren {
+  AksiDistribusiNewsIdRoute: typeof AksiDistribusiNewsIdRoute
+  AksiDistribusiNewsIndexRoute: typeof AksiDistribusiNewsIndexRoute
+}
+
+const AksiDistribusiNewsRouteChildren: AksiDistribusiNewsRouteChildren = {
+  AksiDistribusiNewsIdRoute: AksiDistribusiNewsIdRoute,
+  AksiDistribusiNewsIndexRoute: AksiDistribusiNewsIndexRoute,
+}
+
+const AksiDistribusiNewsRouteWithChildren =
+  AksiDistribusiNewsRoute._addFileChildren(AksiDistribusiNewsRouteChildren)
+
 interface AksiDistribusiSosialRouteChildren {
   AksiDistribusiSosialIdRoute: typeof AksiDistribusiSosialIdRoute
   AksiDistribusiSosialIndexRoute: typeof AksiDistribusiSosialIndexRoute
@@ -497,7 +546,7 @@ const AksiProduksiRouteWithChildren = AksiProduksiRoute._addFileChildren(
 )
 
 interface AksiRouteChildren {
-  AksiDistribusiNewsRoute: typeof AksiDistribusiNewsRoute
+  AksiDistribusiNewsRoute: typeof AksiDistribusiNewsRouteWithChildren
   AksiDistribusiSosialRoute: typeof AksiDistribusiSosialRouteWithChildren
   AksiPersetujuanRoute: typeof AksiPersetujuanRoute
   AksiProduksiRoute: typeof AksiProduksiRouteWithChildren
@@ -505,7 +554,7 @@ interface AksiRouteChildren {
 }
 
 const AksiRouteChildren: AksiRouteChildren = {
-  AksiDistribusiNewsRoute: AksiDistribusiNewsRoute,
+  AksiDistribusiNewsRoute: AksiDistribusiNewsRouteWithChildren,
   AksiDistribusiSosialRoute: AksiDistribusiSosialRouteWithChildren,
   AksiPersetujuanRoute: AksiPersetujuanRoute,
   AksiProduksiRoute: AksiProduksiRouteWithChildren,

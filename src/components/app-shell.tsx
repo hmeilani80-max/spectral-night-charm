@@ -5,8 +5,11 @@ import {
   BookOpenCheck,
   ChevronDown,
   CircleGauge,
+  ClipboardCheck,
   Command,
-  Crosshair,
+  Newspaper,
+  PenSquare,
+  Share2,
   LayoutDashboard,
   Search,
   Settings2,
@@ -44,11 +47,17 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
+const aksiItems = [
+  { label: "Produksi", to: "/aksi/produksi", icon: PenSquare },
+  { label: "Persetujuan", to: "/aksi/persetujuan", icon: ClipboardCheck },
+  { label: "Distribusi Sosial", to: "/aksi/distribusi-sosial", icon: Share2 },
+  { label: "Distribusi News", to: "/aksi/distribusi-news", icon: Newspaper },
+] as const;
+
 const mainItems = [
   { label: "Beranda", to: "/", icon: LayoutDashboard },
   { label: "Situasi", to: "/situasi", icon: CircleGauge },
   { label: "Strategi", to: "/strategi", icon: Target },
-  { label: "Aksi", to: "/aksi", icon: Crosshair },
   { label: "Dampak", to: "/dampak", icon: BookOpenCheck },
   { label: "Arsip & Pengetahuan", to: "/arsip", icon: Archive },
 ] as const;
@@ -78,9 +87,42 @@ function SpektraSidebar() {
           <SidebarGroupLabel className="uppercase text-[10px] font-semibold">Workspace</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainItems.map((item) => (
+              {mainItems.slice(0, 3).map((item) => (
                 <SidebarMenuItem key={item.to}>
-                  <SidebarMenuButton asChild isActive={pathname === item.to} tooltip={item.label} className="h-10">
+                  <SidebarMenuButton asChild isActive={item.to === "/" ? pathname === "/" : pathname.startsWith(item.to)} tooltip={item.label} className="h-10">
+                    <Link to={item.to} onClick={() => setOpenMobile(false)}>
+                      <item.icon />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel className="uppercase text-[10px] font-semibold">Aksi</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {aksiItems.map((item) => (
+                <SidebarMenuItem key={item.to}>
+                  <SidebarMenuButton asChild isActive={pathname.startsWith(item.to)} tooltip={item.label} className="h-10">
+                    <Link to={item.to} onClick={() => setOpenMobile(false)}>
+                      <item.icon />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {mainItems.slice(3).map((item) => (
+                <SidebarMenuItem key={item.to}>
+                  <SidebarMenuButton asChild isActive={item.to === "/" ? pathname === "/" : pathname.startsWith(item.to)} tooltip={item.label} className="h-10">
                     <Link to={item.to} onClick={() => setOpenMobile(false)}>
                       <item.icon />
                       <span>{item.label}</span>

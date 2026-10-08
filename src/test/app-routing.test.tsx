@@ -7,7 +7,7 @@ import { routeTree } from "@/routeTree.gen";
 // Match routes without running loaders or rendering: loaders may need a server or
 // network the test run lacks, and jsdom never loads the stylesheets React waits on.
 describe("App routing", () => {
-  it.each(["/", "/situasi", "/situasi/demonstrasi-nasional", "/situasi/demonstrasi-nasional/eksplorasi", "/situasi/demonstrasi-nasional/risiko-prediksi", "/strategi", "/strategi/respons-informasi-demonstrasi-nasional", "/aksi", "/dampak", "/arsip", "/administrasi"])(
+  it.each(["/", "/situasi", "/situasi/demonstrasi-nasional", "/situasi/demonstrasi-nasional/eksplorasi", "/situasi/demonstrasi-nasional/risiko-prediksi", "/strategi", "/strategi/respons-informasi-demonstrasi-nasional", "/aksi/produksi", "/aksi/produksi/PRD-021", "/aksi/persetujuan", "/aksi/distribusi-sosial", "/aksi/distribusi-sosial/CMP-014", "/aksi/distribusi-news", "/aksi/distribusi-news/DN-012", "/dampak", "/arsip", "/administrasi"])(
     "matches a SPEKTRA page for %s instead of falling back to not found",
     (path) => {
     const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
@@ -46,5 +46,30 @@ describe("Strategy recommendations", () => {
     const { getChannelApproach } = await import("@/features/strategi/data");
     expect(getChannelApproach(["News"])).toBe("News-led");
     expect(getChannelApproach(["TikTok", "Instagram"])).toBe("Social-led");
+  });
+});
+
+describe("Aksi approval gates", () => {
+  it("blocks derived content until the Pesan Utama is approved", async () => {
+    const { canProduceOutputs } = await import("@/features/aksi/data");
+    expect(canProduceOutputs({ messageApproval: "Menunggu" })).toBe(false);
+    expect(canProduceOutputs({ messageApproval: "Disetujui" })).toBe(true);
+  });
+  it("only lets approved, eligible content into each distribution", async () => {
+    const { isEligible } = await import("@/features/aksi/data");
+    expect(isEligible({ approval: "Disetujui", dest: ["News"] }, "News")).toBe(true);
+    expect(isEligible({ approval: "Disetujui", dest: ["News"] }, "Sosial")).toBe(false);
+    expect(isEligible({ approval: "Menunggu", dest: ["Sosial"] }, "Sosial")).toBe(false);
+  });
+  it("requires distribution approval before execution", async () => {
+    const { distributionReadiness } = await import("@/features/aksi/data");
+    expect(distributionReadiness("Disetujui", "Menunggu")).toBe("Menunggu Approval Distribusi");
+    expect(distributionReadiness("Disetujui", "Disetujui")).toBe("Siap Eksekusi");
+    expect(distributionReadiness(null, "Disetujui")).toBe("Belum dapat didistribusikan");
+  });
+  it("has 38 regional channels plus 1 national channel", async () => {
+    const { NEWS_CHANNELS, REGIONAL_CHANNELS } = await import("@/features/aksi/data");
+    expect(REGIONAL_CHANNELS).toHaveLength(38);
+    expect(NEWS_CHANNELS).toHaveLength(39);
   });
 });
