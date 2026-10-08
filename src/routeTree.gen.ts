@@ -35,6 +35,7 @@ import { Route as AksiProduksiIdRouteImport } from './routes/aksi.produksi.$id'
 import { Route as SituasiSlugIndexRouteImport } from './routes/situasi.$slug.index'
 import { Route as SituasiSlugEksplorasiRouteImport } from './routes/situasi.$slug.eksplorasi'
 import { Route as SituasiSlugRisikoPrediksiRouteImport } from './routes/situasi.$slug.risiko-prediksi'
+import { Route as AksiPersetujuanKindIdRouteImport } from './routes/aksi.persetujuan.$kind.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -168,6 +169,11 @@ const SituasiSlugRisikoPrediksiRoute =
     path: '/risiko-prediksi',
     getParentRoute: () => SituasiSlugRoute,
   } as any)
+const AksiPersetujuanKindIdRoute = AksiPersetujuanKindIdRouteImport.update({
+  id: '/$kind/$id',
+  path: '/$kind/$id',
+  getParentRoute: () => AksiPersetujuanRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -196,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/aksi/persetujuan/': typeof AksiPersetujuanIndexRoute
   '/aksi/produksi/': typeof AksiProduksiIndexRoute
   '/situasi/$slug/': typeof SituasiSlugIndexRoute
+  '/aksi/persetujuan/$kind/$id': typeof AksiPersetujuanKindIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -216,6 +223,7 @@ export interface FileRoutesByTo {
   '/aksi/persetujuan': typeof AksiPersetujuanIndexRoute
   '/aksi/produksi': typeof AksiProduksiIndexRoute
   '/situasi/$slug': typeof SituasiSlugIndexRoute
+  '/aksi/persetujuan/$kind/$id': typeof AksiPersetujuanKindIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -245,6 +253,7 @@ export interface FileRoutesById {
   '/aksi/persetujuan/': typeof AksiPersetujuanIndexRoute
   '/aksi/produksi/': typeof AksiProduksiIndexRoute
   '/situasi/$slug/': typeof SituasiSlugIndexRoute
+  '/aksi/persetujuan/$kind/$id': typeof AksiPersetujuanKindIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -275,6 +284,7 @@ export interface FileRouteTypes {
     | '/aksi/persetujuan/'
     | '/aksi/produksi/'
     | '/situasi/$slug/'
+    | '/aksi/persetujuan/$kind/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -295,6 +305,7 @@ export interface FileRouteTypes {
     | '/aksi/persetujuan'
     | '/aksi/produksi'
     | '/situasi/$slug'
+    | '/aksi/persetujuan/$kind/$id'
   id:
     | '__root__'
     | '/'
@@ -323,6 +334,7 @@ export interface FileRouteTypes {
     | '/aksi/persetujuan/'
     | '/aksi/produksi/'
     | '/situasi/$slug/'
+    | '/aksi/persetujuan/$kind/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -519,6 +531,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SituasiSlugRisikoPrediksiRouteImport
       parentRoute: typeof SituasiSlugRoute
     }
+    '/aksi/persetujuan/$kind/$id': {
+      id: '/aksi/persetujuan/$kind/$id'
+      path: '/$kind/$id'
+      fullPath: '/aksi/persetujuan/$kind/$id'
+      preLoaderRoute: typeof AksiPersetujuanKindIdRouteImport
+      parentRoute: typeof AksiPersetujuanRoute
+    }
   }
 }
 
@@ -550,10 +569,12 @@ const AksiDistribusiSosialRouteWithChildren =
 
 interface AksiPersetujuanRouteChildren {
   AksiPersetujuanIndexRoute: typeof AksiPersetujuanIndexRoute
+  AksiPersetujuanKindIdRoute: typeof AksiPersetujuanKindIdRoute
 }
 
 const AksiPersetujuanRouteChildren: AksiPersetujuanRouteChildren = {
   AksiPersetujuanIndexRoute: AksiPersetujuanIndexRoute,
+  AksiPersetujuanKindIdRoute: AksiPersetujuanKindIdRoute,
 }
 
 const AksiPersetujuanRouteWithChildren = AksiPersetujuanRoute._addFileChildren(

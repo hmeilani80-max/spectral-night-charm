@@ -13,8 +13,8 @@ export const Route = createFileRoute("/aksi/persetujuan/")({
   component: Persetujuan,
 });
 
-export const statusLabel = (s: QueueItem["status"]) => (s === "Menunggu" ? "Menunggu Review" : s);
-export const kindParam = (q: QueueItem) => (q.ref.kind === "Konten" ? "konten" : q.ref.kind === "Distribusi Sosial" ? "sosial" : "news");
+const statusLabel = (s: QueueItem["status"]) => (s === "Menunggu" ? "Menunggu Review" : s);
+const kindParam = (q: QueueItem) => (q.ref.kind === "Konten" ? "konten" : q.ref.kind === "Distribusi Sosial" ? "sosial" : "news");
 
 const TABS = ["Semua", "Konten", "Distribusi"] as const;
 const uniq = (xs: string[]) => ["Semua", ...Array.from(new Set(xs))];

@@ -7,7 +7,7 @@ import { routeTree } from "@/routeTree.gen";
 // Match routes without running loaders or rendering: loaders may need a server or
 // network the test run lacks, and jsdom never loads the stylesheets React waits on.
 describe("App routing", () => {
-  it.each(["/", "/situasi", "/situasi/demonstrasi-nasional", "/situasi/demonstrasi-nasional/eksplorasi", "/situasi/demonstrasi-nasional/risiko-prediksi", "/strategi", "/strategi/respons-informasi-demonstrasi-nasional", "/aksi/produksi", "/aksi/produksi/PRD-021", "/aksi/persetujuan", "/aksi/distribusi-sosial", "/aksi/distribusi-sosial/CMP-014", "/aksi/distribusi-news", "/aksi/distribusi-news/DN-012", "/dampak", "/arsip", "/administrasi"])(
+  it.each(["/", "/situasi", "/situasi/demonstrasi-nasional", "/situasi/demonstrasi-nasional/eksplorasi", "/situasi/demonstrasi-nasional/risiko-prediksi", "/strategi", "/strategi/respons-informasi-demonstrasi-nasional", "/aksi/produksi", "/aksi/produksi/PRD-021", "/aksi/persetujuan", "/aksi/persetujuan/konten/PRD-021", "/aksi/persetujuan/sosial/CMP-014", "/aksi/distribusi-sosial", "/aksi/distribusi-sosial/CMP-014", "/aksi/distribusi-news", "/aksi/distribusi-news/DN-012", "/dampak", "/arsip", "/administrasi"])(
     "matches a SPEKTRA page for %s instead of falling back to not found",
     (path) => {
     const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
@@ -81,5 +81,18 @@ describe("Aksi approval gates", () => {
     const { NEWS_CHANNELS, REGIONAL_CHANNELS } = await import("@/features/aksi/data");
     expect(REGIONAL_CHANNELS).toHaveLength(38);
     expect(NEWS_CHANNELS).toHaveLength(39);
+  });
+  it("records every decision per version and keeps old records when a new version voids approval", async () => {
+    const { applySubmit, applyDecision, invalidateApproval, initialProductions } = await import("@/features/aksi/data");
+    const base = { ...initialProductions[1]!, approvals: [], approval: null };
+    let p = applySubmit(base, "Tim Produksi", "09:00", 1);
+    p = applyDecision(p, "Perlu Revisi", "09:10", 1, "Perjelas sumber");
+    p = applySubmit(p, "Tim Produksi", "09:30", 2);
+    p = applyDecision(p, "Disetujui", "09:40", 2);
+    expect(p.approvals.map((r) => `${r.version}:${r.decision}`)).toEqual(["1:Diajukan", "1:Perlu Revisi", "2:Diajukan Kembali", "2:Disetujui"]);
+    const v3 = invalidateApproval(p, "10:00", 2, 3);
+    expect(v3.approval).toBeNull();
+    expect(v3.approvals).toHaveLength(5);
+    expect(v3.approvals[3]?.decision).toBe("Disetujui");
   });
 });
