@@ -22,7 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/aksi/kalender-tugas")({
-  validateSearch: (s: Record<string, unknown>): { task?: string | undefined } => ({ task: typeof s.task === "string" ? s.task : undefined }),
+  validateSearch: (s: Record<string, unknown>): { task?: string | undefined } => ({ task: typeof s["task"] === "string" ? s["task"] : undefined }),
   head: aksiHead("Kalender & Tugas", "Kelola jadwal, penanggung jawab, dan perkembangan pekerjaan dari seluruh proses pelaksanaan strategi."),
   component: KalenderTugasPage,
 });

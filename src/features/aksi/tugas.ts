@@ -138,14 +138,14 @@ export function deriveTasks({ productions, campaigns, orders }: Sources): Task[]
     if (c.status !== "Menunggu Persetujuan") out.push({ id: k, title: pl.title ?? `Distribusi Sosial ${c.name}`, source: "Distribusi Sosial", kind: "Distribusi Sosial (tingkat campaign)", situation: "Demonstrasi Nasional",
       strategy: c.name, pic: pl.pic ?? "Budi", support: [], due: pl.due, priority: pl.priority ?? "Normal", base: campaignStatus(c.status), sourceStatus: c.status,
       description: `Persiapan paket publikasi, kesiapan distribusi, dan pelaksanaan ${c.posts.length} posting. Rincian posting tersedia di modul Distribusi Sosial.`,
-      link: { to: "/aksi/distribusi-sosial/$id", params: { id: c.id } }, notes: c.approvals.filter((a) => a.note).map((a) => ({ at: a.at, author: a.actor, text: a.note!, origin: "Persetujuan" })),
+      link: { to: "/aksi/distribusi-sosial/$id", params: { id: c.id } }, notes: (c.approvals ?? []).filter((a) => a.note).map((a) => ({ at: a.at, author: a.actor, text: a.note!, origin: "Persetujuan" })),
       activity: c.history.map((h) => ({ at: h.at, text: h.text })) });
     if (c.approval) {
       const rk = `rev:sosial:${c.id}`; const rp = plan(rk);
       out.push({ id: rk, title: rp.title ?? `Review Distribusi ${c.name}`, source: "Persetujuan", kind: "Review Distribusi Sosial", situation: "Demonstrasi Nasional", strategy: c.name,
         pic: "Supervisor", support: ["Budi"], due: rp.due, priority: rp.priority ?? "Normal", base: reviewStatus(c.approval), sourceStatus: c.approval,
         description: `Keputusan persetujuan rencana distribusi "${c.name}".`, link: { to: "/aksi/persetujuan/$kind/$id", params: { kind: "sosial", id: c.id } },
-        notes: [], activity: c.approvals.map((a) => ({ at: a.at, text: `${a.decision} oleh ${a.actor}` })) });
+        notes: [], activity: (c.approvals ?? []).map((a) => ({ at: a.at, text: `${a.decision} oleh ${a.actor}` })) });
     }
   }
   for (const o of orders) {
@@ -154,12 +154,12 @@ export function deriveTasks({ productions, campaigns, orders }: Sources): Task[]
     if (o.status !== "Menunggu Approval") out.push({ id: k, title: pl.title ?? name, source: "Distribusi News", kind: "Order Distribusi News", situation, pic: pl.pic ?? "Sari", support: [], due: pl.due,
       priority: pl.priority ?? "Normal", base: orderStatus(o.status), sourceStatus: o.status,
       description: `Order "${name}" untuk ${o.channels.length} kanal NusaKanal berbasis ${titleOf(o.productionId)}.`, link: { to: "/aksi/distribusi-news/$id", params: { id: o.id } },
-      notes: o.notes ? [{ at: o.submittedAt ?? "-", author: o.submittedBy ?? "Tim Media", text: o.notes }] : [], activity: o.approvals.map((a) => ({ at: a.at, text: `${a.decision} oleh ${a.actor}` })) });
+      notes: o.notes ? [{ at: o.submittedAt ?? "-", author: o.submittedBy ?? "Tim Media", text: o.notes }] : [], activity: (o.approvals ?? []).map((a) => ({ at: a.at, text: `${a.decision} oleh ${a.actor}` })) });
     if (o.approval) {
       const rk = `rev:news:${o.id}`; const rp = plan(rk);
       out.push({ id: rk, title: rp.title ?? `Review ${name}`, source: "Persetujuan", kind: "Review Distribusi News", situation, pic: "Supervisor", support: ["Sari"], due: rp.due,
         priority: rp.priority ?? "Normal", base: reviewStatus(o.approval), sourceStatus: o.approval, description: `Keputusan persetujuan order "${name}".`,
-        link: { to: "/aksi/persetujuan/$kind/$id", params: { kind: "news", id: o.id } }, notes: [], activity: o.approvals.map((a) => ({ at: a.at, text: `${a.decision} oleh ${a.actor}` })) });
+        link: { to: "/aksi/persetujuan/$kind/$id", params: { kind: "news", id: o.id } }, notes: [], activity: (o.approvals ?? []).map((a) => ({ at: a.at, text: `${a.decision} oleh ${a.actor}` })) });
     }
     const sent = !["Draft Order", "Menunggu Approval", "Approved", "Ditolak"].includes(o.status);
     if (!sent) continue;
