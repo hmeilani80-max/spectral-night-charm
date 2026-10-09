@@ -17,3 +17,4 @@
 - Distribusi Sosial rules (accounts, post planning, readiness, approval→status mapping) live as pure functions in `src/features/aksi/sosial.ts`, so the wizard, detail page, Persetujuan and tests share one source of truth.
 - Read-only distribution asset previews use the shared AssetPreview renderer, so selection, packages, review, and approvals show the same source asset without production controls.
 - News channel domains are derived through the shared `newsChannelDomain` helper, so all 39 fixed-network identities stay consistent across ordering, approval, and verification views.
+- Keep Dampak comparison data and narrative mention counts in its shared feature module, so tables and drilldowns use the same analytical records while Social and News evaluations remain separate.
