@@ -19,9 +19,9 @@ import { COMPLIANCE, ITEMS, JENIS, KLASIFIKASI, MODUL, PROVENANCE, search, sugge
 export const Route = createFileRoute("/arsip")({
   head: () => ({
     meta: [
-      { title: "Arsip & Pengetahuan — SPEKTRA" },
+      { title: "Arsip & Pengetahuan — SINTESA" },
       { name: "description", content: "Temukan kembali dokumen, analisis, keputusan, hasil produksi, dan informasi pendukung dari seluruh proses." },
-      { property: "og:title", content: "Arsip & Pengetahuan — SPEKTRA" },
+      { property: "og:title", content: "Arsip & Pengetahuan — SINTESA" },
       { property: "og:description", content: "Repositori pengetahuan institusional: asal, versi, pemilik, keputusan, dan hubungan antar-artifact." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -199,7 +199,7 @@ function DetailDialog({ item, items, onOpen, onClose }: { item: ArsipItem; items
             <div><h3 className="mb-2 text-xs font-semibold">Provenance / Asal Informasi</h3>
               <ol className="grid gap-1 text-xs">{PROVENANCE.map((p, k) => { const node = byId(p.id)!; return (
                 <li key={p.id} className="grid justify-items-start gap-1">
-                  <button onClick={() => onOpen(node)} className={`rounded border px-3 py-1.5 text-left ${node.id === item.id ? "border-primary bg-primary/10" : "border-border hover:bg-accent/40"}`}><span className="text-[10px] text-muted-foreground">{p.modul}</span><br />{node.title}</button>
+                  <button onClick={() => onOpen(node)} className={`rounded border px-3 py-1.5 text-left ${node.id === item.id ? "border-brand bg-brand/10" : "border-border hover:bg-accent/40"}`}><span className="text-[10px] text-muted-foreground">{p.modul}</span><br />{node.title}</button>
                   {k < PROVENANCE.length - 1 && <ArrowDown className="ml-4 size-3 text-muted-foreground" />}
                 </li>); })}</ol>
               {item.modul !== "Upload Manual" && <p className="mt-2 text-xs"><SourceLink item={item}>Buka artifact asal di {item.modul}<ExternalLink className="size-3" /></SourceLink></p>}
@@ -215,7 +215,7 @@ function DetailDialog({ item, items, onOpen, onClose }: { item: ArsipItem; items
           </TabsContent>
           <TabsContent value="versi">
             <ol className="grid gap-2 text-xs">{item.versions.map((v) => (
-              <li key={v.v}><button onClick={() => setVer(v.v)} className={`w-full rounded border px-3 py-2 text-left ${ver === v.v ? "border-primary bg-primary/10" : "border-border hover:bg-accent/40"}`}>
+              <li key={v.v}><button onClick={() => setVer(v.v)} className={`w-full rounded border px-3 py-2 text-left ${ver === v.v ? "border-brand bg-brand/10" : "border-border hover:bg-accent/40"}`}>
                 <strong>{v.v}</strong> · {v.label} · <span className="text-muted-foreground">{v.at}</span>{v.note && <p className="text-muted-foreground">{v.note}</p>}</button></li>
             ))}</ol>
             <p className="mt-3 text-[11px] text-muted-foreground">Menampilkan {ver}{ver !== item.version ? " (versi lama, hanya-baca)" : " (versi terkini)"}.</p>

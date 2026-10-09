@@ -24,3 +24,4 @@
 - [x] Gunakan domain sesuai nama sebagai identitas 39 kanal Distribusi News
 - [x] Revisi Dampak tanpa redesign: label, timeline, tautan respons, drilldown narasi, dan jenis laporan; verifikasi alur
 - [x] Arsip & Pengetahuan: pencarian isi, repository, detail (provenance, versi, audit, akses, retention), upload, kepatuhan
+- [x] Branding SINTESA dan warna merek #B33A50 terbatas

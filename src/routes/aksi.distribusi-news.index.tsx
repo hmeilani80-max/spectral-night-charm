@@ -23,7 +23,7 @@ export const Route = createFileRoute("/aksi/distribusi-news/")({
 function DistribusiNews() {
   const { orders } = useAksi();
   return (
-    <PageShell eyebrow="Aksi" title="Distribusi News" description="SPEKTRA membuat order, pengelola kanal menerima dan mempublikasikan, lalu mengirim URL tayang untuk diverifikasi.">
+    <PageShell eyebrow="Aksi" title="Distribusi News" description="SINTESA membuat order, pengelola kanal menerima dan mempublikasikan, lalu mengirim URL tayang untuk diverifikasi.">
       <Trail items={["Aksi", "Distribusi News"]} />
       <div className="mb-5 grid gap-3 sm:grid-cols-4">
         <Stat value="39" label="Kanal jaringan (38 wilayah + 1 nasional)" />

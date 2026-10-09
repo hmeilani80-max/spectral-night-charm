@@ -7,10 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
-    { title: "Beranda Pimpinan — SPEKTRA" },
+    { title: "Beranda Pimpinan — SINTESA" },
     { name: "description", content: "Ringkasan situasi, rekomendasi, respons berjalan, dan dampak terbaru untuk pimpinan." },
-    { property: "og:title", content: "Beranda Pimpinan — SPEKTRA" },
-    { property: "og:description", content: "Executive briefing SPEKTRA untuk pengambilan keputusan strategis." },
+    { property: "og:title", content: "Beranda Pimpinan — SINTESA" },
+    { property: "og:description", content: "Executive briefing SINTESA untuk pengambilan keputusan strategis." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: Index,

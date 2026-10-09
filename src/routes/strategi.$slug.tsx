@@ -15,9 +15,9 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/strategi/$slug")({
   head: () => ({ meta: [
-    { title: "Detail Strategi — SPEKTRA" },
+    { title: "Detail Strategi — SINTESA" },
     { name: "description", content: "Workspace keputusan: konteks, kajian, rekomendasi kanal, dan action plan." },
-    { property: "og:title", content: "Detail Strategi — SPEKTRA" },
+    { property: "og:title", content: "Detail Strategi — SINTESA" },
     { property: "og:description", content: "Menyusun rekomendasi dan rencana respons dari situasi." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
@@ -118,7 +118,7 @@ function StrategyDetail() {
           <Panel title="Simulasi Skenario" description="Perbandingan sederhana pendekatan komunikasi. Anda tetap dapat memilih pendekatan lain.">
             <div className="grid gap-3 lg:grid-cols-3">
               {scenarios.map((s) => (
-                <button key={s.key} type="button" aria-pressed={approach === s.key} onClick={() => updateStrategy(strategy.slug, { approach: s.key })} className={cn("rounded-md border p-4 text-left transition-colors", approach === s.key ? "border-primary bg-primary/10" : "border-border hover:border-muted-foreground")}>
+                <button key={s.key} type="button" aria-pressed={approach === s.key} onClick={() => updateStrategy(strategy.slug, { approach: s.key })} className={cn("rounded-md border p-4 text-left transition-colors", approach === s.key ? "border-brand bg-brand/10" : "border-border hover:border-muted-foreground")}>
                   <p className="text-sm font-semibold">{s.label}</p>
                   {s.key === recommended && <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-primary"><Sparkles className="size-3" />Direkomendasikan berdasarkan Situasi</p>}
                   <dl className="mt-3 space-y-1.5 text-xs">{[["Fokus", s.focus], ["Kekuatan", s.strength], ["Estimasi kecepatan", s.speed], ["Potensi jangkauan", s.reach]].map(([l, v]) => <div key={l} className="flex justify-between gap-3"><dt className="text-muted-foreground">{l}</dt><dd className="text-right">{v}</dd></div>)}</dl>

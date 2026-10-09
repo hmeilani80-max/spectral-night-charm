@@ -32,7 +32,7 @@ export function Lineage({ steps }: { steps: { label: string; value: ReactNode }[
 
 export function Flow({ steps, current }: { steps: string[]; current: number }) {
   return <ol className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-[repeat(auto-fit,minmax(110px,1fr))]">
-    {steps.map((s, i) => <li key={s} className={cn("bg-card px-3 py-2.5 text-[11px]", i < current ? "text-chart-2" : i === current ? "bg-accent font-semibold text-foreground" : "text-muted-foreground")}><span className="block text-[10px] opacity-70">0{i + 1}</span>{s}</li>)}
+    {steps.map((s, i) => <li key={s} className={cn("bg-card px-3 py-2.5 text-[11px]", i < current ? "text-foreground shadow-[inset_0_-2px_0_var(--color-brand)]" : i === current ? "bg-accent font-semibold text-foreground shadow-[inset_0_-2px_0_var(--color-brand)]" : "text-muted-foreground")}><span className="block text-[10px] opacity-70">0{i + 1}</span>{s}</li>)}
   </ol>;
 }
 

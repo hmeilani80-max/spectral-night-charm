@@ -16,9 +16,9 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/situasi/")({
   head: () => ({ meta: [
-    { title: "Situasi — SPEKTRA" },
+    { title: "Situasi — SINTESA" },
     { name: "description", content: "Pantau temuan sistem dan topik strategis yang sedang dipantau." },
-    { property: "og:title", content: "Situasi — SPEKTRA" },
+    { property: "og:title", content: "Situasi — SINTESA" },
     { property: "og:description", content: "Temuan EWS dan topik strategis dalam satu area pemantauan." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },

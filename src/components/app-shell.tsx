@@ -71,13 +71,14 @@ function SpektraSidebar() {
     <Sidebar collapsible="icon" className="border-sidebar-border">
       <SidebarHeader className="h-[72px] justify-center border-b border-sidebar-border px-3">
         <Link to="/" className="flex min-w-0 items-center gap-3" onClick={() => setOpenMobile(false)}>
-          <span className="grid size-9 shrink-0 place-items-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
+          <span className="relative grid size-9 shrink-0 place-items-center rounded-md bg-sidebar-accent text-sidebar-foreground">
             <Command className="size-5" />
+            <span aria-hidden className="absolute -left-1.5 top-2 h-5 w-[3px] rounded-full bg-brand" />
           </span>
           {!collapsed && (
             <span className="min-w-0">
-              <span className="block font-display text-base font-semibold">SPEKTRA</span>
-              <span className="block truncate text-[10px] text-sidebar-foreground/55">Kendali Strategis</span>
+              <span className="block font-display text-base font-semibold">SINTESA</span>
+              <span className="block truncate text-[10px] text-sidebar-foreground/55">Sistem Intelijen Terpadu dan Strategi Aksi</span>
             </span>
           )}
         </Link>
@@ -89,7 +90,7 @@ function SpektraSidebar() {
             <SidebarMenu>
               {mainItems.slice(0, 3).map((item) => (
                 <SidebarMenuItem key={item.to}>
-                  <SidebarMenuButton asChild isActive={item.to === "/" ? pathname === "/" : pathname.startsWith(item.to)} tooltip={item.label} className="h-10">
+                  <SidebarMenuButton asChild isActive={item.to === "/" ? pathname === "/" : pathname.startsWith(item.to)} tooltip={item.label} className="h-10 data-[active=true]:shadow-[inset_3px_0_0_var(--color-brand)]">
                     <Link to={item.to} onClick={() => setOpenMobile(false)}>
                       <item.icon />
                       <span>{item.label}</span>
@@ -106,7 +107,7 @@ function SpektraSidebar() {
             <SidebarMenu>
               {aksiItems.map((item) => (
                 <SidebarMenuItem key={item.to}>
-                  <SidebarMenuButton asChild isActive={pathname.startsWith(item.to)} tooltip={item.label} className="h-10">
+                  <SidebarMenuButton asChild isActive={pathname.startsWith(item.to)} tooltip={item.label} className="h-10 data-[active=true]:shadow-[inset_3px_0_0_var(--color-brand)]">
                     <Link to={item.to} onClick={() => setOpenMobile(false)}>
                       <item.icon />
                       <span>{item.label}</span>
@@ -122,7 +123,7 @@ function SpektraSidebar() {
             <SidebarMenu>
               {mainItems.slice(3).map((item) => (
                 <SidebarMenuItem key={item.to}>
-                  <SidebarMenuButton asChild isActive={item.to === "/" ? pathname === "/" : pathname.startsWith(item.to)} tooltip={item.label} className="h-10">
+                  <SidebarMenuButton asChild isActive={item.to === "/" ? pathname === "/" : pathname.startsWith(item.to)} tooltip={item.label} className="h-10 data-[active=true]:shadow-[inset_3px_0_0_var(--color-brand)]">
                     <Link to={item.to} onClick={() => setOpenMobile(false)}>
                       <item.icon />
                       <span>{item.label}</span>
@@ -137,7 +138,7 @@ function SpektraSidebar() {
       <SidebarFooter className="border-t border-sidebar-border p-3">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={pathname === "/administrasi"} tooltip="Administrasi" className="h-10">
+            <SidebarMenuButton asChild isActive={pathname === "/administrasi"} tooltip="Administrasi" className="h-10 data-[active=true]:shadow-[inset_3px_0_0_var(--color-brand)]">
               <Link to="/administrasi" onClick={() => setOpenMobile(false)}>
                 <Settings2 />
                 <span>Administrasi</span>
