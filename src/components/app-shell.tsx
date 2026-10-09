@@ -32,6 +32,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { highEwsNotifications } from "@/features/situasi/data";
+import { cn } from "@/lib/utils";
 import {
   Sidebar,
   SidebarContent,
