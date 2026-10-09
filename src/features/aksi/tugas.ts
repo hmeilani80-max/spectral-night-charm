@@ -117,7 +117,8 @@ export function deriveTasks({ productions, campaigns, orders }: Sources): Task[]
     const k = `prod:${p.id}`; const pl = plan(k);
     const approvalNotes: Note[] = p.approvals.filter((a) => a.note).map((a) => ({ at: a.at, author: a.actor, text: a.note!, origin: "Persetujuan" as const }));
     const situation = p.situationName ?? "Demonstrasi Nasional";
-    out.push({ id: k, title: pl.title ?? `Produksi ${p.title}`, source: "Produksi", kind: `Produksi ${p.type}`, situation, strategy: p.strategyTitle,
+    // While approval is pending the job IS the review: one row, one status.
+    if (p.approval !== "Menunggu") out.push({ id: k, title: pl.title ?? `Produksi ${p.title}`, source: "Produksi", kind: `Produksi ${p.type}`, situation, strategy: p.strategyTitle,
       pic: pl.pic ?? PIC_BY_TYPE[p.type] ?? "Rina", support: p.approval ? ["Supervisor"] : [], due: pl.due, priority: pl.priority ?? "Normal",
       base: productionStatus(p), sourceStatus: p.approval ? `${p.status} · ${p.approval}` : p.status,
       description: `Menyiapkan ${p.type} "${p.title}" sesuai brief${p.strategyTitle ? ` dari strategi ${p.strategyTitle}` : ""}.`,
@@ -134,7 +135,7 @@ export function deriveTasks({ productions, campaigns, orders }: Sources): Task[]
   }
   for (const c of campaigns) {
     const k = `cmp:${c.id}`; const pl = plan(k);
-    out.push({ id: k, title: pl.title ?? `Distribusi Sosial ${c.name}`, source: "Distribusi Sosial", kind: "Distribusi Sosial (tingkat campaign)", situation: "Demonstrasi Nasional",
+    if (c.status !== "Menunggu Persetujuan") out.push({ id: k, title: pl.title ?? `Distribusi Sosial ${c.name}`, source: "Distribusi Sosial", kind: "Distribusi Sosial (tingkat campaign)", situation: "Demonstrasi Nasional",
       strategy: c.name, pic: pl.pic ?? "Budi", support: [], due: pl.due, priority: pl.priority ?? "Normal", base: campaignStatus(c.status), sourceStatus: c.status,
       description: `Persiapan paket publikasi, kesiapan distribusi, dan pelaksanaan ${c.posts.length} posting. Rincian posting tersedia di modul Distribusi Sosial.`,
       link: { to: "/aksi/distribusi-sosial/$id", params: { id: c.id } }, notes: c.approvals.filter((a) => a.note).map((a) => ({ at: a.at, author: a.actor, text: a.note!, origin: "Persetujuan" })),
@@ -150,7 +151,7 @@ export function deriveTasks({ productions, campaigns, orders }: Sources): Task[]
   for (const o of orders) {
     const name = o.title ?? `Order ${o.id}`; const situation = "Demonstrasi Nasional";
     const k = `ord:${o.id}`; const pl = plan(k);
-    out.push({ id: k, title: pl.title ?? name, source: "Distribusi News", kind: "Order Distribusi News", situation, pic: pl.pic ?? "Sari", support: [], due: pl.due,
+    if (o.status !== "Menunggu Approval") out.push({ id: k, title: pl.title ?? name, source: "Distribusi News", kind: "Order Distribusi News", situation, pic: pl.pic ?? "Sari", support: [], due: pl.due,
       priority: pl.priority ?? "Normal", base: orderStatus(o.status), sourceStatus: o.status,
       description: `Order "${name}" untuk ${o.channels.length} kanal NusaKanal berbasis ${titleOf(o.productionId)}.`, link: { to: "/aksi/distribusi-news/$id", params: { id: o.id } },
       notes: o.notes ? [{ at: o.submittedAt ?? "-", author: o.submittedBy ?? "Tim Media", text: o.notes }] : [], activity: o.approvals.map((a) => ({ at: a.at, text: `${a.decision} oleh ${a.actor}` })) });
@@ -163,6 +164,8 @@ export function deriveTasks({ productions, campaigns, orders }: Sources): Task[]
     const sent = !["Draft Order", "Menunggu Approval", "Approved", "Ditolak"].includes(o.status);
     if (!sent) continue;
     for (const ch of o.channels) {
+      // Published URLs awaiting verification are tracked by the single verification task.
+      if (ch.status === "Menunggu Verifikasi" || ch.status === "Tayang") continue;
       const wk = `wo:${o.id}:${ch.channel}`; const wp = plan(wk);
       out.push({ id: wk, title: wp.title ?? `Publikasi NusaKanal ${ch.channel}`, source: "Distribusi News", kind: "Work Order Kanal", situation, pic: channelManager(ch.channel), support: ["Sari"],
         due: wp.due, priority: wp.priority ?? "Normal", base: workOrderStatus(ch.status), sourceStatus: ch.status,
@@ -187,8 +190,10 @@ export const SCENARIO_TASKS: Task[] = [
   s("ext:HP-01", "Produksi Infografis Stabilitas Harga Pangan", "Produksi", "Produksi Infografis", "Stabilitas Harga Pangan", "Rina", "2026-10-10T09:00", "Dalam Proses", "Normal", { to: "/aksi/produksi" }),
   s("ext:HP-02", "Artikel Harga Pangan Wilayah Timur", "Produksi", "Produksi News Article", "Stabilitas Harga Pangan", "Andi", "2026-10-11T10:00", "Dalam Proses", "Normal", { to: "/aksi/produksi" }),
   s("ext:HP-03", "Verifikasi 14 URL News", "Distribusi News", "Verifikasi Publikasi", "Stabilitas Harga Pangan", "Sari", "2026-10-10T14:00", "Belum Dimulai", "Normal", { to: "/aksi/distribusi-news" }),
-  s("ext:LP-01", "Review Carousel Informasi Publik", "Persetujuan", "Review Konten", "Gangguan Layanan Publik", "Supervisor", "2026-10-10T11:00", "Menunggu", "Normal", { to: "/aksi/persetujuan" }),
+  s("ext:LP-01", "Review Carousel Informasi Publik", "Persetujuan", "Review Konten", "Gangguan Layanan Publik", "Supervisor", "2026-10-10T11:00", "Belum Dimulai", "Normal", { to: "/aksi/persetujuan" }),
   s("ext:LP-02", "Distribusi Sosial Informasi Layanan", "Distribusi Sosial", "Distribusi Sosial (tingkat campaign)", "Gangguan Layanan Publik", "Budi", "2026-10-12T10:00", "Belum Dimulai", "Normal", { to: "/aksi/distribusi-sosial" }),
+  s("man:03", "Brief Konten Gangguan Layanan Publik", "Manual", "Tugas Manual", "Gangguan Layanan Publik", "Andi", "2026-10-12T14:00", "Belum Dimulai"),
+  s("man:04", "Penyesuaian Headline Wilayah Harga Pangan", "Manual", "Tugas Manual", "Stabilitas Harga Pangan", "Andi", "2026-10-10T16:00", "Dalam Proses"),
   s("man:01", "Koordinasi Juru Bicara Harga Pangan", "Manual", "Tugas Manual", "Stabilitas Harga Pangan", "Dimas Pratama", "2026-10-08T14:00", "Selesai"),
   s("man:02", "Rekap Kendala Kanal Wilayah Timur", "Manual", "Tugas Manual", "Gangguan Layanan Publik", "Sari", "2026-10-13T15:00", "Dalam Proses"),
 ];
