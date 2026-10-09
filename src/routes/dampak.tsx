@@ -15,9 +15,9 @@ import {
 export const Route = createFileRoute("/dampak")({
   head: () => ({
     meta: [
-      { title: "Dampak — SPEKTRA" },
+      { title: "Dampak — SINTESA" },
       { name: "description", content: "Evaluasi perubahan kondisi situasi sebelum dan setelah rangkaian respons dijalankan." },
-      { property: "og:title", content: "Dampak — SPEKTRA" },
+      { property: "og:title", content: "Dampak — SINTESA" },
       { property: "og:description", content: "Baseline → kondisi terkini → apa yang berubah, tanpa klaim sebab-akibat." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

@@ -101,7 +101,7 @@ export const studyFacts = {
 };
 
 export const sources = [
-  { statement: "Volume naik 63%", source: "Data SPEKTRA", platform: "Multi-platform", time: "7 Okt", status: "Terverifikasi" },
+  { statement: "Volume naik 63%", source: "Data SINTESA", platform: "Multi-platform", time: "7 Okt", status: "Terverifikasi" },
   { statement: "Aksi direncanakan di Bandung", source: "News A", platform: "News", time: "7 Okt", status: "Terverifikasi" },
   { statement: "Klaim kericuhan lokasi X", source: "@akun_dummy", platform: "X", time: "7 Okt", status: "Belum Terverifikasi" },
 ];

@@ -18,9 +18,9 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/strategi/")({
   head: () => ({ meta: [
-    { title: "Strategi — SPEKTRA" },
+    { title: "Strategi — SINTESA" },
     { name: "description", content: "Daftar strategi respons yang disusun dari situasi atau input manual." },
-    { property: "og:title", content: "Strategi — SPEKTRA" },
+    { property: "og:title", content: "Strategi — SINTESA" },
     { property: "og:description", content: "Mengubah intelligence situasi menjadi rencana respons." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
@@ -76,7 +76,7 @@ function CreateStrategyDialog({ open, onOpenChange }: { open: boolean; onOpenCha
         {step === "choose" && (
           <div className="grid gap-3 sm:grid-cols-2">
             <button type="button" onClick={() => setStep("situation")} className="rounded-lg border border-border bg-secondary/40 p-4 text-left transition-colors hover:border-primary">
-              <Database className="size-5 text-primary" /><p className="mt-3 text-sm font-semibold">Pilih dari Situasi</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Gunakan hasil monitoring dan analisis SPEKTRA sebagai konteks penyusunan strategi.</p>
+              <Database className="size-5 text-primary" /><p className="mt-3 text-sm font-semibold">Pilih dari Situasi</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Gunakan hasil monitoring dan analisis SINTESA sebagai konteks penyusunan strategi.</p>
             </button>
             <button type="button" onClick={() => setStep("manual")} className="rounded-lg border border-border bg-secondary/40 p-4 text-left transition-colors hover:border-primary">
               <PenLine className="size-5 text-primary" /><p className="mt-3 text-sm font-semibold">Buat Strategi Baru</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Masukkan konteks dan kebutuhan secara manual.</p>
@@ -102,7 +102,7 @@ function CreateStrategyDialog({ open, onOpenChange }: { open: boolean; onOpenCha
             <Field label="Target Audiens"><Input value={form.audience} onChange={(e) => setForm({ ...form, audience: e.target.value })} /></Field>
             <Field label="Wilayah (opsional)"><Input value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })} /></Field>
             <Field label="Platform / Kanal (opsional)">
-              <div className="flex flex-wrap gap-1.5">{PLATFORMS.map((p) => <button key={p} type="button" onClick={() => setPlatforms((c) => c.includes(p) ? c.filter((x) => x !== p) : [...c, p])} className={cn("rounded-md border px-2.5 py-1 text-xs", platforms.includes(p) ? "border-primary bg-primary/15 text-foreground" : "border-border text-muted-foreground")}>{p}</button>)}</div>
+              <div className="flex flex-wrap gap-1.5">{PLATFORMS.map((p) => <button key={p} type="button" onClick={() => setPlatforms((c) => c.includes(p) ? c.filter((x) => x !== p) : [...c, p])} className={cn("rounded-md border px-2.5 py-1 text-xs", platforms.includes(p) ? "border-brand bg-brand/15 text-foreground" : "border-border text-muted-foreground")}>{p}</button>)}</div>
             </Field>
             <Field label="Data atau Referensi Pendukung (opsional)"><Textarea value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} /></Field>
             <div className="flex justify-between pt-2"><Button type="button" variant="ghost" onClick={() => setStep("choose")}><ArrowLeft />Kembali</Button><Button type="submit">Analisis Konteks</Button></div>

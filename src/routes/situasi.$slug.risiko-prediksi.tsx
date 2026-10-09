@@ -14,9 +14,9 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/situasi/$slug/risiko-prediksi")({
   head: ({ params }) => ({ meta: [
-    { title: `Risiko & Prediksi ${params.slug.replaceAll("-", " ")} — SPEKTRA` },
+    { title: `Risiko & Prediksi ${params.slug.replaceAll("-", " ")} — SINTESA` },
     { name: "description", content: "Tingkat risiko, faktor pendorong, early warning, dan proyeksi untuk situasi aktif." },
-    { property: "og:title", content: "Risiko & Prediksi Situasi — SPEKTRA" },
+    { property: "og:title", content: "Risiko & Prediksi Situasi — SINTESA" },
     { property: "og:description", content: "Analisis risiko dan kemungkinan perkembangan situasi aktif." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },

@@ -38,7 +38,7 @@ export function SituationNav({ slug }: { slug?: string }) {
       <div className="flex items-center gap-2"><span className="shrink-0 text-xs text-muted-foreground">Situasi:</span><Select value={activeSlug} onValueChange={(nextSlug) => navigate({ to: pathname.endsWith("/eksplorasi") ? "/situasi/$slug/eksplorasi" : pathname.endsWith("/risiko-prediksi") ? "/situasi/$slug/risiko-prediksi" : "/situasi/$slug", params: { slug: nextSlug } })}><SelectTrigger aria-label="Pilih situasi" className="w-full min-w-0 sm:w-[280px]"><SelectValue /></SelectTrigger><SelectContent>{situations.map((item) => <SelectItem key={item.slug} value={item.slug}>{item.name}</SelectItem>)}</SelectContent></Select></div>
     </div>
     <nav aria-label="Navigasi Situasi" className="flex w-full gap-1 overflow-x-auto border-b border-border">
-      {links.map((link) => <Button key={link.to} asChild variant="ghost" className={cn("h-11 shrink-0 rounded-none border-b-2 border-transparent px-3 text-xs text-muted-foreground", pathname === link.to.replace("$slug", activeSlug) && "border-primary text-foreground")}><Link to={link.to} params={{ slug: activeSlug }}>{link.label}</Link></Button>)}
+      {links.map((link) => <Button key={link.to} asChild variant="ghost" className={cn("h-11 shrink-0 rounded-none border-b-2 border-transparent px-3 text-xs text-muted-foreground", pathname === link.to.replace("$slug", activeSlug) && "border-brand text-foreground")}><Link to={link.to} params={{ slug: activeSlug }}>{link.label}</Link></Button>)}
     </nav>
   </div>;
 }

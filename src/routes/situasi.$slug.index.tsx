@@ -11,9 +11,9 @@ import { actors, narratives, records, regions, sentiment, trend, type DetailReco
 
 export const Route = createFileRoute("/situasi/$slug/")({
   head: ({ params }) => ({ meta: [
-    { title: `Ringkasan ${params.slug.replaceAll("-", " ")} — SPEKTRA` },
+    { title: `Ringkasan ${params.slug.replaceAll("-", " ")} — SINTESA` },
     { name: "description", content: "Ringkasan metrik, tren, aktor, narasi, sentimen, wilayah, dan data detail situasi." },
-    { property: "og:title", content: "Ringkasan Detail Situasi — SPEKTRA" },
+    { property: "og:title", content: "Ringkasan Detail Situasi — SINTESA" },
     { property: "og:description", content: "Kondisi terkini dari situasi yang dipantau." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
   ] }),

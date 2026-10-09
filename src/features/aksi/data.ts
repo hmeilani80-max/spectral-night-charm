@@ -78,7 +78,7 @@ export function newsChannelDomain(channel: string) {
 }
 
 export const SOURCES = [
-  { name: "Data SPEKTRA", kind: "Internal", use: "Volume percakapan" },
+  { name: "Data SINTESA", kind: "Internal", use: "Volume percakapan" },
   { name: "Laporan Analyst", kind: "Internal", use: "Konteks" },
   { name: "News Source", kind: "News", use: "Fakta lapangan" },
 ];

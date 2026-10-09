@@ -8,7 +8,7 @@ import { routeTree } from "@/routeTree.gen";
 // network the test run lacks, and jsdom never loads the stylesheets React waits on.
 describe("App routing", () => {
   it.each(["/", "/situasi", "/situasi/demonstrasi-nasional", "/situasi/demonstrasi-nasional/eksplorasi", "/situasi/demonstrasi-nasional/risiko-prediksi", "/strategi", "/strategi/respons-informasi-demonstrasi-nasional", "/aksi/produksi", "/aksi/produksi/PRD-021", "/aksi/persetujuan", "/aksi/persetujuan/konten/PRD-021", "/aksi/persetujuan/sosial/CMP-014", "/aksi/distribusi-sosial", "/aksi/distribusi-sosial/CMP-014", "/aksi/distribusi-sosial/baru", "/aksi/distribusi-news", "/aksi/distribusi-news/DN-012", "/dampak", "/arsip", "/administrasi"])(
-    "matches a SPEKTRA page for %s instead of falling back to not found",
+    "matches a SINTESA page for %s instead of falling back to not found",
     (path) => {
     const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
 

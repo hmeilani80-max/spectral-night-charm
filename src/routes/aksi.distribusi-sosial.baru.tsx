@@ -24,7 +24,7 @@ export const Route = createFileRoute("/aksi/distribusi-sosial/baru")({
 
 const STEPS = ["Rencana", "Target", "Paket Publikasi", "Review & Approval"];
 const flip = (list: string[], v: string) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
-const chip = (on: boolean) => cn("rounded-md border px-2.5 py-1 text-xs transition-colors", on ? "border-primary bg-primary/15 text-foreground" : "border-border text-muted-foreground hover:text-foreground");
+const chip = (on: boolean) => cn("rounded-md border px-2.5 py-1 text-xs transition-colors", on ? "border-brand bg-brand/15 text-foreground" : "border-border text-muted-foreground hover:text-foreground");
 
 function NewDistribution() {
   const { productions, createCampaign } = useAksi();
@@ -76,7 +76,7 @@ function NewDistribution() {
         <Box title="Nama Distribusi"><Input aria-label="Nama distribusi" placeholder="Respons Informasi Demonstrasi Nasional" value={name} onChange={(e) => setName(e.target.value)} /></Box>
         <Box title="Pilih Approved Content" action={<span className="flex items-center gap-1 text-xs font-semibold text-primary"><CheckCircle2 className="size-4" />{contentIds.length} konten dipilih</span>}>
           {!approved.length ? <p className="text-xs text-muted-foreground">Belum ada konten sosial yang disetujui.</p> : <div className="grid gap-3 sm:grid-cols-3">
-            {approved.map((p) => { const on = contentIds.includes(p.id); return <div key={p.id} className={cn("relative rounded-lg border-2 p-3 transition-colors", on ? "border-primary bg-primary/10" : "border-border")}>
+            {approved.map((p) => { const on = contentIds.includes(p.id); return <div key={p.id} className={cn("relative rounded-lg border-2 p-3 transition-colors", on ? "border-brand bg-brand/10" : "border-border")}>
               <label className="mb-3 flex cursor-pointer items-center justify-between gap-2 text-xs font-medium"><Checkbox checked={on} onCheckedChange={() => selectContent(p.id)} aria-label={`Pilih ${p.title}`} /><span>{on ? "Dipilih" : "Pilih konten"}</span>{on && <CheckCircle2 className="size-4 text-primary" />}</label>
               <AssetThumb asset={p} />
               <p className="mt-2 text-xs font-medium">{p.title}</p>
@@ -98,7 +98,7 @@ function NewDistribution() {
               <div key={lbl} className="flex flex-wrap items-center gap-2"><span className="w-28 text-muted-foreground">{lbl}</span>{opts.map((o) => <Button variant="outline" key={o} type="button" className={chip(false)} onClick={() => addAll(mk(o))}>+ {o}</Button>)}</div>)}
             {accounts.length > 0 && <Button variant="ghost" type="button" className="w-fit text-[11px] text-muted-foreground hover:text-foreground" onClick={() => setAccounts([])}>Kosongkan pilihan</Button>}
           </div>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{pool.map((a) => { const ok = selectable(a); return <label key={a.id} className={cn("flex items-start gap-2 rounded-md border border-border p-3 text-xs", !ok && "opacity-50", accounts.includes(a.id) && "border-primary bg-primary/5")}>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{pool.map((a) => { const ok = selectable(a); return <label key={a.id} className={cn("flex items-start gap-2 rounded-md border border-border p-3 text-xs", !ok && "opacity-50", accounts.includes(a.id) && "border-brand bg-brand/5")}>
             <Checkbox disabled={!ok} checked={accounts.includes(a.id)} onCheckedChange={() => setAccounts(flip(accounts, a.id))} aria-label={`${a.handle} ${a.platform}`} />
             <span className="grid flex-1 gap-0.5"><span className="flex items-center justify-between gap-2 font-medium">{a.handle}<StatusPill value={a.status} /></span><span className="text-muted-foreground">{a.platform} · {a.group} · {a.label}</span></span>
           </label>; })}</div>
