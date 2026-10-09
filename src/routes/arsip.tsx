@@ -14,7 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { COMPLIANCE, ITEMS, JENIS, KLASIFIKASI, MODUL, PROVENANCE, search, suggestForUpload, type ArsipItem, type Filters, type Jenis, type Klasifikasi } from "@/features/arsip/data";
+import { useArsip } from "@/features/arsip/context";
+import { analyzeFieldReport, buildFieldReportItem, COMPLIANCE, JENIS, KLASIFIKASI, MODUL, PROVENANCE, search, suggestForUpload, type AiFieldAnalysis, type ArsipItem, type Filters, type Jenis, type Klasifikasi } from "@/features/arsip/data";
 
 export const Route = createFileRoute("/arsip")({
   head: () => ({
@@ -49,18 +50,20 @@ function SourceLink({ item, children }: { item: ArsipItem; children: ReactNode }
 }
 
 function Arsip() {
-  const [items, setItems] = useState<ArsipItem[]>(ITEMS);
+  const { items, addItem } = useArsip();
   const [query, setQuery] = useState("");
   const [f, setF] = useState<Filters>(ALL);
   const [open, setOpen] = useState<ArsipItem | null>(null);
-  const [upload, setUpload] = useState(false);
+  const [choice, setChoice] = useState(false);
+  const [upload, setUpload] = useState<null | Jenis>(null);
+  const [fieldReport, setFieldReport] = useState(false);
   const results = useMemo(() => search(items, query, f), [items, query, f]);
   const owners = [...new Set(items.map((i) => i.owner))];
   const set = (k: keyof Filters) => (v: string) => setF({ ...f, [k]: v });
 
   return (
     <PageShell eyebrow="Learn" title="Arsip & Pengetahuan" description="Temukan kembali dokumen, analisis, keputusan, hasil produksi, dan informasi pendukung dari seluruh proses SINTESA."
-      actions={<Button onClick={() => setUpload(true)}><Plus />Tambah Dokumen</Button>}>
+      actions={<Button onClick={() => setChoice(true)}><Plus />Tambah Data / Dokumen</Button>}>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {[["Total Arsip", items.length], ["Dokumen Baru Bulan Ini", items.filter((i) => i.created.includes("Okt")).length], ["Menunggu Submission", COMPLIANCE.filter((c) => c.status !== "Submitted").length], ["Item Terbatas", items.filter((i) => i.klasifikasi !== "Internal").length]].map(([l, v]) => (
           <div key={l} className="rounded-lg border border-border bg-card px-4 py-3"><p className="text-[11px] text-muted-foreground">{l}</p><p className="text-lg font-semibold tabular-nums">{v}</p></div>
@@ -142,7 +145,10 @@ function Arsip() {
       <p className="mt-5 text-center text-[11px] text-muted-foreground">Situasi → Strategi → Produksi → Persetujuan → Distribusi → Dampak → Arsip & Pengetahuan → kembali menjadi input Situasi, Strategi, dan Produksi baru.</p>
 
       {open && <DetailDialog item={open} items={items} onOpen={setOpen} onClose={() => setOpen(null)} />}
-      <UploadDialog open={upload} onClose={() => setUpload(false)} onSave={(it) => { setItems([it, ...items]); setUpload(false); toast.success("Dokumen tersimpan di Arsip"); }} />
+      <ChoiceDialog open={choice} onClose={() => setChoice(false)}
+        onPick={(c) => { setChoice(false); if (c === "field") setFieldReport(true); else setUpload(c === "dataset" ? "Dataset" : "Dokumen"); }} />
+      <UploadDialog open={!!upload} initialJenis={upload ?? "Dokumen"} onClose={() => setUpload(null)} onSave={(it) => { addItem(it); setUpload(null); toast.success("Tersimpan di Arsip"); }} />
+      <FieldReportDialog open={fieldReport} onClose={() => setFieldReport(false)} onSave={(it) => { addItem(it); setFieldReport(false); toast.success("Laporan lapangan tersimpan di Arsip"); }} />
     </PageShell>
   );
 }
@@ -237,8 +243,8 @@ function DetailDialog({ item, items, onOpen, onClose }: { item: ArsipItem; items
   );
 }
 
-function UploadDialog({ open, onClose, onSave }: { open: boolean; onClose: () => void; onSave: (i: ArsipItem) => void }) {
-  const empty = { file: "", title: "", jenis: "Dokumen" as Jenis, owner: "", klas: "Internal" as Klasifikasi, tags: "", desc: "" };
+function UploadDialog({ open, initialJenis, onClose, onSave }: { open: boolean; initialJenis: Jenis; onClose: () => void; onSave: (i: ArsipItem) => void }) {
+  const empty = { file: "", title: "", jenis: initialJenis, owner: "", klas: "Internal" as Klasifikasi, tags: "", desc: "" };
   const [d, setD] = useState(empty);
   const [confirmRel, setConfirmRel] = useState(true);
   const s = suggestForUpload(`${d.title} ${d.desc}`);
@@ -256,7 +262,7 @@ function UploadDialog({ open, onClose, onSave }: { open: boolean; onClose: () =>
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-lg">
-        <DialogHeader><DialogTitle>Tambah Dokumen</DialogTitle><DialogDescription>Unggah dokumen resmi/manual ke repository.</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle>{initialJenis === "Dataset" ? "Unggah Dataset" : "Unggah Dokumen"}</DialogTitle><DialogDescription>Unggah {initialJenis === "Dataset" ? "dataset" : "dokumen"} resmi/manual ke repository.</DialogDescription></DialogHeader>
         <div className="grid gap-3 text-xs">
           <div className="grid gap-1"><Label htmlFor="up-file">File</Label><Input id="up-file" type="file" onChange={(e) => setD({ ...d, file: e.target.files?.[0]?.name ?? "", title: d.title || (e.target.files?.[0]?.name.replace(/\.[^.]+$/, "") ?? "") })} /></div>
           <div className="grid gap-1"><Label htmlFor="up-title">Judul</Label><Input id="up-title" value={d.title} onChange={(e) => setD({ ...d, title: e.target.value })} /></div>

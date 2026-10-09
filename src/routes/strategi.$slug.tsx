@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, ChevronRight, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -8,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useSituations } from "@/features/situasi/context";
 import { Panel, RiskLabel, SummaryBlock } from "@/features/situasi/components";
-import { StatusBadge } from "@/features/strategi/components";
+import { buildBahanTanggapan, type BahanTanggapan } from "@/features/strategi/bahan";
+import { BahanTanggapanPanel, StatusBadge } from "@/features/strategi/components";
 import { approachPlatforms, useStrategies } from "@/features/strategi/context";
 import { channelRoles, getActionPlan, getChannelApproach, getStrategyContext, insights, scenarios, sources, studyFacts, type ChannelApproach } from "@/features/strategi/data";
 import { cn } from "@/lib/utils";
@@ -33,12 +35,29 @@ function StrategyDetail() {
   const strategy = strategies.find((s) => s.slug === slug);
   const [editing, setEditing] = useState(false);
   const [objective, setObjective] = useState(strategy?.objective ?? "");
+  const [tab, setTab] = useState("ringkasan");
   if (!strategy) throw notFound();
   const situation = [...topics, ...findings].find((s) => s.slug === strategy.situationSlug);
   const ctx = getStrategyContext(strategy, situation);
   const recommended = getChannelApproach(ctx.platforms);
   const approach: ChannelApproach = strategy.approach ?? recommended;
   const tasks = getActionPlan(approachPlatforms(approach, ctx.platforms));
+  const bahanInput = useMemo(() => ({
+    title: strategy.situationName ?? strategy.title,
+    narrative: ctx.narrative,
+    growth: ctx.growth,
+    regions: ctx.regions,
+    verifiedFacts: studyFacts.verified,
+    unverifiedFacts: studyFacts.unverified,
+    sources,
+  }), [strategy.situationName, strategy.title, ctx.narrative, ctx.growth, ctx.regions]);
+  const [bahan, setBahan] = useState<BahanTanggapan>(() => buildBahanTanggapan(bahanInput));
+  // Kajian & Sumber: render seluruh kategori yang tersedia pada data (termasuk kategori baru seperti Data Internal / Laporan Lapangan jika ditambahkan ke data.ts).
+  const studyFactLabels: Record<string, string> = { verified: "Fakta Terverifikasi", claims: "Klaim yang Berkembang", unverified: "Informasi Belum Terverifikasi", internal: "Data Internal / Laporan Lapangan" };
+  const studyFactColors: Record<string, string> = { verified: "text-chart-2", claims: "text-chart-3", unverified: "text-muted-foreground", internal: "text-primary" };
+  const studyFactCategories = Object.entries(studyFacts)
+    .filter((entry): entry is [string, string[]] => Array.isArray(entry[1]))
+    .map(([key, items]) => [studyFactLabels[key] ?? key, items, studyFactColors[key] ?? "text-muted-foreground"] as [string, string[], string]);
 
   return (
     <div className="mx-auto w-full max-w-[1500px] px-4 py-6 md:px-8 md:py-8">
@@ -61,7 +80,7 @@ function StrategyDetail() {
         <Button onClick={() => { sendToAction(strategy.slug); navigate({ to: "/aksi/produksi" }); }}>Lanjutkan ke Aksi<ArrowRight /></Button>
       </header>
 
-      <Tabs defaultValue="ringkasan" className="mt-5">
+      <Tabs value={tab} onValueChange={setTab} className="mt-5">
         <TabsList className="h-auto flex-wrap"><TabsTrigger value="ringkasan">Ringkasan</TabsTrigger><TabsTrigger value="kajian">Kajian & Sumber</TabsTrigger><TabsTrigger value="rencana">Rekomendasi & Rencana</TabsTrigger></TabsList>
 
         <TabsContent value="ringkasan" className="mt-5 space-y-4">
@@ -85,8 +104,8 @@ function StrategyDetail() {
         <TabsContent value="kajian" className="mt-5 space-y-4">
           <Panel title="Ringkasan Kajian"><p className="text-sm leading-6 text-muted-foreground">Peningkatan percakapan terutama dipicu oleh perluasan agenda aksi dan informasi situasi lapangan. Percakapan sosial berkembang lebih cepat daripada pemberitaan, sementara klarifikasi resmi belum mengimbangi laju informasi yang belum terverifikasi.</p></Panel>
           <div className="grid gap-4 lg:grid-cols-3">
-            {[["Fakta Terverifikasi", studyFacts.verified, "text-chart-2"], ["Klaim yang Berkembang", studyFacts.claims, "text-chart-3"], ["Informasi Belum Terverifikasi", studyFacts.unverified, "text-muted-foreground"]].map(([t, items, c]) => (
-              <Panel key={t as string} title={t as string}><ul className="space-y-2">{(items as string[]).map((i) => <li key={i} className="flex gap-2 text-xs leading-5"><span className={cn("mt-1.5 size-1.5 shrink-0 rounded-full bg-current", c as string)} />{i}</li>)}</ul></Panel>
+            {studyFactCategories.map(([t, items, c]) => (
+              <Panel key={t} title={t}><ul className="space-y-2">{items.map((i) => <li key={i} className="flex gap-2 text-xs leading-5"><span className={cn("mt-1.5 size-1.5 shrink-0 rounded-full bg-current", c)} />{i}</li>)}</ul></Panel>
             ))}
           </div>
           <p className="text-[11px] text-muted-foreground">Klaim tidak dinyatakan benar atau salah tanpa sumber yang cukup.</p>
@@ -141,6 +160,15 @@ function StrategyDetail() {
             </div>
             <div className="mt-4 flex justify-end"><Button onClick={() => { sendToAction(strategy.slug); navigate({ to: "/aksi/produksi" }); }}>Lanjutkan ke Aksi<ArrowRight /></Button></div>
           </Panel>
+
+          <BahanTanggapanPanel
+            bahan={bahan}
+            onChange={setBahan}
+            onRegenerate={() => { setBahan(buildBahanTanggapan(bahanInput)); toast.success("Paket Bahan Tanggapan dibuat ulang (simulasi)"); }}
+            onLihatSumber={() => setTab("kajian")}
+            onTeruskan={() => { sendToAction(strategy.slug); navigate({ to: "/aksi/produksi" }); }}
+            onSimpanArsip={() => toast.success("Tersimpan ke Arsip (simulasi)")}
+          />
         </TabsContent>
       </Tabs>
     </div>

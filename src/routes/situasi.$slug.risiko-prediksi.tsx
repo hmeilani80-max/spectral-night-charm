@@ -9,7 +9,8 @@ import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartToo
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ActiveFilters, FilterBar, MetricGrid, Panel, RiskLabel, SituationMeta, SituationNav, SummaryBlock, type ActiveFilter } from "@/features/situasi/components";
 import { useSituations } from "@/features/situasi/context";
-import { getRiskProfile, trend } from "@/features/situasi/data";
+import { getRiskProfile, trend, warningHistory } from "@/features/situasi/data";
+import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/situasi/$slug/risiko-prediksi")({
@@ -81,6 +82,21 @@ function RiskForecast() {
       </div>
 
       <Panel title="Pola Aktivitas Tidak Biasa" action={<Button variant="outline" size="sm" onClick={() => choose("Indikasi aktivitas terkoordinasi")}>Lihat Detail<ArrowUpRight /></Button>}><p className="text-sm">{profile.unusualActivity}</p><p className="mt-2 text-xs text-muted-foreground">Indikasi aktivitas terkoordinasi — pola ini memerlukan penelaahan lebih lanjut dan tidak menyatakan koordinasi sebagai fakta.</p></Panel>
+
+      <Panel title="Riwayat Peringatan & Penanganan" description="Linimasa peringatan dan status penanganan dari sistem hingga respons operasional">
+        <ol className="space-y-4 border-l border-border pl-5">
+          {warningHistory.map((item) => <li key={item.time + item.event} className="relative">
+            <span className="absolute -left-[26px] top-1 size-2.5 rounded-full border-2 border-card bg-primary" />
+            <p className="text-xs font-medium text-muted-foreground">{item.time}</p>
+            <p className="mt-0.5 text-sm">{item.event}</p>
+            <span className="mt-1 inline-flex rounded-sm bg-secondary px-2 py-0.5 text-[10px] font-semibold text-secondary-foreground">{item.status}</span>
+          </li>)}
+        </ol>
+        <div className="mt-5 flex flex-wrap gap-2">
+          <Button asChild variant="outline" size="sm"><Link to="/strategi">Lihat Strategi Terkait</Link></Button>
+          <Button asChild variant="outline" size="sm"><Link to="/dampak">Lihat Perubahan di Dampak</Link></Button>
+        </div>
+      </Panel>
 
       <Panel title="Detail Data Risiko" description={`Komponen risiko di dalam ${situation.name}`}><Table><TableHeader><TableRow><TableHead>Narasi / Indikator</TableHead><TableHead>Level</TableHead><TableHead>Volume</TableHead><TableHead>Growth</TableHead><TableHead>Aktor</TableHead><TableHead>Wilayah</TableHead><TableHead>Status</TableHead></TableRow></TableHeader><TableBody>{profile.riskDetails.map((item) => <TableRow key={item.indicator} className="cursor-pointer" onClick={() => choose(item.indicator)}><TableCell className="font-medium">{item.indicator}</TableCell><TableCell><RiskLabel value={item.level} /></TableCell><TableCell>{item.volume}</TableCell><TableCell className="text-chart-2">{item.growth}</TableCell><TableCell>{item.actors}</TableCell><TableCell>{item.region}</TableCell><TableCell>{item.status}</TableCell></TableRow>)}</TableBody></Table></Panel>
     </div>

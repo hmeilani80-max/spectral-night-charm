@@ -92,3 +92,98 @@ export function DetailTable({ rows, onSelect }: { rows: DetailRecord[]; onSelect
 export function RecordSheet({ record, onOpenChange }: { record: DetailRecord | undefined; onOpenChange: (open: boolean) => void }) {
   return <Sheet open={Boolean(record)} onOpenChange={onOpenChange}><SheetContent className="w-full overflow-y-auto sm:max-w-lg"><SheetHeader><SheetTitle>Detail Konten</SheetTitle><SheetDescription>Rekam data terpilih dan sumber asal.</SheetDescription></SheetHeader>{record && <div className="mt-7 space-y-6"><blockquote className="border-l-2 border-primary pl-4 text-sm leading-6">“{record.content}”</blockquote><dl className="grid grid-cols-2 gap-4 text-sm">{[["Aktor",record.actor],["Platform",record.platform],["Waktu",record.time],["Narasi",record.narrative],["Sentimen",record.sentiment],["Emosi",record.emotion],["Wilayah",record.region],["Risiko",record.risk]].map(([label,value]) => <div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-1 font-medium">{value}</dd></div>)}</dl><Button variant="outline" className="w-full">Lihat Sumber<ExternalLink /></Button></div>}</SheetContent></Sheet>;
 }
+/* ===================== REVISI 1 — Analisis Pola Manipulasi Informasi ===================== */
+import type { AccountProfile, EwsLevel, ManipulationContentRow, ManipulationPattern } from "./data";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+export function TrendBadge({ value }: { value: "Meningkat" | "Stabil" | "Menurun" }) {
+  return <span className={cn("inline-flex rounded-sm px-2 py-1 text-[10px] font-semibold", value === "Meningkat" ? "bg-destructive/15 text-destructive" : value === "Menurun" ? "bg-chart-2/15 text-chart-2" : "bg-secondary text-secondary-foreground")}>{value}</span>;
+}
+
+export function ManipulationPatternPanel({ patterns, onSelect }: { patterns: ManipulationPattern[]; onSelect: (pattern: ManipulationPattern) => void }) {
+  return <Panel title="Analisis Pola Manipulasi Informasi" description="Sistem mendeteksi indikasi pola komunikasi dalam pemberitaan dan percakapan media sosial. Label menunjukkan indikasi pola, bukan tuduhan niat pelaku.">
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      {patterns.map((pattern) => <Button key={pattern.id} variant="outline" className="h-auto min-h-36 flex-col items-start justify-start gap-2 p-4 text-left" onClick={() => onSelect(pattern)}>
+        <span className="w-full"><span className="block text-xs font-semibold leading-5">{pattern.name}</span><span className="mt-2 block font-display text-2xl text-foreground">{pattern.count}</span></span>
+        <TrendBadge value={pattern.trend} />
+        <span className="block text-[10px] font-normal leading-4 text-muted-foreground">Platform dominan: {pattern.dominantPlatform}</span>
+        <span className="block text-[10px] font-normal leading-4 text-muted-foreground">Narasi terkait: {pattern.relatedNarrative}</span>
+      </Button>)}
+    </div>
+  </Panel>;
+}
+
+export function ManipulationContentSheet({ pattern, rows, onOpenChange }: { pattern: ManipulationPattern | undefined; rows: ManipulationContentRow[]; onOpenChange: (open: boolean) => void }) {
+  return <Sheet open={Boolean(pattern)} onOpenChange={onOpenChange}><SheetContent className="w-full overflow-y-auto sm:max-w-3xl">
+    <SheetHeader><SheetTitle>Indikasi Pola: {pattern?.name}</SheetTitle><SheetDescription>Konten yang mendasari indikasi pola ini. Kemiripan atau pengulangan konten tidak menyimpulkan niat pelaku.</SheetDescription></SheetHeader>
+    {pattern && <div className="mt-6 space-y-4">
+      <p className="text-xs leading-5 text-muted-foreground">{pattern.description}</p>
+      <div className="rounded-md border border-dashed border-border bg-muted/20 p-3 text-xs"><strong className="block text-[10px] uppercase text-muted-foreground">Contoh konten</strong><p className="mt-1">{pattern.example}</p></div>
+      <Table><TableHeader><TableRow><TableHead className="min-w-56">Konten / Ringkasan</TableHead><TableHead>Akun / Media</TableHead><TableHead>Platform</TableHead><TableHead>Waktu</TableHead><TableHead className="min-w-48">Alasan Terdeteksi</TableHead><TableHead>Sumber</TableHead></TableRow></TableHeader>
+        <TableBody>{rows.map((row) => <TableRow key={row.sourceUrl}><TableCell className="max-w-64 text-xs leading-5">{row.content}</TableCell><TableCell>{row.actor}</TableCell><TableCell>{row.platform}</TableCell><TableCell className="whitespace-nowrap text-muted-foreground">{row.time}</TableCell><TableCell className="max-w-56 text-xs text-muted-foreground">{row.reason}</TableCell><TableCell><a href={row.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">Lihat<ExternalLink className="size-3" /></a></TableCell></TableRow>)}</TableBody>
+      </Table>
+    </div>}
+  </SheetContent></Sheet>;
+}
+
+/* ===================== REVISI 2 — Account Deep Dive ===================== */
+export function AccountDetailSheet({ account, onOpenChange }: { account: AccountProfile | undefined; onOpenChange: (open: boolean) => void }) {
+  return <Sheet open={Boolean(account)} onOpenChange={onOpenChange}><SheetContent className="w-full overflow-y-auto sm:max-w-4xl">
+    <SheetHeader><SheetTitle>Detail Akun — {account?.username}</SheetTitle><SheetDescription>Pendalaman aktivitas akun yang bisa ditelusuri ke posting sumber.</SheetDescription></SheetHeader>
+    {account && <div className="mt-6 space-y-6">
+      <div className="grid grid-cols-2 gap-4 rounded-md border border-border bg-muted/10 p-4 text-xs sm:grid-cols-3">
+        <div><dt className="text-muted-foreground">Platform</dt><dd className="mt-1 font-medium">{account.platform}</dd></div>
+        <div><dt className="text-muted-foreground">Status Akun</dt><dd className="mt-1 font-medium">{account.status}</dd></div>
+        <div><dt className="text-muted-foreground">Periode Analisis</dt><dd className="mt-1 font-medium">{account.periodAnalysis}</dd></div>
+        <div><dt className="text-muted-foreground">Pertama Terdeteksi</dt><dd className="mt-1 font-medium">{account.firstDetected}</dd></div>
+        <div className="col-span-2 sm:col-span-2"><dt className="text-muted-foreground">Tautan Profil Sumber</dt><dd className="mt-1"><a href={account.profileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-primary hover:underline">{account.profileUrl}<ExternalLink className="size-3" /></a></dd></div>
+      </div>
+      <Tabs defaultValue="ringkasan">
+        <TabsList className="h-10 w-full justify-start overflow-x-auto bg-card">
+          <TabsTrigger value="ringkasan">Ringkasan</TabsTrigger>
+          <TabsTrigger value="unggahan">Riwayat Unggahan</TabsTrigger>
+          <TabsTrigger value="relasi">Pola Interaksi & Relasi</TabsTrigger>
+          <TabsTrigger value="perilaku">Perubahan Perilaku</TabsTrigger>
+        </TabsList>
+        <TabsContent value="ringkasan" className="space-y-4 pt-4">
+          <MetricGrid items={[{ value: String(account.postsMonitored), label: "Posting Terpantau" }, { value: account.interactionsMonitored.toLocaleString("id-ID"), label: "Interaksi Terpantau" }, { value: String(account.mentions), label: "Mention" }, { value: account.dominantTopic, label: "Topik Dominan" }]} />
+          <div className="rounded-md border border-primary/30 bg-primary/5 p-3 text-xs leading-5"><strong className="block text-[10px] uppercase text-primary">AI Insight</strong><p className="mt-1">{account.aiInsight}</p></div>
+          <p className="text-xs text-muted-foreground">{account.activityChange}</p>
+        </TabsContent>
+        <TabsContent value="unggahan" className="pt-4">
+          <Table><TableHeader><TableRow><TableHead>Tanggal</TableHead><TableHead className="min-w-56">Isi / Ringkasan</TableHead><TableHead>Topik</TableHead><TableHead>Interaksi</TableHead><TableHead>Sumber</TableHead></TableRow></TableHeader>
+            <TableBody>{account.uploads.map((row) => <TableRow key={row.source}><TableCell className="whitespace-nowrap">{row.date}</TableCell><TableCell className="max-w-72 text-xs leading-5">{row.content}</TableCell><TableCell>{row.topic}</TableCell><TableCell>{row.interactions.toLocaleString("id-ID")}</TableCell><TableCell><a href={row.source} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">Lihat<ExternalLink className="size-3" /></a></TableCell></TableRow>)}</TableBody>
+          </Table>
+        </TabsContent>
+        <TabsContent value="relasi" className="space-y-4 pt-4">
+          <div className="relative h-56 overflow-hidden rounded-md border border-border bg-muted/10">
+            <svg className="absolute inset-0 size-full" aria-hidden="true">{account.relations.map((_, index) => <line key={index} x1="50%" y1="50%" x2={`${20 + index * 25}%`} y2={index % 2 === 0 ? "20%" : "80%"} stroke="var(--color-border)" />)}</svg>
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary bg-card px-3 py-1.5 text-[10px] font-semibold">{account.username}</span>
+            {account.relations.map((relation, index) => <span key={relation.name} className="absolute rounded-full border border-border bg-card px-2 py-1 text-[9px]" style={{ left: `${12 + index * 25}%`, top: index % 2 === 0 ? "14%" : "78%" }}>{relation.name}</span>)}
+          </div>
+          <Table><TableHeader><TableRow><TableHead>Akun</TableHead><TableHead>Jumlah Interaksi</TableHead><TableHead>Hubungan Teramati</TableHead></TableRow></TableHeader>
+            <TableBody>{account.relations.map((relation) => <TableRow key={relation.name}><TableCell className="font-medium">{relation.name}</TableCell><TableCell>{relation.interactions.toLocaleString("id-ID")}</TableCell><TableCell>{relation.relation}</TableCell></TableRow>)}</TableBody>
+          </Table>
+        </TabsContent>
+        <TabsContent value="perilaku" className="space-y-4 pt-4">
+          <Table><TableHeader><TableRow><TableHead>Indikator</TableHead><TableHead>Sebelum</TableHead><TableHead>Sekarang</TableHead></TableRow></TableHeader>
+            <TableBody>
+              <TableRow><TableCell className="font-medium">Posting</TableCell><TableCell>{account.behaviorChange.postsBefore}</TableCell><TableCell>{account.behaviorChange.postsNow}</TableCell></TableRow>
+              <TableRow><TableCell className="font-medium">Frekuensi Posting</TableCell><TableCell>{account.behaviorChange.frequencyBefore}</TableCell><TableCell>{account.behaviorChange.frequencyNow}</TableCell></TableRow>
+              <TableRow><TableCell className="font-medium">Interaksi Terpantau</TableCell><TableCell>{account.behaviorChange.interactionsBefore.toLocaleString("id-ID")}</TableCell><TableCell>{account.behaviorChange.interactionsNow.toLocaleString("id-ID")}</TableCell></TableRow>
+              <TableRow><TableCell className="font-medium">Mention Terkait Isu</TableCell><TableCell>{account.behaviorChange.mentionsBefore.toLocaleString("id-ID")}</TableCell><TableCell>{account.behaviorChange.mentionsNow.toLocaleString("id-ID")}</TableCell></TableRow>
+              <TableRow><TableCell className="font-medium">Topik Paling Sering Dibahas</TableCell><TableCell>{account.behaviorChange.topicBefore}</TableCell><TableCell>{account.behaviorChange.topicNow}</TableCell></TableRow>
+            </TableBody>
+          </Table>
+          <div className="rounded-md border border-primary/30 bg-primary/5 p-3 text-xs leading-5"><strong className="block text-[10px] uppercase text-primary">AI Insight</strong><p className="mt-1">{account.aiInsight}</p></div>
+        </TabsContent>
+      </Tabs>
+    </div>}
+  </SheetContent></Sheet>;
+}
+
+/* ===================== REVISI 4 — EWS Bertingkat ===================== */
+export function EwsLevelBadge({ level }: { level: EwsLevel }) {
+  const styles: Record<EwsLevel, string> = { Rendah: "bg-chart-2/15 text-chart-2", Sedang: "bg-chart-3/15 text-chart-3", Tinggi: "bg-destructive/15 text-destructive", Kritis: "bg-destructive text-destructive-foreground" };
+  return <span className={cn("inline-flex rounded-sm px-2 py-1 text-[10px] font-semibold", styles[level])}>{level}</span>;
+}
