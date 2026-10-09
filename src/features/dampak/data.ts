@@ -103,14 +103,14 @@ export const social = { planned: 24, published: 23, failed: 1, views: 486000, in
 // Revisi 10 — S62: metrik per platform. Watch Time hanya berlaku untuk platform/konten video.
 // Nilai yang tidak tersedia dibiarkan undefined (bukan 0) dan ditampilkan sebagai "Data Tidak Tersedia".
 export const NOT_AVAILABLE = "Data Tidak Tersedia";
-export type SocialPlatformMetric = { platform: string; published: number; views?: number; interactions?: number; shares?: number; watchTimeSec?: number; isVideoPlatform: boolean };
+export type SocialPlatformMetric = { platform: string; published: number; views?: number | undefined; interactions?: number | undefined; shares?: number | undefined; watchTimeSec?: number; isVideoPlatform: boolean };
 export const socialBreakdown: SocialPlatformMetric[] = [
   { platform: "X", published: 8, views: 148000, interactions: 9800, shares: 2100, isVideoPlatform: false },
   { platform: "Instagram", published: 8, views: 126000, interactions: 8600, shares: 1400, isVideoPlatform: false },
   { platform: "TikTok", published: 7, views: 212000, interactions: 13000, shares: 3200, watchTimeSec: 184000, isVideoPlatform: true },
 ];
 
-export type SocialContentMetric = { id: string; title: string; platform: string; type: "Video" | "Post" | "Carousel"; published: string; views?: number; interactions?: number; shares?: number; watchTimeSec?: number };
+export type SocialContentMetric = { id: string; title: string; platform: string; type: "Video" | "Post" | "Carousel"; published: string; views?: number | undefined; interactions?: number | undefined; shares?: number | undefined; watchTimeSec?: number };
 export const socialContentBreakdown: SocialContentMetric[] = [
   { id: "SC-1", title: "Video Penjelasan Demonstrasi Nasional", platform: "TikTok", type: "Video", published: "8 Okt", views: 92000, interactions: 6100, shares: 1500, watchTimeSec: 184000 },
   { id: "SC-2", title: "Carousel Informasi Demonstrasi Nasional", platform: "Instagram", type: "Carousel", published: "7 Okt", views: 54000, interactions: 3900, shares: 620 },
@@ -119,7 +119,7 @@ export const socialContentBreakdown: SocialContentMetric[] = [
 
 export const news = { target: 16, live: 14, inProgress: 2, verified: 14, cost: 32000000 };
 // Revisi 10 — S62: Website Visits & Page Views ditampilkan jika tersedia; belum terintegrasi pada PoC ini → undefined.
-export type NewsMetrics = { publishedArticles: number; verifiedUrls: number; websiteVisits?: number; pageViews?: number };
+export type NewsMetrics = { publishedArticles: number; verifiedUrls: number; websiteVisits?: number | undefined; pageViews?: number | undefined };
 export const newsMetrics: NewsMetrics = { publishedArticles: 14, verifiedUrls: 14, websiteVisits: undefined, pageViews: undefined };
 export const newsChannels = [
   { channel: "NusaKanal Nasional", status: "Tayang", time: "6 Okt 10:15" },
