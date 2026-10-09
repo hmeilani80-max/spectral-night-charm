@@ -23,3 +23,4 @@
 - [x] Verifikasi revisi hingga persetujuan dan simulasi eksekusi
 - [x] Gunakan domain sesuai nama sebagai identitas 39 kanal Distribusi News
 - [x] Revisi Dampak tanpa redesign: label, timeline, tautan respons, drilldown narasi, dan jenis laporan; verifikasi alur
+- [x] Arsip & Pengetahuan: pencarian isi, repository, detail (provenance, versi, audit, akses, retention), upload, kepatuhan
