@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Archive,
   Bell,
+  CalendarDays,
   BookOpenCheck,
   ChevronDown,
   CircleGauge,
@@ -32,6 +33,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { highEwsNotifications } from "@/features/situasi/data";
+import { useTugas } from "@/features/aksi/tugas-context";
+import { taskNotifications } from "@/features/aksi/tugas";
 import { cn } from "@/lib/utils";
 import {
   Sidebar,
@@ -55,6 +58,7 @@ import {
 } from "@/components/ui/sidebar";
 
 const aksiItems = [
+  { label: "Kalender & Tugas", to: "/aksi/kalender-tugas", icon: CalendarDays },
   { label: "Produksi", to: "/aksi/produksi", icon: PenSquare },
   { label: "Persetujuan", to: "/aksi/persetujuan", icon: ClipboardCheck },
   { label: "Distribusi Sosial", to: "/aksi/distribusi-sosial", icon: Share2 },
@@ -204,6 +208,7 @@ function Topbar() {
               ))}
               {highEwsNotifications.length === 0 && <p className="px-2 py-3 text-xs text-muted-foreground">Tidak ada notifikasi level tinggi atau kritis saat ini.</p>}
             </div>
+            <TaskNotifications />
             <div className="flex items-center gap-2 border-t border-border bg-muted/20 px-4 py-3">
               <span className="grid size-8 shrink-0 place-items-center rounded-md border border-border bg-card"><Smartphone className="size-4 text-muted-foreground" /></span>
               <span className="text-[11px] text-muted-foreground">Notifikasi Mobile (simulasi)</span>
@@ -242,4 +247,13 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
     </SidebarProvider>
   );
+}
+function TaskNotifications() {
+  const { tasks } = useTugas();
+  const items = taskNotifications(tasks);
+  return <div className="border-t border-border px-2 pb-2 pt-3">
+    <p className="px-2 pb-1 text-sm font-semibold">Notifikasi Pekerjaan</p>
+    {items.map((n) => <Link key={n.id} to="/aksi/kalender-tugas" search={{ task: n.id }} className="block rounded-md px-2 py-1.5 hover:bg-accent/50">
+      <p className="text-xs font-semibold">{n.text}</p><p className="text-[11px] text-muted-foreground">{n.title}</p></Link>)}
+  </div>;
 }

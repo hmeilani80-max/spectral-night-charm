@@ -222,3 +222,16 @@ export function filterTasks(tasks: Task[], f: Filters, now = NOW) {
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
 export const fmtDue = (iso: string) => { const [d, t] = iso.split("T"); const [, m, day] = d!.split("-"); return `${Number(day)} ${MONTHS[Number(m) - 1]} ${t}`; };
+
+/** Simulated work notifications for the global bell (brief §12). */
+export function taskNotifications(tasks: Task[], now = NOW) {
+  const out: { id: string; text: string; title: string }[] = [];
+  for (const t of tasks) {
+    const st = effectiveStatus(t, now);
+    if (st === "Terlambat") out.push({ id: t.id, text: t.source === "Distribusi News" ? "Pekerjaan News melewati tenggat" : "Tugas melewati tenggat", title: t.title });
+    else if (st === "Menunggu" && t.source === "Persetujuan") out.push({ id: t.id, text: "Persetujuan menunggu keputusan", title: t.title });
+    else if (st === "Perlu Tindakan") out.push({ id: t.id, text: "Pekerjaan membutuhkan revisi", title: t.title });
+    else if (t.source === "Manual" && t.id.startsWith("man:new")) out.push({ id: t.id, text: "Anda mendapat tugas baru", title: t.title });
+  }
+  return out.slice(0, 6);
+}
