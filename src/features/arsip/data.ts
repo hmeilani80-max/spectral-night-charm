@@ -12,7 +12,7 @@ export type Activity = { at: string; who: string; what: string; v: string };
 
 // Revisi 5 — verifikasi silang data internal (S27). Laporan internal TIDAK PERNAH dianggap otomatis terverifikasi.
 export type VerificationFinding = { text: string; sourceId?: string };
-export type Verification = { situationRef?: string; supported: VerificationFinding[]; conflicting: VerificationFinding[]; unverified: VerificationFinding[] };
+export type Verification = { situationRef?: string | undefined; supported: VerificationFinding[]; conflicting: VerificationFinding[]; unverified: VerificationFinding[] };
 
 /** Simulasi user yang sedang login — dipakai untuk mengisi owner/unit otomatis pada Input Laporan Lapangan. */
 export const CURRENT_USER = { name: "Anda (Petugas Lapangan)", unit: "Direktorat Analisis" } as const;
@@ -287,7 +287,7 @@ export type AiFieldAnalysis = {
 export function analyzeFieldReport(input: { title: string; content: string; location: string; date: string }): AiFieldAnalysis {
   const t = norm(`${input.title} ${input.content}`);
   const issuesPool = ["demonstrasi", "kericuhan", "layanan publik", "lalu lintas", "keamanan"];
-  const issues = issuesPool.filter((k) => t.includes(norm(k).split(" ")[0]));
+  const issues = issuesPool.filter((k) => t.includes(norm(k).split(" ")[0] ?? ""));
   const tags = ["demonstrasi", "lapangan", "verifikasi", "oktober"].filter((k) => t.includes(k) || k === "lapangan" || k === "verifikasi");
   const relatedSituation = t.includes("demonstrasi") || t.includes("demo") || t.includes("jakarta") ? "Demonstrasi Nasional" : "Belum ditemukan situasi yang relevan";
   return {

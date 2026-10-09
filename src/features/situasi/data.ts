@@ -433,7 +433,7 @@ export const comments: CommentRow[] = [
 export type EwsLevel = "Rendah" | "Sedang" | "Tinggi" | "Kritis";
 export type EwsEntry = {
   slug: string; name: string; level: EwsLevel; firstDetected: string;
-  triggers: string[]; handlingStatus: string; pic?: string; reason: string;
+  triggers: string[]; handlingStatus: string; pic?: string | undefined; reason: string;
 };
 
 export const ewsEntries: EwsEntry[] = [
