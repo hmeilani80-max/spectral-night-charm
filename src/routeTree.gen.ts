@@ -21,6 +21,7 @@ import { Route as AdministrasiAkunSosialRouteImport } from './routes/administras
 import { Route as AksiIndexRouteImport } from './routes/aksi.index'
 import { Route as AksiDistribusiNewsRouteImport } from './routes/aksi.distribusi-news'
 import { Route as AksiDistribusiSosialRouteImport } from './routes/aksi.distribusi-sosial'
+import { Route as AksiKalenderTugasRouteImport } from './routes/aksi.kalender-tugas'
 import { Route as AksiPersetujuanRouteImport } from './routes/aksi.persetujuan'
 import { Route as AksiProduksiRouteImport } from './routes/aksi.produksi'
 import { Route as SituasiIndexRouteImport } from './routes/situasi.index'
@@ -98,6 +99,11 @@ const AksiDistribusiNewsRoute = AksiDistribusiNewsRouteImport.update({
 const AksiDistribusiSosialRoute = AksiDistribusiSosialRouteImport.update({
   id: '/distribusi-sosial',
   path: '/distribusi-sosial',
+  getParentRoute: () => AksiRoute,
+} as any)
+const AksiKalenderTugasRoute = AksiKalenderTugasRouteImport.update({
+  id: '/kalender-tugas',
+  path: '/kalender-tugas',
   getParentRoute: () => AksiRoute,
 } as any)
 const AksiPersetujuanRoute = AksiPersetujuanRouteImport.update({
@@ -205,6 +211,7 @@ export interface FileRoutesByFullPath {
   '/administrasi/akun-sosial': typeof AdministrasiAkunSosialRoute
   '/aksi/distribusi-news': typeof AksiDistribusiNewsRouteWithChildren
   '/aksi/distribusi-sosial': typeof AksiDistribusiSosialRouteWithChildren
+  '/aksi/kalender-tugas': typeof AksiKalenderTugasRoute
   '/aksi/persetujuan': typeof AksiPersetujuanRouteWithChildren
   '/aksi/produksi': typeof AksiProduksiRouteWithChildren
   '/situasi/$slug': typeof SituasiSlugRouteWithChildren
@@ -231,6 +238,7 @@ export interface FileRoutesByTo {
   '/arsip': typeof ArsipRoute
   '/dampak': typeof DampakRoute
   '/administrasi/akun-sosial': typeof AdministrasiAkunSosialRoute
+  '/aksi/kalender-tugas': typeof AksiKalenderTugasRoute
   '/strategi/$slug': typeof StrategiSlugRoute
   '/administrasi': typeof AdministrasiIndexRoute
   '/aksi': typeof AksiIndexRoute
@@ -261,6 +269,7 @@ export interface FileRoutesById {
   '/administrasi/akun-sosial': typeof AdministrasiAkunSosialRoute
   '/aksi/distribusi-news': typeof AksiDistribusiNewsRouteWithChildren
   '/aksi/distribusi-sosial': typeof AksiDistribusiSosialRouteWithChildren
+  '/aksi/kalender-tugas': typeof AksiKalenderTugasRoute
   '/aksi/persetujuan': typeof AksiPersetujuanRouteWithChildren
   '/aksi/produksi': typeof AksiProduksiRouteWithChildren
   '/situasi/$slug': typeof SituasiSlugRouteWithChildren
@@ -295,6 +304,7 @@ export interface FileRouteTypes {
     | '/administrasi/akun-sosial'
     | '/aksi/distribusi-news'
     | '/aksi/distribusi-sosial'
+    | '/aksi/kalender-tugas'
     | '/aksi/persetujuan'
     | '/aksi/produksi'
     | '/situasi/$slug'
@@ -321,6 +331,7 @@ export interface FileRouteTypes {
     | '/arsip'
     | '/dampak'
     | '/administrasi/akun-sosial'
+    | '/aksi/kalender-tugas'
     | '/strategi/$slug'
     | '/administrasi'
     | '/aksi'
@@ -350,6 +361,7 @@ export interface FileRouteTypes {
     | '/administrasi/akun-sosial'
     | '/aksi/distribusi-news'
     | '/aksi/distribusi-sosial'
+    | '/aksi/kalender-tugas'
     | '/aksi/persetujuan'
     | '/aksi/produksi'
     | '/situasi/$slug'
@@ -466,6 +478,13 @@ declare module '@tanstack/react-router' {
       path: '/distribusi-sosial'
       fullPath: '/aksi/distribusi-sosial'
       preLoaderRoute: typeof AksiDistribusiSosialRouteImport
+      parentRoute: typeof AksiRoute
+    }
+    '/aksi/kalender-tugas': {
+      id: '/aksi/kalender-tugas'
+      path: '/kalender-tugas'
+      fullPath: '/aksi/kalender-tugas'
+      preLoaderRoute: typeof AksiKalenderTugasRouteImport
       parentRoute: typeof AksiRoute
     }
     '/aksi/persetujuan': {
@@ -670,6 +689,7 @@ const AksiProduksiRouteWithChildren = AksiProduksiRoute._addFileChildren(
 interface AksiRouteChildren {
   AksiDistribusiNewsRoute: typeof AksiDistribusiNewsRouteWithChildren
   AksiDistribusiSosialRoute: typeof AksiDistribusiSosialRouteWithChildren
+  AksiKalenderTugasRoute: typeof AksiKalenderTugasRoute
   AksiPersetujuanRoute: typeof AksiPersetujuanRouteWithChildren
   AksiProduksiRoute: typeof AksiProduksiRouteWithChildren
   AksiIndexRoute: typeof AksiIndexRoute
@@ -678,6 +698,7 @@ interface AksiRouteChildren {
 const AksiRouteChildren: AksiRouteChildren = {
   AksiDistribusiNewsRoute: AksiDistribusiNewsRouteWithChildren,
   AksiDistribusiSosialRoute: AksiDistribusiSosialRouteWithChildren,
+  AksiKalenderTugasRoute: AksiKalenderTugasRoute,
   AksiPersetujuanRoute: AksiPersetujuanRouteWithChildren,
   AksiProduksiRoute: AksiProduksiRouteWithChildren,
   AksiIndexRoute: AksiIndexRoute,

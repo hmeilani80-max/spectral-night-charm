@@ -18,3 +18,4 @@
 - Read-only distribution asset previews use the shared AssetPreview renderer, so selection, packages, review, and approvals show the same source asset without production controls.
 - News channel domains are derived through the shared `newsChannelDomain` helper, so all 39 fixed-network identities stay consistent across ordering, approval, and verification views.
 - Keep Dampak comparison data and narrative mention counts in its shared feature module, so tables and drilldowns use the same analytical records while Social and News evaluations remain separate.
+- Kalender & Tugas derives tasks from Aksi objects via pure rules in `src/features/aksi/tugas.ts` (TugasProvider only overlays PIC, notes and manual tasks), so each job has one status that follows its source module.

@@ -4,9 +4,9 @@ import { Fragment, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 const GOOD = ["Siap", "Ready", "Dijadwalkan", "Generated", "Approved", "Disetujui", "Published", "Selesai", "Siap Eksekusi", "Tayang", "Scheduled"];
-const WARN = ["Perlu Perubahan", "Busy", "Diedit", "Perlu Revisi", "Menunggu Verifikasi", "Menunggu Approval Distribusi"];
-const BAD = ["Unavailable", "Ditolak", "Failed", "Belum dapat didistribusikan"];
-const ACTIVE = ["Menunggu Persetujuan", "Sedang Berjalan", "Generating", "Menunggu", "Menunggu Review", "Menunggu Approval", "Dikirim", "Diterima Kanal", "Dalam Pengerjaan", "Publishing", "Dalam Produksi"];
+const WARN = ["Perlu Perubahan", "Busy", "Diedit", "Perlu Revisi", "Perlu Tindakan", "Menunggu Verifikasi", "Menunggu Approval Distribusi"];
+const BAD = ["Unavailable", "Ditolak", "Failed", "Belum dapat didistribusikan", "Terlambat"];
+const ACTIVE = ["Menunggu Persetujuan", "Sedang Berjalan", "Generating", "Menunggu", "Menunggu Review", "Menunggu Approval", "Dikirim", "Diterima Kanal", "Dalam Pengerjaan", "Publishing", "Dalam Produksi", "Dalam Proses"];
 
 export function StatusPill({ value }: { value: string }) {
   return <span className={cn("inline-flex whitespace-nowrap rounded-sm px-2 py-1 text-[10px] font-semibold",
