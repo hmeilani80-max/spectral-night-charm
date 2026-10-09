@@ -70,7 +70,7 @@ function DeltaTable({ rows, unit, label, onPick, status, extra }: { rows: Row[];
 }
 
 function CompareBars({ rows, onPick, layout = "vertical", height = 220 }: { rows: Row[]; onPick: (r: Row) => void; layout?: "vertical" | "horizontal"; height?: number }) {
-  const click = (d: { name?: string } | undefined) => { const r = rows.find((x) => x.name === d?.name); if (r) onPick(r); };
+  const click = (d: { name: string | undefined }) => { const r = rows.find((x) => x.name === d.name); if (r) onPick(r); };
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={rows} layout={layout} margin={{ left: layout === "vertical" ? 40 : 0 }} onClick={(e) => click({ name: e?.activeLabel as string | undefined })}>
