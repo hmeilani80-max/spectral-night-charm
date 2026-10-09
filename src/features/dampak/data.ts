@@ -30,17 +30,19 @@ export const summary = [
   { label: "Volume Mention", before: "24.300", now: "18.900", delta: `↓ ${Math.abs(pctChange(24300, 18900))}%`, down: true },
   { label: "Sentimen Negatif", before: "46%", now: "34%", delta: "↓ 12 poin", down: true },
   { label: "Wilayah Aktif", before: "6", now: "4", delta: "↓ 2 wilayah", down: true },
-  { label: "Aktor Aktif", before: "142", now: "97", delta: "↓ 45 aktor", down: true },
+  { label: "Aktor Terdeteksi", before: "142", now: "97", delta: "↓ 45 aktor", down: true },
   { label: "Early Warning", before: "3", now: "1", delta: "↓ 2 peringatan", down: true },
   { label: "Risk Level", before: "Tinggi", now: "Sedang", delta: "Turun satu tingkat", down: true },
 ];
 
-export const narratives: Row[] = [
-  { name: "Aksi meluas ke banyak kota", before: 38, now: 22 },
-  { name: "Klarifikasi kondisi", before: 8, now: 21 },
-  { name: "Kericuhan", before: 17, now: 14 },
-  { name: "Gangguan layanan publik", before: 12, now: 6 },
-  { name: "Aksi damai", before: 9, now: 15 },
+export type NarrativeRow = Row & { mentionsBefore: number; mentionsNow: number };
+// PoC counts align with the existing share and total mention volume (24,300 → 18,900).
+export const narratives: NarrativeRow[] = [
+  { name: "Aksi meluas ke banyak kota", before: 38, now: 22, mentionsBefore: 9234, mentionsNow: 4158 },
+  { name: "Klarifikasi kondisi", before: 8, now: 21, mentionsBefore: 1944, mentionsNow: 3969 },
+  { name: "Kericuhan", before: 17, now: 14, mentionsBefore: 4131, mentionsNow: 2646 },
+  { name: "Gangguan layanan publik", before: 12, now: 6, mentionsBefore: 2916, mentionsNow: 1134 },
+  { name: "Aksi damai", before: 9, now: 15, mentionsBefore: 2187, mentionsNow: 2835 },
 ];
 
 export const actors: (Row & { shareBefore: number; shareNow: number })[] = [
@@ -89,10 +91,10 @@ export const sentimentCompare = [
 
 export const timeline = [
   { date: "4 Oktober", kind: "Respons", text: "Distribusi Sosial dimulai — 12 akun aktif di X, Instagram, dan TikTok." },
-  { date: "5 Oktober", kind: "Situasi", text: "Pada periode yang sama, volume mention turun dari 24.300 (baseline) menjadi 22.100." },
+  { date: "5 Oktober", kind: "Perubahan Metrik", text: "Pada periode yang sama, volume mention turun dari 24.300 (baseline) menjadi 22.100." },
   { date: "6 Oktober", kind: "Respons", text: "Publikasi News mulai tayang di 16 kanal." },
-  { date: "7 Oktober", kind: "Situasi", text: "Share narasi “Klarifikasi kondisi” meningkat dari 8% menjadi 16%." },
-  { date: "8 Oktober", kind: "Situasi", text: "Sentimen negatif turun menjadi 36%." },
+  { date: "7 Oktober", kind: "Perubahan Metrik", text: "Share narasi “Klarifikasi kondisi” meningkat dari 8% menjadi 16%." },
+  { date: "8 Oktober", kind: "Perubahan Metrik", text: "Sentimen negatif turun menjadi 36%." },
   { date: "9 Oktober", kind: "Situasi", text: "Risk Level berubah dari Tinggi menjadi Sedang." },
 ];
 
@@ -114,6 +116,26 @@ export const newsChannels = [
 export const completionRate = (live: number, target: number) => Math.round((live / target) * 1000) / 10;
 
 export const sampleRecords: Record<string, { post: string; platform: string; time: string }[]> = {
+  "Aksi meluas ke banyak kota": [
+    { post: "@forum_mahasiswa: Aksi lanjutan direncanakan di sejumlah kota.", platform: "X", time: "2 Okt 14:32" },
+    { post: "@pantau_kota: Agenda aksi lanjutan masih menunggu konfirmasi panitia daerah.", platform: "X", time: "9 Okt 08:40" },
+  ],
+  "Klarifikasi kondisi": [
+    { post: "@suara_warga: Informasi kondisi lapangan perlu dikonfirmasi melalui kanal resmi.", platform: "Instagram", time: "2 Okt 11:05" },
+    { post: "@media_nusantara: Klarifikasi terbaru menyebut layanan utama tetap beroperasi.", platform: "News", time: "9 Okt 09:20" },
+  ],
+  "Kericuhan": [
+    { post: "@pantau_kota: Laporan kericuhan di satu titik masih menunggu verifikasi.", platform: "X", time: "2 Okt 15:10" },
+    { post: "@kabar_daerah: Situasi di titik yang dipantau kembali tertib.", platform: "News", time: "9 Okt 08:30" },
+  ],
+  "Gangguan layanan publik": [
+    { post: "@suara_warga: Rute layanan dialihkan sementara di sekitar lokasi aksi.", platform: "X", time: "2 Okt 12:15" },
+    { post: "@pantau_kota: Layanan transportasi kembali mengikuti rute normal.", platform: "Instagram", time: "9 Okt 07:45" },
+  ],
+  "Aksi damai": [
+    { post: "@forum_mahasiswa: Peserta diminta menjaga ketertiban selama aksi.", platform: "X", time: "2 Okt 09:10" },
+    { post: "@kabar_daerah: Peserta menyampaikan aspirasi secara tertib dan damai.", platform: "News", time: "9 Okt 10:05" },
+  ],
   "@forum_mahasiswa": [
     { post: "Agenda konsolidasi lanjutan akan diumumkan setelah evaluasi hari ini.", platform: "X", time: "9 Okt 08:10" },
     { post: "Aksi lanjutan direncanakan di sejumlah kota.", platform: "X", time: "2 Okt 14:32" },

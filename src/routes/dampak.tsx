@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { ArrowRight, FileText, Sparkles } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ReferenceArea, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -27,7 +27,13 @@ export const Route = createFileRoute("/dampak")({
 });
 
 const tip = { contentStyle: { background: "var(--color-popover)", border: "1px solid var(--color-border)", borderRadius: 8, fontSize: 12 } };
-type Detail = { name: string; before: number; now: number; unit: string; kind: string };
+type Detail = Row & { unit: string; kind: string };
+
+const responseAreas = [
+  { title: "Produksi", to: "/aksi/produksi", items: ["1 News Article", "1 Carousel", "1 Video Pendek", "1 Infografis"] },
+  { title: "Distribusi Sosial", to: "/aksi/distribusi-sosial", items: ["2 campaign distribusi", "24 planned posts", "23 published", "12 akun", "3 platform"] },
+  { title: "Distribusi News", to: "/aksi/distribusi-news", items: ["1 order distribusi", "16 kanal target", "14 publikasi selesai", "2 masih dalam pengerjaan"] },
+] as const;
 
 function Section({ n, title, period, children }: { n: number; title: string; period: string; children: ReactNode }) {
   return (
@@ -89,18 +95,19 @@ function Dampak() {
   const [situation, setSituation] = useState("demonstrasi-nasional");
   const [periodId, setPeriodId] = useState<string>("default");
   const [detail, setDetail] = useState<Detail | null>(null);
-  const [report, setReport] = useState({ type: "Per Situasi", format: "PDF" });
+  const [report, setReport] = useState({ type: "Per Situasi", kind: "Ringkasan Pimpinan", format: "PDF" });
   const [generated, setGenerated] = useState<string[]>([]);
   const [generating, setGenerating] = useState(false);
   const period = PERIODS.find((p) => p.id === periodId) ?? PERIODS[0];
-  const sit = systemFindings.find((s) => s.slug === situation)!;
+  const sit = systemFindings.find((s) => s.slug === situation) ?? systemFindings[0];
+  const narrativeDetail = detail?.kind === "Narasi" ? narratives.find((n) => n.name === detail.name) : undefined;
   const pp = `Baseline ${period.baseline} · Current ${period.current}`;
   const pick = (kind: string, unit: string) => (r: Row) => setDetail({ ...r, unit, kind });
 
   const generate = () => {
     setGenerating(true);
     setTimeout(() => {
-      setGenerated((g) => [`Laporan Dampak ${report.type} — ${sit.name} (${period.baseline} → ${period.current}) · ${report.format}`, ...g]);
+      setGenerated((g) => [`${report.kind} · Laporan Dampak ${report.type} — ${sit?.name ?? "Situasi"} (${period.baseline} → ${period.current}) · ${report.format}`, ...g]);
       setGenerating(false);
     }, 900);
   };
@@ -149,6 +156,7 @@ function Dampak() {
                 <p className="text-xs text-muted-foreground">{s.label}</p>
                 <p className="mt-2 flex items-center gap-1.5 font-display text-lg"><span className="text-muted-foreground">{s.before}</span><ArrowRight className="size-3.5 text-muted-foreground" />{s.now}</p>
                 <p className="mt-1 text-xs text-chart-2">{s.delta}</p>
+                {s.label === "Risk Level" && <p className="mt-2 text-[11px] leading-4 text-muted-foreground">Mengikuti klasifikasi risiko pada modul Situasi.</p>}
               </div>
             ))}
           </div>
@@ -194,7 +202,7 @@ function Dampak() {
                 <Bar dataKey="delta" name="Delta mention" fill="var(--color-primary)" radius={3} className="cursor-pointer" />
               </BarChart>
             </ResponsiveContainer>
-            <DeltaTable rows={actors} unit="" label="Aktor" onPick={pick("Aktor", "")} extra={(r) => { const a = actors.find((x) => x.name === r.name)!; return `${a.shareBefore}% → ${a.shareNow}%`; }} />
+            <DeltaTable rows={actors} unit="" label="Aktor" onPick={pick("Aktor", "")} extra={(r) => { const a = actors.find((x) => x.name === r.name); return a ? `${a.shareBefore}% → ${a.shareNow}%` : "—"; }} />
           </div>
         </Section>
 
@@ -222,8 +230,8 @@ function Dampak() {
           <ol className="relative space-y-3 border-l border-border pl-5">
             {timeline.map((t) => (
               <li key={t.date + t.text} className="relative">
-                <span className={`absolute -left-[25px] top-1 size-2.5 rounded-full ${t.kind === "Respons" ? "bg-primary" : "bg-chart-2"}`} />
-                <p className="text-xs"><span className="font-medium">{t.date}</span> <span className="ml-2 rounded border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">{t.kind}</span></p>
+                <span className={`absolute -left-[25px] top-1 size-2.5 rounded-full ${t.kind === "Respons" ? "bg-primary" : t.kind === "Situasi" ? "bg-chart-4" : "bg-chart-2"}`} />
+                <p className="text-xs"><span className="font-medium">{t.date}</span> <span className={`ml-2 rounded border px-1.5 py-0.5 text-[10px] ${t.kind === "Respons" ? "border-primary/40 text-primary" : t.kind === "Situasi" ? "border-chart-4/40 text-chart-4" : "border-chart-2/40 text-chart-2"}`}>{t.kind}</span></p>
                 <p className="mt-1 text-sm text-muted-foreground">{t.text}</p>
               </li>
             ))}
@@ -233,8 +241,8 @@ function Dampak() {
 
         <Section n={9} title="Respons yang Berjalan pada Periode Evaluasi" period={`Periode Respons ${period.response}`}>
           <div className="grid gap-3 md:grid-cols-3 text-sm">
-            {[["Produksi", ["1 News Article", "1 Carousel", "1 Video Pendek", "1 Infografis"]], ["Distribusi Sosial", ["2 campaign distribusi", "24 planned posts", "23 published", "12 akun", "3 platform"]], ["Distribusi News", ["1 order distribusi", "16 kanal target", "14 publikasi selesai", "2 masih dalam pengerjaan"]]].map(([t, items]) => (
-              <div key={t as string} className="rounded-md border border-border p-4"><p className="text-xs font-semibold">{t}</p><ul className="mt-2 space-y-1 text-muted-foreground">{(items as string[]).map((i) => <li key={i}>· {i}</li>)}</ul></div>
+            {responseAreas.map(({ title, items, to }) => (
+              <div key={title} className="rounded-md border border-border p-4"><p className="text-xs font-semibold">{title}</p><ul className="mt-2 space-y-1 text-muted-foreground">{items.map((i) => <li key={i}>· {i}</li>)}</ul><Button asChild variant="link" size="sm" className="mt-2 h-auto px-0"><Link to={to}>Lihat {title}<ArrowRight className="size-3.5" /></Link></Button></div>
             ))}
           </div>
           <p className="mt-3 text-[11px] text-muted-foreground">Konteks aktivitas; bukan skor dampak langsung.</p>
@@ -262,7 +270,7 @@ function Dampak() {
           </Section>
         </div>
 
-        <Section n={12} title="Cost vs Outcome" period={`Periode Respons ${period.response}`}>
+        <Section n={12} title="Cost vs Output" period={`Periode Respons ${period.response}`}>
           <table className="w-full text-sm"><thead className="text-xs text-muted-foreground"><tr className="border-b border-border text-left"><th className="py-2 font-medium">Kanal</th><th className="py-2 text-right font-medium">Biaya</th><th className="py-2 text-right font-medium">Output</th><th className="py-2 text-right font-medium">Biaya per output</th></tr></thead>
             <tbody>
               <tr className="border-b border-border/60"><td className="py-2">Social Distribution</td><td className="py-2 text-right tabular-nums">Rp{fmt(social.cost)}</td><td className="py-2 text-right">{social.published} published posts</td><td className="py-2 text-right tabular-nums">Rp{fmt(costPer(social.cost, social.published))} / post</td></tr>
@@ -272,7 +280,8 @@ function Dampak() {
 
         <Section n={13} title="Generate Laporan Dampak" period={pp}>
           <div className="flex flex-wrap items-end gap-3">
-            <div><p className="mb-1 text-xs text-muted-foreground">Jenis</p><Select value={report.type} onValueChange={(type) => setReport((r) => ({ ...r, type }))}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent>{["Daily", "Weekly", "Monthly", "Per Situasi"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
+            <div><p className="mb-1 text-xs text-muted-foreground">Jenis laporan</p><Select value={report.kind} onValueChange={(kind) => setReport((r) => ({ ...r, kind }))}><SelectTrigger aria-label="Jenis laporan" className="w-52"><SelectValue /></SelectTrigger><SelectContent>{["Ringkasan Pimpinan", "Laporan Analitik", "Laporan Lengkap"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
+            <div><p className="mb-1 text-xs text-muted-foreground">Cakupan</p><Select value={report.type} onValueChange={(type) => setReport((r) => ({ ...r, type }))}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent>{["Daily", "Weekly", "Monthly", "Per Situasi"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
             <div><p className="mb-1 text-xs text-muted-foreground">Format</p><Select value={report.format} onValueChange={(format) => setReport((r) => ({ ...r, format }))}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent>{["PDF", "Document", "Spreadsheet", "Presentation"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
             <Button onClick={generate} disabled={generating}><FileText />{generating ? "Menyusun…" : "Generate Laporan Dampak"}</Button>
           </div>
@@ -285,12 +294,20 @@ function Dampak() {
           {detail && <>
             <DialogHeader><DialogTitle>{detail.kind}: {detail.name}</DialogTitle></DialogHeader>
             <div className="grid grid-cols-3 gap-2 text-xs">
-              <div className="rounded-md border border-border p-3"><p className="text-muted-foreground">Baseline · {period.baseline}</p><p className="mt-1 font-display text-lg">{fmt(detail.before)}{detail.unit}</p></div>
-              <div className="rounded-md border border-border p-3"><p className="text-muted-foreground">Current · {period.current}</p><p className="mt-1 font-display text-lg">{fmt(detail.now)}{detail.unit}</p></div>
+              <div className="rounded-md border border-border p-3"><p className="text-muted-foreground">{narrativeDetail ? "Share baseline" : "Baseline"} · {period.baseline}</p><p className="mt-1 font-display text-lg">{fmt(detail.before)}{detail.unit}</p></div>
+              <div className="rounded-md border border-border p-3"><p className="text-muted-foreground">{narrativeDetail ? "Share current" : "Current"} · {period.current}</p><p className="mt-1 font-display text-lg">{fmt(detail.now)}{detail.unit}</p></div>
               <div className="rounded-md border border-border p-3"><p className="text-muted-foreground">Delta</p><p className="mt-1 font-display text-lg"><DeltaText d={detail.now - detail.before} unit={detail.unit === "%" ? " pt" : ""} /></p></div>
             </div>
-            <p className="mt-2 text-xs font-semibold">Contoh records</p>
-            <ul className="space-y-2 text-xs">{recordsFor(detail.name).map((r) => <li key={r.time} className="rounded-md border border-border p-3"><p>{r.post}</p><p className="mt-1 text-muted-foreground">{r.platform} · {r.time} · Sumber: data monitoring</p></li>)}</ul>
+            {narrativeDetail && <>
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="rounded-md border border-border p-3"><p className="text-muted-foreground">Mention baseline</p><p className="mt-1 font-display text-lg">{fmt(narrativeDetail.mentionsBefore)}</p></div>
+                <div className="rounded-md border border-border p-3"><p className="text-muted-foreground">Mention current</p><p className="mt-1 font-display text-lg">{fmt(narrativeDetail.mentionsNow)}</p></div>
+                <div className="rounded-md border border-border p-3"><p className="text-muted-foreground">Delta mention</p><p className="mt-1 font-display text-lg"><DeltaText d={narrativeDetail.mentionsNow - narrativeDetail.mentionsBefore} /></p></div>
+              </div>
+              <p className="text-[11px] text-muted-foreground">Jumlah mention dan sumber/konten berikut adalah data contoh PoC.</p>
+            </>}
+            <p className="mt-2 text-xs font-semibold">{narrativeDetail ? "Contoh sumber/konten" : "Contoh records"}</p>
+            <ul className="space-y-2 text-xs">{recordsFor(detail.name).map((r) => <li key={r.time} className="rounded-md border border-border p-3"><p>{r.post}</p><p className="mt-1 text-muted-foreground">{r.platform} · {r.time} · Sumber: {narrativeDetail ? "contoh monitoring PoC" : "data monitoring"}</p></li>)}</ul>
           </>}
         </DialogContent>
       </Dialog>
