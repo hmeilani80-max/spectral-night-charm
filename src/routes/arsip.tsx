@@ -180,7 +180,10 @@ function DetailDialog({ item, items, onOpen, onClose }: { item: ArsipItem; items
   const [ver, setVer] = useState(item.version);
   const byId = (id: string) => items.find((i) => i.id === id);
   const related = item.related.map(byId).filter((x): x is ArsipItem => !!x);
-  const suggested = items.filter((i) => i.id !== item.id && !item.related.includes(i.id) && i.tags.some((t) => item.tags.includes(t))).slice(0, 4);
+  const words = new Set(item.content.split(/\s+/).filter((w) => w.length > 4));
+  const suggested = items.filter((i) => i.id !== item.id && !item.related.includes(i.id))
+    .map((i) => ({ i, s: i.content.split(/\s+/).filter((w) => words.has(w)).length }))
+    .filter((x) => x.s > 1).sort((a, b) => b.s - a.s).slice(0, 4).map((x) => x.i);
   const reuse = (a: string) => toast.success(`${a}: ${item.title} ${item.version} ditautkan sebagai referensi (bukan salinan baru)`);
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
