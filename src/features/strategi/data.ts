@@ -104,6 +104,8 @@ export const sources = [
   { statement: "Volume naik 63%", source: "Data SINTESA", platform: "Multi-platform", time: "7 Okt", status: "Terverifikasi" },
   { statement: "Aksi direncanakan di Bandung", source: "News A", platform: "News", time: "7 Okt", status: "Terverifikasi" },
   { statement: "Klaim kericuhan lokasi X", source: "@akun_dummy", platform: "X", time: "7 Okt", status: "Belum Terverifikasi" },
+  // Revisi 5 — kategori sumber Data Internal / Laporan Lapangan (Arsip & Pengetahuan). Penggunaan tetap memperhatikan klasifikasi dan hak akses.
+  { statement: "Massa berangsur membubarkan diri menjelang sore di lokasi aksi", source: "Data Internal / Laporan Lapangan", platform: "Arsip & Pengetahuan", time: "9 Okt", status: "Belum Terverifikasi", note: "Klasifikasi: Internal — gunakan sesuai hak akses; laporan lapangan tidak otomatis dianggap terverifikasi." },
 ];
 
 export const insights = [

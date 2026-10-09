@@ -1,14 +1,21 @@
 export type Klasifikasi = "Internal" | "Terbatas" | "Rahasia";
-export type Modul = "Situasi" | "Strategi" | "Produksi" | "Persetujuan" | "Distribusi Sosial" | "Distribusi News" | "Dampak" | "Upload Manual";
-export type Jenis = "Dokumen" | "Situasi" | "Strategi" | "Produksi" | "Persetujuan" | "Distribusi" | "Laporan" | "Dataset";
+export type Modul = "Situasi" | "Strategi" | "Produksi" | "Persetujuan" | "Distribusi Sosial" | "Distribusi News" | "Dampak" | "Upload Manual" | "Laporan Lapangan";
+export type Jenis = "Dokumen" | "Situasi" | "Strategi" | "Produksi" | "Persetujuan" | "Distribusi" | "Laporan" | "Dataset" | "Laporan Lapangan";
 export type Preview = "dokumen" | "situasi" | "strategi" | "artikel" | "video" | "visual" | "keputusan" | "distribusi" | "laporan";
 
-export const JENIS: Jenis[] = ["Dokumen", "Situasi", "Strategi", "Produksi", "Persetujuan", "Distribusi", "Laporan", "Dataset"];
-export const MODUL: Modul[] = ["Situasi", "Strategi", "Produksi", "Persetujuan", "Distribusi Sosial", "Distribusi News", "Dampak", "Upload Manual"];
+export const JENIS: Jenis[] = ["Dokumen", "Situasi", "Strategi", "Produksi", "Persetujuan", "Distribusi", "Laporan", "Dataset", "Laporan Lapangan"];
+export const MODUL: Modul[] = ["Situasi", "Strategi", "Produksi", "Persetujuan", "Distribusi Sosial", "Distribusi News", "Dampak", "Upload Manual", "Laporan Lapangan"];
 export const KLASIFIKASI: Klasifikasi[] = ["Internal", "Terbatas", "Rahasia"];
 
 export type Version = { v: string; label: string; at: string; note: string };
 export type Activity = { at: string; who: string; what: string; v: string };
+
+// Revisi 5 — verifikasi silang data internal (S27). Laporan internal TIDAK PERNAH dianggap otomatis terverifikasi.
+export type VerificationFinding = { text: string; sourceId?: string };
+export type Verification = { situationRef?: string | undefined; supported: VerificationFinding[]; conflicting: VerificationFinding[]; unverified: VerificationFinding[] };
+
+/** Simulasi user yang sedang login — dipakai untuk mengisi owner/unit otomatis pada Input Laporan Lapangan. */
+export const CURRENT_USER = { name: "Anda (Petugas Lapangan)", unit: "Direktorat Analisis" } as const;
 
 export type ArsipItem = {
   id: string;
@@ -34,6 +41,7 @@ export type ArsipItem = {
   related: string[];
   versions: Version[];
   activity: Activity[];
+  verification?: Verification;
 };
 
 const AUD = (who: string, what: string, at: string, v: string): Activity => ({ who, what, at, v });
@@ -183,6 +191,31 @@ export const ITEMS: ArsipItem[] = [
     versions: [{ v: "v1", label: "Diekspor", at: "9 Okt · 07:50", note: "" }],
     activity: [AUD("Tim Data", "Dataset diekspor", "9 Okt · 07:50", "v1")],
   },
+    {
+    id: "ARS-013", title: "Laporan Lapangan — Demonstrasi Jakarta", jenis: "Laporan Lapangan", label: "Laporan Lapangan", modul: "Laporan Lapangan", ref: "demonstrasi-nasional",
+    owner: CURRENT_USER.name, unit: CURRENT_USER.unit, created: "9 Okt 2026", updated: "9 Okt 2026", version: "v1", klasifikasi: "Internal",
+    retention: "Simpan 5 tahun", access: ["Direktorat terkait"], canAccess: true, downloadable: true,
+    tags: ["lapangan", "demonstrasi", "jakarta", "verifikasi"],
+    snippet: "Pengamatan langsung di lokasi demonstrasi Jakarta: massa berangsur membubarkan diri menjelang sore, layanan transportasi umum berangsur normal.",
+    content: "laporan lapangan demonstrasi jakarta massa membubarkan diri sore hari layanan transportasi umum normal pengamatan langsung petugas",
+    preview: "dokumen", related: ["ARS-001", "ARS-003", "ARS-009", "ARS-010"],
+    versions: [{ v: "v1", label: "Dibuat", at: "9 Okt · 16:00", note: "Input laporan lapangan" }],
+    activity: [AUD(CURRENT_USER.name, "Laporan lapangan dibuat", "9 Okt · 16:00", "v1"), AUD("Sistem AI", "Verifikasi silang otomatis dijalankan", "9 Okt · 16:05", "v1")],
+    verification: {
+      situationRef: "demonstrasi-nasional",
+      supported: [
+        { text: "Volume mention menurun pada periode yang sama, sejalan dengan Laporan Dampak.", sourceId: "ARS-009" },
+        { text: "Artikel klarifikasi menyebut layanan publik tetap berjalan di titik yang sama.", sourceId: "ARS-003" },
+        { text: "Situasi mencatat penurunan Risk Level dari Tinggi ke Sedang pada periode ini.", sourceId: "ARS-001" },
+      ],
+      conflicting: [
+        { text: "Kajian Stabilitas Sosial menyebut potensi eskalasi lanjutan di lokasi yang sama.", sourceId: "ARS-010" },
+      ],
+      unverified: [
+        { text: "Estimasi jumlah massa yang membubarkan diri belum dapat dikonfirmasi silang dengan sumber lain." },
+      ],
+    },
+  },
 ];
 
 export const PROVENANCE: { modul: Modul; id: string }[] = [
@@ -235,4 +268,65 @@ export function suggestForUpload(text: string) {
   const tags = ["demonstrasi", "kajian", "laporan", "klarifikasi", "oktober", "siber", "bencana", "layanan"].filter((k) => t.includes(k));
   const related = t.includes("demonstrasi") || t.includes("demo") ? ["Situasi: Demonstrasi Nasional", "Strategi: Respons Informasi Demonstrasi Nasional"] : t.includes("siber") ? ["Situasi: Dugaan Serangan Siber"] : [];
   return { tags: tags.length ? tags : ["umum"], related, summary: text.trim() ? `Ringkasan otomatis: dokumen membahas ${tags.length ? tags.join(", ") : "topik umum"}.` : "" };
+}
+
+// ---------- Revisi 5 — Input Laporan Lapangan: bantuan AI (simulasi) ----------
+
+export type AiFieldAnalysis = {
+  summary: string;
+  actors: string[];
+  location: string;
+  time: string;
+  issues: string[];
+  tags: string[];
+  relatedSituation: string;
+  comparison: { label: string; result: string }[];
+};
+
+/** Simulasi ekstraksi & perbandingan AI untuk laporan lapangan. Tidak ada klaim integrasi real-time. */
+export function analyzeFieldReport(input: { title: string; content: string; location: string; date: string }): AiFieldAnalysis {
+  const t = norm(`${input.title} ${input.content}`);
+  const issuesPool = ["demonstrasi", "kericuhan", "layanan publik", "lalu lintas", "keamanan"];
+  const issues = issuesPool.filter((k) => t.includes(norm(k).split(" ")[0] ?? ""));
+  const tags = ["demonstrasi", "lapangan", "verifikasi", "oktober"].filter((k) => t.includes(k) || k === "lapangan" || k === "verifikasi");
+  const relatedSituation = t.includes("demonstrasi") || t.includes("demo") || t.includes("jakarta") ? "Demonstrasi Nasional" : "Belum ditemukan situasi yang relevan";
+  return {
+    summary: input.content.trim()
+      ? `Ringkasan otomatis: laporan menyebutkan ${issues.length ? issues.join(", ") : "kondisi umum"} di ${input.location || "lokasi tidak disebutkan"} pada ${input.date || "tanggal tidak disebutkan"}.`
+      : "Isi laporan masih kosong — ringkasan otomatis belum dapat dibuat.",
+    actors: ["Petugas lapangan", "Warga sekitar lokasi"],
+    location: input.location || "Tidak disebutkan",
+    time: input.date || "Tidak disebutkan",
+    issues: issues.length ? issues : ["umum"],
+    tags: tags.length ? tags : ["umum"],
+    relatedSituation,
+    comparison: [
+      { label: "News", result: relatedSituation !== "Belum ditemukan situasi yang relevan" ? "Ditemukan artikel klarifikasi terkait topik yang sama." : "Tidak ditemukan artikel yang relevan." },
+      { label: "Social", result: relatedSituation !== "Belum ditemukan situasi yang relevan" ? "Pola percakapan sosial menunjukkan topik serupa pada periode yang sama." : "Tidak ditemukan percakapan yang relevan." },
+      { label: "Dokumen internal lain", result: "1 laporan/kajian internal lain membahas topik yang berdekatan — lihat Verifikasi & Keterkaitan Sumber." },
+    ],
+  };
+}
+
+export type FieldReportInput = { title: string; content: string; fileName: string; date: string; location: string; klasifikasi: Klasifikasi };
+
+/** Membangun ArsipItem dari form Input Laporan Lapangan. Owner/unit otomatis dari CURRENT_USER.
+ *  Status verifikasi SELALU dimulai sebagai "belum terverifikasi" — tidak pernah otomatis dianggap fakta. */
+export function buildFieldReportItem(input: FieldReportInput, ai: AiFieldAnalysis): ArsipItem {
+  const id = `ARS-${Date.now()}`;
+  return {
+    id, title: input.title, jenis: "Laporan Lapangan", label: "Laporan Lapangan", modul: "Laporan Lapangan",
+    owner: CURRENT_USER.name, unit: CURRENT_USER.unit, created: "Baru saja", updated: "Baru saja", version: "v1",
+    klasifikasi: input.klasifikasi, retention: "Simpan 5 tahun", access: ["Direktorat terkait"], canAccess: true, downloadable: true,
+    tags: ai.tags, snippet: ai.summary, content: `${input.title} ${input.content} ${ai.tags.join(" ")} ${input.location} ${input.date}`,
+    preview: "dokumen", related: ai.relatedSituation !== "Belum ditemukan situasi yang relevan" ? ["ARS-001"] : [],
+    versions: [{ v: "v1", label: "Dibuat", at: "Baru saja", note: input.fileName || "Input manual" }],
+    activity: [AUD(CURRENT_USER.name, "Laporan lapangan dibuat", "Baru saja", "v1"), AUD("Sistem AI", "Ringkasan & ekstraksi otomatis dijalankan", "Baru saja", "v1")],
+    verification: {
+      situationRef: ai.relatedSituation !== "Belum ditemukan situasi yang relevan" ? "demonstrasi-nasional" : undefined,
+      supported: [],
+      conflicting: [],
+      unverified: [{ text: "Laporan baru dibuat — belum melalui proses verifikasi silang manual." }],
+    },
+  };
 }

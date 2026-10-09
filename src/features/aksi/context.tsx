@@ -2,9 +2,9 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from "re
 
 import {
   applyDecision, applySubmit, buildItems, canSubmit, invalidateApproval, generateContent, initialOrders, initialProductions,
-  type ApprovalStatus, type Campaign, type HistoryEntry, type NewsOrder, type NewsStatus, type OutputType, type ProductionBrief, type ProductionContent, type ProductionItem,
+  type ApprovalStatus, type Campaign, type ChannelOrder, type HistoryEntry, type NewsOrder, type NewsStatus, type OutputType, type ProductionBrief, type ProductionContent, type ProductionItem,
 } from "./data";
-import { advanceExecution, executionDone, initialCampaigns, regeneratePost, retry, statusAfterDecision, type Post } from "./sosial";
+import { advanceExecution, executionDone, initialCampaigns, regeneratePost, retry, SOCIAL_ACCOUNTS, statusAfterDecision, type AccountRole, type AccountStatus, type Post, type SocialAccount } from "./sosial";
 
 export type ApprovalKind = "Konten" | "Distribusi Sosial" | "Distribusi News";
 export type ApprovalRef = { kind: ApprovalKind; id: string };
@@ -26,10 +26,15 @@ type Value = {
   advanceCampaign: (id: string) => boolean;
   retryPost: (id: string, postId: string) => void;
   cancelCampaign: (id: string) => void;
-  createOrder: (o: Omit<NewsOrder, "id" | "status" | "approval" | "channels"> & { channels: string[] }) => string;
+  createOrder: (o: Omit<NewsOrder, "id" | "status" | "approval" | "channels"> & { channels: (string | ChannelOrder)[] }) => string;
   submitOrder: (id: string) => void;
   sendOrder: (id: string) => boolean;
   setChannel: (id: string, channel: string, status: NewsStatus, url?: string) => void;
+  accounts: SocialAccount[];
+  setAccountConnection: (id: string, status: AccountStatus) => void;
+  setAccountGroup: (id: string, group: string) => void;
+  setAccountLabel: (id: string, label: string) => void;
+  setAccountRoles: (id: string, roles: AccountRole[]) => void;
 };
 
 const g = globalThis as unknown as { __spektraAksiCtx?: React.Context<Value | undefined> };
@@ -42,6 +47,7 @@ export function AksiProvider({ children }: { children: ReactNode }) {
   const [productions, setProductions] = useState(initialProductions);
   const [campaigns, setCampaigns] = useState(initialCampaigns);
   const [orders, setOrders] = useState(initialOrders);
+  const [accounts, setAccounts] = useState(SOCIAL_ACCOUNTS);
   const [log, setLog] = useState<LogEntry[]>([{ at: "10:05", text: "Publikasi Artikel Demonstrasi diajukan oleh Tim Media" }]);
   const audit = (text: string) => setLog((cur) => [{ at: now(), text }, ...cur].slice(0, 30));
   const patch = (id: string, fn: (p: ProductionItem) => ProductionItem) => setProductions((cur) => cur.map((p) => (p.id === id ? { ...fn(p), updated: "Baru saja" } : p)));
@@ -67,7 +73,7 @@ export function AksiProvider({ children }: { children: ReactNode }) {
     for (const o of orders) if (o.approval) queue.push({ key: `n-${o.id}`, ref: { kind: "Distribusi News", id: o.id }, title: o.title ?? `Publikasi ${o.channels.length} Kanal`, group: "Distribusi", subtype: "News", source: "Distribusi News", status: o.approval, ...meta(o) });
 
     return {
-      productions, campaigns, orders, queue, log,
+      productions, campaigns, orders, queue, log, accounts,
       createProductions: (brief, types, origin) => {
         const items = buildItems(brief, types, origin, 21 + productions.length);
         setProductions((cur) => [...items, ...cur]);
@@ -131,8 +137,9 @@ export function AksiProvider({ children }: { children: ReactNode }) {
       cancelCampaign: (id) => editCampaign(id, (c) => ({ ...c, status: "Dibatalkan", posts: c.posts.map((p) => (p.exec === "Published" ? p : { ...p, exec: "Cancelled" })), history: [{ at: now(), text: "Distribusi dibatalkan" }, ...c.history] })),
       createOrder: ({ channels, ...o }) => {
         const id = `DN-${String(13 + orders.length - 2).padStart(3, "0")}`;
-        setOrders((cur) => [{ ...o, id, channels: channels.map((channel) => ({ channel, status: "Draft Order" })), status: "Draft Order", approval: null }, ...cur]);
-        audit(`Order ${id} dibuat untuk ${channels.length} kanal`);
+        const resolved: ChannelOrder[] = channels.map((c) => (typeof c === "string" ? { channel: c, status: "Draft Order" } : { ...c, status: "Draft Order" }));
+        setOrders((cur) => [{ ...o, id, channels: resolved, status: "Draft Order", approval: null }, ...cur]);
+        audit(`Order ${id} dibuat untuk ${resolved.length} kanal`);
         return id;
       },
       submitOrder: (id) => { setOrders((cur) => cur.map((o) => (o.id === id ? { ...applySubmit(o, o.submittedBy ?? "Tim Media", now()), status: "Menunggu Approval" } : o))); audit(`Order ${id} diajukan untuk Approval Distribusi`); },
@@ -152,9 +159,13 @@ export function AksiProvider({ children }: { children: ReactNode }) {
         }));
         audit(`Order ${id} · ${channel}: ${status}`);
       },
+      setAccountConnection: (id, status) => { setAccounts((cur) => cur.map((a) => (a.id === id ? { ...a, status, updatedAt: "Baru saja" } : a))); audit(`Akun ${id}: status koneksi diubah menjadi ${status === "Ready" ? "Terhubung" : status === "Busy" ? "Perlu Autentikasi Ulang" : "Terputus"}`); },
+      setAccountGroup: (id, group) => setAccounts((cur) => cur.map((a) => (a.id === id ? { ...a, group, updatedAt: "Baru saja" } : a))),
+      setAccountLabel: (id, label) => setAccounts((cur) => cur.map((a) => (a.id === id ? { ...a, label, updatedAt: "Baru saja" } : a))),
+      setAccountRoles: (id, roles) => setAccounts((cur) => cur.map((a) => (a.id === id ? { ...a, roles, updatedAt: "Baru saja" } : a))),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productions, campaigns, orders, log]);
+  }, [productions, campaigns, orders, log, accounts]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

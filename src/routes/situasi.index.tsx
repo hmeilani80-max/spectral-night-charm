@@ -9,9 +9,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { FilterBar, MetricGrid, RiskLabel } from "@/features/situasi/components";
+import { EwsLevelBadge, FilterBar, MetricGrid, RiskLabel } from "@/features/situasi/components";
 import { useSituations } from "@/features/situasi/context";
-import type { SituationEntry } from "@/features/situasi/data";
+import { getEws, type SituationEntry } from "@/features/situasi/data";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/situasi/")({
@@ -29,14 +29,21 @@ export const Route = createFileRoute("/situasi/")({
 const platforms = ["X", "Instagram", "TikTok", "Facebook", "YouTube", "Threads", "News"];
 
 function FindingCard({ item, monitored, onMonitor }: { item: SituationEntry; monitored: boolean; onMonitor: () => void }) {
+  const ews = getEws(item.slug);
   return <article className="flex h-full flex-col rounded-lg border border-border bg-card p-5">
-    <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-semibold uppercase text-primary">Temuan Sistem</p><h3 className="mt-2 text-base font-semibold">{item.name}</h3></div>{item.risk && <RiskLabel value={item.risk} />}</div>
+    <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-semibold uppercase text-primary">Temuan Sistem</p><h3 className="mt-2 text-base font-semibold">{item.name}</h3></div><div className="flex flex-col items-end gap-1">{item.risk && <RiskLabel value={item.risk} />}{ews && <EwsLevelBadge level={ews.level} />}</div></div>
     <p className="mt-3 text-xs leading-5 text-muted-foreground">{item.description}</p>
     <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
       <div><dt className="text-muted-foreground">Volume</dt><dd className="mt-1 font-semibold text-chart-2">{item.growth}</dd></div>
       <div><dt className="text-muted-foreground">Cakupan</dt><dd className="mt-1 font-medium">{item.regionsGrowing}</dd></div>
       <div className="col-span-2"><dt className="text-muted-foreground">Narasi dominan</dt><dd className="mt-1 font-medium">{item.dominantNarrative}</dd></div>
       <div className="col-span-2"><dt className="text-muted-foreground">Pemicu</dt><dd className="mt-1 font-medium">{item.detectedReason}</dd></div>
+      {ews && <>
+        <div><dt className="text-muted-foreground">Pertama terdeteksi</dt><dd className="mt-1 font-medium">{ews.firstDetected}</dd></div>
+        <div><dt className="text-muted-foreground">Status penanganan</dt><dd className="mt-1 font-medium">{ews.handlingStatus}</dd></div>
+        <div className="col-span-2"><dt className="text-muted-foreground">Indikator pemicu (EWS)</dt><dd className="mt-1 font-medium">{ews.triggers.join(" · ")}</dd></div>
+        <div className="col-span-2"><dt className="text-muted-foreground">PIC</dt><dd className="mt-1 font-medium">{ews.pic ?? "Belum ditetapkan"}</dd></div>
+      </>}
     </dl>
     <div className="mt-auto flex flex-wrap gap-2 pt-5">
       <Button asChild size="sm"><Link to="/situasi/$slug" params={{ slug: item.slug }}>Lihat Situasi<ArrowRight /></Link></Button>

@@ -8,6 +8,7 @@ import {
   ClipboardCheck,
   Command,
   Newspaper,
+  Smartphone,
   PenSquare,
   Share2,
   LayoutDashboard,
@@ -29,6 +30,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { highEwsNotifications } from "@/features/situasi/data";
+import { cn } from "@/lib/utils";
 import {
   Sidebar,
   SidebarContent,
@@ -41,6 +45,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarProvider,
   SidebarRail,
   SidebarTrigger,
@@ -170,26 +177,39 @@ function Topbar() {
         <Button variant="ghost" size="icon" className="sm:hidden" aria-label="Cari">
           <Search />
         </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+        <Popover>
+          <PopoverTrigger asChild>
             <Button variant="ghost" size="icon" className="relative" aria-label="Notifikasi">
               <Bell />
-              <span className="absolute right-2 top-2 size-1.5 rounded-full bg-primary" />
+              {highEwsNotifications.length > 0 && <span className="absolute right-2 top-2 size-1.5 rounded-full bg-primary" />}
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel>Notifikasi terbaru</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="items-start py-3">
-              <span className="mt-1 size-2 shrink-0 rounded-full bg-destructive" />
-              <span><strong>Risiko meningkat</strong><br /><span className="text-xs text-muted-foreground">Demonstrasi Nasional · 12 menit lalu</span></span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="items-start py-3">
-              <span className="mt-1 size-2 shrink-0 rounded-full bg-primary" />
-              <span><strong>Review selesai</strong><br /><span className="text-xs text-muted-foreground">Bahan komunikasi siap disetujui</span></span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-96 space-y-3 p-0">
+            <div className="border-b border-border px-4 py-3">
+              <p className="text-sm font-semibold">Notifikasi EWS (Tinggi / Kritis)</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">Peringatan dini dengan level risiko tinggi atau kritis.</p>
+            </div>
+            <div className="max-h-72 space-y-1 overflow-y-auto px-2 pb-2">
+              {highEwsNotifications.map((item) => (
+                <div key={item.slug} className="flex items-start gap-2 rounded-md px-2 py-2 hover:bg-accent/50">
+                  <span className={cn("mt-1 size-2 shrink-0 rounded-full", item.level === "Kritis" ? "bg-destructive" : "bg-chart-3")} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold">{item.name} <span className="font-normal text-muted-foreground">· {item.level}</span></p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">{item.time} — {item.reason}</p>
+                    <Button asChild variant="link" size="sm" className="h-auto px-0 py-1 text-xs">
+                      <Link to="/situasi/$slug" params={{ slug: item.slug }}>Lihat Situasi</Link>
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              {highEwsNotifications.length === 0 && <p className="px-2 py-3 text-xs text-muted-foreground">Tidak ada notifikasi level tinggi atau kritis saat ini.</p>}
+            </div>
+            <div className="flex items-center gap-2 border-t border-border bg-muted/20 px-4 py-3">
+              <span className="grid size-8 shrink-0 place-items-center rounded-md border border-border bg-card"><Smartphone className="size-4 text-muted-foreground" /></span>
+              <span className="text-[11px] text-muted-foreground">Notifikasi Mobile (simulasi)</span>
+            </div>
+          </PopoverContent>
+        </Popover>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-10 gap-2 px-2">

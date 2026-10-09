@@ -2,15 +2,25 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { ArrowRight, FileText, Sparkles } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ReferenceArea, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { toast } from "sonner";
 import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useArsip } from "@/features/arsip/context";
 import { systemFindings } from "@/features/situasi/data";
 import {
-  PERIODS, actors, completionRate, costPer, direction, fmt, fmtDelta, narratives, news, newsChannels, platforms, recordsFor,
-  regions, sentimentCompare, social, socialBreakdown, summary, timeline, volumeSeries, type Row,
+  NOT_AVAILABLE, PERIODS, SCHEDULED_REPORTS, actors, completionRate, costPer, direction, fmt, fmtDelta, narratives, news, newsChannels,
+  newsMetrics, platforms, recordsFor, regions, sentimentCompare, social, socialBreakdown, socialContentBreakdown, summary, timeline,
+  volumeSeries, type Row, type SocialContentMetric,
 } from "@/features/dampak/data";
+
+/** Tampilkan "Data Tidak Tersedia" alih-alih angka 0 yang diasumsikan saat metrik tidak ada. */
+function fmtOrNA(n: number | undefined, unit = "") {
+  return n === undefined ? NOT_AVAILABLE : `${fmt(n)}${unit}`;
+}
 
 export const Route = createFileRoute("/dampak")({
   head: () => ({
@@ -98,6 +108,9 @@ function Dampak() {
   const [report, setReport] = useState({ type: "Per Situasi", kind: "Ringkasan Pimpinan", format: "PDF" });
   const [generated, setGenerated] = useState<string[]>([]);
   const [generating, setGenerating] = useState(false);
+  const [schedule, setSchedule] = useState({ kind: "Ringkasan Pimpinan", frekuensi: "Harian", penerima: "" });
+  const [contentDetail, setContentDetail] = useState<SocialContentMetric | null>(null);
+  const { addItem } = useArsip();
   const period = PERIODS.find((p) => p.id === periodId) ?? PERIODS[0];
   const sit = systemFindings.find((s) => s.slug === situation) ?? systemFindings[0];
   const narrativeDetail = detail?.kind === "Narasi" ? narratives.find((n) => n.name === detail.name) : undefined;
@@ -107,9 +120,22 @@ function Dampak() {
   const generate = () => {
     setGenerating(true);
     setTimeout(() => {
-      setGenerated((g) => [`${report.kind} · Laporan Dampak ${report.type} — ${sit?.name ?? "Situasi"} (${period.baseline} → ${period.current}) · ${report.format}`, ...g]);
+      const label = `${report.kind} · Laporan Dampak ${report.type} — ${sit?.name ?? "Situasi"} (${period.baseline} → ${period.current}) · ${report.format}`;
+      setGenerated((g) => [label, ...g]);
+      addItem({
+        id: `ARS-${Date.now()}`, title: label, jenis: "Laporan", label: "Laporan", modul: "Dampak",
+        owner: "Tim Analisis", unit: "Direktorat Analisis", created: "Baru saja", updated: "Baru saja", version: "v1", klasifikasi: "Internal",
+        retention: "Simpan 5 tahun", access: ["Direktorat terkait"], canAccess: true, downloadable: true,
+        tags: ["laporan", "dampak", report.kind.toLowerCase()], snippet: label, content: label, preview: "laporan", related: [],
+        versions: [{ v: "v1", label: "Dibuat", at: "Baru saja", note: "Generate Laporan Dampak" }],
+        activity: [{ who: "Tim Analisis", what: "Laporan dibuat dari Generate Laporan Dampak", at: "Baru saja", v: "v1" }],
+      });
+      toast.success("Laporan tercatat di Arsip & Pengetahuan");
       setGenerating(false);
     }, 900);
+  };
+  const scheduleReport = () => {
+    toast.success(`Jadwal disimpan: ${schedule.kind} · ${schedule.frekuensi}${schedule.penerima ? ` · ke ${schedule.penerima}` : ""} (simulasi)`);
   };
 
   return (
@@ -255,17 +281,23 @@ function Dampak() {
                 <div key={l as string} className="rounded-md border border-border p-3"><p className="text-muted-foreground">{l}</p><p className="mt-1 font-display text-lg tabular-nums">{fmt(v as number)}</p></div>
               ))}
             </div>
-            <table className="mt-4 w-full text-xs"><thead className="text-muted-foreground"><tr className="border-b border-border text-left"><th className="py-2 font-medium">Platform</th><th className="py-2 text-right font-medium">Published</th><th className="py-2 text-right font-medium">Views</th><th className="py-2 text-right font-medium">Interactions</th></tr></thead>
-              <tbody>{socialBreakdown.map((s) => <tr key={s.platform} className="border-b border-border/60"><td className="py-2">{s.platform}</td><td className="py-2 text-right">{s.published}</td><td className="py-2 text-right tabular-nums">{fmt(s.views)}</td><td className="py-2 text-right tabular-nums">{fmt(s.interactions)}</td></tr>)}</tbody></table>
+            <p className="mt-3 text-[11px] font-semibold text-muted-foreground">Per Platform</p>
+            <table className="mt-1 w-full text-xs"><thead className="text-muted-foreground"><tr className="border-b border-border text-left"><th className="py-2 font-medium">Platform</th><th className="py-2 text-right font-medium">Published Posts</th><th className="py-2 text-right font-medium">Views</th><th className="py-2 text-right font-medium">Interactions</th><th className="py-2 text-right font-medium">Shares/Reposts</th><th className="py-2 text-right font-medium">Watch Time (video)</th></tr></thead>
+              <tbody>{socialBreakdown.map((s) => <tr key={s.platform} className="border-b border-border/60"><td className="py-2">{s.platform}</td><td className="py-2 text-right">{s.published}</td><td className="py-2 text-right tabular-nums">{fmtOrNA(s.views)}</td><td className="py-2 text-right tabular-nums">{fmtOrNA(s.interactions)}</td><td className="py-2 text-right tabular-nums">{fmtOrNA(s.shares)}</td><td className="py-2 text-right tabular-nums">{s.isVideoPlatform ? fmtOrNA(s.watchTimeSec, " dtk") : NOT_AVAILABLE}</td></tr>)}</tbody></table>
+            <p className="mt-4 text-[11px] font-semibold text-muted-foreground">Per Konten — klik untuk detail</p>
+            <table className="mt-1 w-full text-xs"><thead className="text-muted-foreground"><tr className="border-b border-border text-left"><th className="py-2 font-medium">Konten</th><th className="py-2 font-medium">Platform</th><th className="py-2 text-right font-medium">Views</th><th className="py-2 text-right font-medium">Interactions</th><th className="py-2 text-right font-medium">Shares</th><th className="py-2 text-right font-medium">Watch Time</th></tr></thead>
+              <tbody>{socialContentBreakdown.map((c) => <tr key={c.id} onClick={() => setContentDetail(c)} className="cursor-pointer border-b border-border/60 hover:bg-accent/40"><td className="py-2 font-medium">{c.title}</td><td className="py-2 text-muted-foreground">{c.platform} · {c.type}</td><td className="py-2 text-right tabular-nums">{fmtOrNA(c.views)}</td><td className="py-2 text-right tabular-nums">{fmtOrNA(c.interactions)}</td><td className="py-2 text-right tabular-nums">{fmtOrNA(c.shares)}</td><td className="py-2 text-right tabular-nums">{c.type === "Video" ? fmtOrNA(c.watchTimeSec, " dtk") : NOT_AVAILABLE}</td></tr>)}</tbody></table>
+            <p className="mt-3 text-[11px] text-muted-foreground">Views, Website Visits, dan Estimated Exposure News ditampilkan terpisah dan tidak dijumlahkan menjadi satu angka total.</p>
           </Section>
           <Section n={11} title="Evaluasi Kanal News" period={`Periode Respons ${period.response}`}>
             <div className="grid grid-cols-3 gap-2 text-xs">
-              {[["Kanal target", fmt(news.target)], ["Tayang", fmt(news.live)], ["Dalam pengerjaan", fmt(news.inProgress)], ["URL terverifikasi", fmt(news.verified)], ["Completion rate", `${completionRate(news.live, news.target).toLocaleString("id-ID")}%`]].map(([l, v]) => (
+              {[["Published Articles", fmt(newsMetrics.publishedArticles)], ["Verified URLs", fmt(newsMetrics.verifiedUrls)], ["Website Visits", fmtOrNA(newsMetrics.websiteVisits)], ["Page Views", fmtOrNA(newsMetrics.pageViews)], ["Completion rate", `${completionRate(news.live, news.target).toLocaleString("id-ID")}%`]].map(([l, v]) => (
                 <div key={l} className="rounded-md border border-border p-3"><p className="text-muted-foreground">{l}</p><p className="mt-1 font-display text-lg">{v}</p></div>
               ))}
             </div>
-            <table className="mt-4 w-full text-xs"><thead className="text-muted-foreground"><tr className="border-b border-border text-left"><th className="py-2 font-medium">Kanal</th><th className="py-2 font-medium">Status</th><th className="py-2 text-right font-medium">Waktu Tayang</th></tr></thead>
-              <tbody>{newsChannels.map((c) => <tr key={c.channel} className="border-b border-border/60"><td className="py-2">{c.channel}</td><td className={`py-2 ${c.status === "Tayang" ? "text-chart-2" : "text-muted-foreground"}`}>{c.status}</td><td className="py-2 text-right">{c.time}</td></tr>)}</tbody></table>
+            <p className="mt-3 text-[11px] font-semibold text-muted-foreground">Klik baris untuk drilldown ke URL publikasi</p>
+            <table className="mt-1 w-full text-xs"><thead className="text-muted-foreground"><tr className="border-b border-border text-left"><th className="py-2 font-medium">Kanal</th><th className="py-2 font-medium">Status</th><th className="py-2 text-right font-medium">Waktu Tayang</th></tr></thead>
+              <tbody>{newsChannels.map((c) => <tr key={c.channel} onClick={() => c.status === "Tayang" && toast.message(`URL publikasi ${c.channel}`, { description: `Tayang ${c.time} (drilldown simulasi)` })} className={`border-b border-border/60 ${c.status === "Tayang" ? "cursor-pointer hover:bg-accent/40" : ""}`}><td className="py-2">{c.channel}</td><td className={`py-2 ${c.status === "Tayang" ? "text-chart-2" : "text-muted-foreground"}`}>{c.status}</td><td className="py-2 text-right">{c.time}</td></tr>)}</tbody></table>
             <p className="mt-3 text-[11px] text-muted-foreground">Metrik News ditampilkan terpisah dan tidak dijumlahkan dengan views sosial.</p>
           </Section>
         </div>
@@ -281,13 +313,43 @@ function Dampak() {
         <Section n={13} title="Generate Laporan Dampak" period={pp}>
           <div className="flex flex-wrap items-end gap-3">
             <div><p className="mb-1 text-xs text-muted-foreground">Jenis laporan</p><Select value={report.kind} onValueChange={(kind) => setReport((r) => ({ ...r, kind }))}><SelectTrigger aria-label="Jenis laporan" className="w-52"><SelectValue /></SelectTrigger><SelectContent>{["Ringkasan Pimpinan", "Laporan Analitik", "Laporan Lengkap"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
-            <div><p className="mb-1 text-xs text-muted-foreground">Cakupan</p><Select value={report.type} onValueChange={(type) => setReport((r) => ({ ...r, type }))}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent>{["Daily", "Weekly", "Monthly", "Per Situasi"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
-            <div><p className="mb-1 text-xs text-muted-foreground">Format</p><Select value={report.format} onValueChange={(format) => setReport((r) => ({ ...r, format }))}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent>{["PDF", "Document", "Spreadsheet", "Presentation"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
+            <div><p className="mb-1 text-xs text-muted-foreground">Periode</p><Select value={report.type} onValueChange={(type) => setReport((r) => ({ ...r, type }))}><SelectTrigger aria-label="Periode" className="w-40"><SelectValue /></SelectTrigger><SelectContent>{["Harian", "Mingguan", "Bulanan", "Per Situasi"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
+            <div><p className="mb-1 text-xs text-muted-foreground">Format</p><Select value={report.format} onValueChange={(format) => setReport((r) => ({ ...r, format }))}><SelectTrigger aria-label="Format" className="w-40"><SelectValue /></SelectTrigger><SelectContent>{["Document", "Spreadsheet", "Presentation", "PDF"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
             <Button onClick={generate} disabled={generating}><FileText />{generating ? "Menyusun…" : "Generate Laporan Dampak"}</Button>
           </div>
-          {generated.length > 0 && <ul className="mt-4 space-y-2 text-xs">{generated.map((g, i) => <li key={i} className="rounded-md border border-border px-3 py-2">{g} <span className="ml-2 text-chart-2">Siap (simulasi)</span></li>)}</ul>}
+          {generated.length > 0 && <ul className="mt-4 space-y-2 text-xs">{generated.map((g, i) => <li key={i} className="rounded-md border border-border px-3 py-2">{g} <span className="ml-2 text-chart-2">Siap (simulasi) · tercatat di Arsip</span></li>)}</ul>}
+
+          <div className="mt-6 rounded-md border border-border p-4">
+            <p className="text-xs font-semibold">Jadwalkan Laporan Otomatis</p>
+            <div className="mt-2 flex flex-wrap items-end gap-3">
+              <div><p className="mb-1 text-xs text-muted-foreground">Jenis laporan</p><Select value={schedule.kind} onValueChange={(kind) => setSchedule((r) => ({ ...r, kind }))}><SelectTrigger aria-label="Jenis laporan jadwal" className="w-52"><SelectValue /></SelectTrigger><SelectContent>{["Ringkasan Pimpinan", "Laporan Analitik", "Laporan Lengkap"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
+              <div><p className="mb-1 text-xs text-muted-foreground">Frekuensi</p><Select value={schedule.frekuensi} onValueChange={(frekuensi) => setSchedule((r) => ({ ...r, frekuensi }))}><SelectTrigger aria-label="Frekuensi" className="w-40"><SelectValue /></SelectTrigger><SelectContent>{["Harian", "Mingguan", "Bulanan", "Per Situasi"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
+              <div><p className="mb-1 text-xs text-muted-foreground">Penerima (opsional)</p><Input value={schedule.penerima} onChange={(e) => setSchedule((r) => ({ ...r, penerima: e.target.value }))} placeholder="mis. Deputi, Direktorat terkait" className="w-56" /></div>
+              <Button variant="outline" onClick={scheduleReport}>Jadwalkan</Button>
+            </div>
+            <p className="mt-3 text-[11px] text-muted-foreground">Sistem mensimulasikan pembuatan laporan otomatis secara berkala; setiap laporan yang dihasilkan otomatis tercatat di Arsip & Pengetahuan. Tidak ada backend scheduler sungguhan pada PoC ini.</p>
+            <p className="mt-4 text-xs font-semibold">Laporan Terjadwal</p>
+            <ul className="mt-2 grid gap-2 text-xs sm:grid-cols-3">{SCHEDULED_REPORTS.map((s) => (
+              <li key={s.id} className="rounded-md border border-border px-3 py-2"><p className="font-medium">{s.name}</p><p className="text-muted-foreground">{s.frekuensi} · {s.jenis}</p></li>
+            ))}</ul>
+          </div>
         </Section>
       </div>
+
+      <Dialog open={!!contentDetail} onOpenChange={(o) => !o && setContentDetail(null)}>
+        <DialogContent>
+          {contentDetail && <>
+            <DialogHeader><DialogTitle>{contentDetail.title}</DialogTitle></DialogHeader>
+            <p className="text-xs text-muted-foreground">{contentDetail.platform} · {contentDetail.type} · Published {contentDetail.published}</p>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="rounded-md border border-border p-3"><p className="text-muted-foreground">Views</p><p className="mt-1 font-display text-lg">{fmtOrNA(contentDetail.views)}</p></div>
+              <div className="rounded-md border border-border p-3"><p className="text-muted-foreground">Interactions</p><p className="mt-1 font-display text-lg">{fmtOrNA(contentDetail.interactions)}</p></div>
+              <div className="rounded-md border border-border p-3"><p className="text-muted-foreground">Shares/Reposts</p><p className="mt-1 font-display text-lg">{fmtOrNA(contentDetail.shares)}</p></div>
+              <div className="rounded-md border border-border p-3"><p className="text-muted-foreground">Watch Time</p><p className="mt-1 font-display text-lg">{contentDetail.type === "Video" ? fmtOrNA(contentDetail.watchTimeSec, " dtk") : NOT_AVAILABLE}</p></div>
+            </div>
+          </>}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
         <DialogContent>

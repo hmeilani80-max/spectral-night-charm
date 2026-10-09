@@ -1,4 +1,4 @@
-import { initialProductions, type ApprovalRecord, type ApprovalStatus, type OutputType, type ProductionItem, type SubmittedDay } from "./data";
+import { initialProductions, type ApprovalRecord, type ApprovalStatus, type NewsOrder, type OutputType, type ProductionItem, type SubmittedDay } from "./data";
 
 export const SOCIAL_PLATFORMS = ["X", "Instagram", "TikTok", "Facebook", "Threads", "YouTube"] as const;
 export const PURPOSES = ["Diseminasi Informasi", "Klarifikasi", "Penguatan Informasi Resmi", "Counter Narrative", "Edukasi Publik"];
@@ -11,35 +11,75 @@ export const PLATFORM_FIT: Partial<Record<OutputType, string[]>> = {
 };
 export const recommendedPlatforms = (types: OutputType[]) => [...new Set(types.flatMap((type) => PLATFORM_FIT[type] ?? []))];
 export const fits = (type: OutputType, platform: string) => (PLATFORM_FIT[type]?.includes(platform) ?? false) || (platform === "Threads" && ["Carousel", "Infografis", "Video Pendek"].includes(type)) || (type === "Audio / Podcast" && ["YouTube", "Facebook"].includes(platform));
-export const RECOMMENDED_WINDOWS = [{ from: "10:00", to: "12:00" }, { from: "16:00", to: "18:00" }];
+
+/** Revisi 7 — S48: per-platform recommended posting window, derived from (simulated) audience activity, account history, and content type. */
+export const PLATFORM_WINDOWS: { platform: string; from: string; to: string }[] = [
+  { platform: "X", from: "09:00", to: "11:00" },
+  { platform: "Instagram", from: "11:00", to: "13:00" },
+  { platform: "TikTok", from: "17:00", to: "20:00" },
+  { platform: "Facebook", from: "10:00", to: "12:00" },
+  { platform: "YouTube", from: "18:00", to: "21:00" },
+  { platform: "Threads", from: "12:00", to: "14:00" },
+];
+export const windowFor = (platform: string) => PLATFORM_WINDOWS.find((w) => w.platform === platform);
+/** Build the recommended windows for whichever platforms are in play; falls back to the X window when unknown. */
+export function recommendedWindowsFor(platforms: string[]): { from: string; to: string }[] {
+  const unique = [...new Set(platforms)];
+  const windows = unique.map((p) => windowFor(p)).filter((w): w is { platform: string; from: string; to: string } => !!w).map(({ from, to }) => ({ from, to }));
+  return windows.length ? windows : [{ from: "09:00", to: "11:00" }];
+}
 
 export type AccountStatus = "Ready" | "Busy" | "Unavailable";
-export type SocialAccount = { id: string; handle: string; platform: string; group: string; label: string; status: AccountStatus };
-const A = (handle: string, platform: string, group: string, label: string, status: AccountStatus = "Ready"): SocialAccount => ({ id: `${platform}:${handle}`, handle, platform, group, label, status });
+/** Connection-status label shown in Pengelolaan Akun Sosial; keeps the targeting-oriented AccountStatus untouched elsewhere. */
+export const CONN_LABEL: Record<AccountStatus, string> = { Ready: "Terhubung", Busy: "Perlu Autentikasi Ulang", Unavailable: "Terputus" };
+
+export const ACCOUNT_ROLES = ["Viewer", "Operator", "Pengelola Akun", "Administrator"] as const;
+export type AccountRole = (typeof ACCOUNT_ROLES)[number];
+export type Permission = "melihat" | "menyusunDistribusi" | "mengelolaKoneksi" | "mengeksekusiPublikasi";
+export const PERMISSION_LABELS: Record<Permission, string> = {
+  melihat: "Melihat",
+  menyusunDistribusi: "Menyusun Distribusi",
+  mengelolaKoneksi: "Mengelola Koneksi",
+  mengeksekusiPublikasi: "Mengeksekusi Publikasi (setelah approval)",
+};
+/** Revisi 6 — S46: fixed role → permission matrix; account-level "Hak Akses" is which roles have been granted on that account. */
+export const ROLE_PERMISSIONS: Record<AccountRole, Record<Permission, boolean>> = {
+  Viewer: { melihat: true, menyusunDistribusi: false, mengelolaKoneksi: false, mengeksekusiPublikasi: false },
+  Operator: { melihat: true, menyusunDistribusi: true, mengelolaKoneksi: false, mengeksekusiPublikasi: false },
+  "Pengelola Akun": { melihat: true, menyusunDistribusi: true, mengelolaKoneksi: true, mengeksekusiPublikasi: false },
+  Administrator: { melihat: true, menyusunDistribusi: true, mengelolaKoneksi: true, mengeksekusiPublikasi: true },
+};
+
+export type SocialAccount = { id: string; handle: string; platform: string; group: string; label: string; status: AccountStatus; pic: string; roles: AccountRole[]; updatedAt: string };
+const A = (handle: string, platform: string, group: string, label: string, status: AccountStatus = "Ready", pic = "Tim Digital", roles: AccountRole[] = ["Operator", "Pengelola Akun"], updatedAt = "Hari ini"): SocialAccount => ({ id: `${platform}:${handle}`, handle, platform, group, label, status, pic, roles, updatedAt });
+/** Revisi 6 — S46: canonical account list. This is the single source used by Pengelolaan Akun Sosial AND Distribusi Sosial → Target. */
 export const SOCIAL_ACCOUNTS: SocialAccount[] = [
-  A("@pantau_kota", "X", "Jaringan Nasional", "Informasi Resmi"),
-  A("@info_aksi", "X", "Jaringan Nasional", "Informasi Resmi"),
-  A("@analisis_media", "X", "Jaringan Nasional", "Analisis"),
-  A("@forum_mahasiswa", "X", "Komunitas", "Komunitas"),
-  A("@kabar_daerah", "X", "Jaringan Daerah", "Informasi Resmi", "Busy"),
-  A("@suara_warga", "Instagram", "Komunitas", "Komunitas"),
-  A("@media_nusantara", "Instagram", "Jaringan Nasional", "Informasi Resmi"),
-  A("@ruangpublik", "Instagram", "Komunitas", "Komunitas"),
-  A("@kabar_daerah", "Instagram", "Jaringan Daerah", "Informasi Resmi"),
-  A("@info_aksi", "Instagram", "Jaringan Nasional", "Informasi Resmi", "Unavailable"),
-  A("@ruangpublik", "TikTok", "Komunitas", "Komunitas"),
-  A("@forum_mahasiswa", "TikTok", "Komunitas", "Komunitas"),
-  A("@suara_warga", "TikTok", "Komunitas", "Komunitas"),
-  A("@info_aksi", "TikTok", "Jaringan Nasional", "Informasi Resmi"),
-  A("@pantau_kota", "TikTok", "Jaringan Nasional", "Informasi Resmi", "Busy"),
-  A("@media_nusantara", "Facebook", "Jaringan Nasional", "Informasi Resmi"),
-  A("@kabar_daerah", "Facebook", "Jaringan Daerah", "Informasi Resmi"),
-  A("@suara_warga", "Threads", "Komunitas", "Komunitas"),
-  A("@analisis_media", "YouTube", "Jaringan Nasional", "Analisis"),
+  A("@pantau_kota", "X", "Jaringan Nasional", "Informasi Resmi", "Ready", "Tim Digital", ["Operator", "Pengelola Akun", "Administrator"]),
+  A("@info_aksi", "X", "Jaringan Nasional", "Informasi Resmi", "Ready", "Tim Digital", ["Operator", "Pengelola Akun"]),
+  A("@analisis_media", "X", "Jaringan Nasional", "Analisis", "Ready", "Tim Analis", ["Viewer", "Operator"]),
+  A("@forum_mahasiswa", "X", "Komunitas", "Komunitas", "Ready", "Tim Komunitas", ["Operator"]),
+  A("@kabar_daerah", "X", "Jaringan Daerah", "Informasi Resmi", "Busy", "Tim Daerah", ["Operator"], "2 hari lalu"),
+  A("@suara_warga", "Instagram", "Komunitas", "Komunitas", "Ready", "Tim Komunitas", ["Operator", "Pengelola Akun"]),
+  A("@media_nusantara", "Instagram", "Jaringan Nasional", "Informasi Resmi", "Ready", "Tim Digital", ["Operator", "Pengelola Akun", "Administrator"]),
+  A("@ruangpublik", "Instagram", "Komunitas", "Komunitas", "Ready", "Tim Komunitas", ["Viewer", "Operator"]),
+  A("@kabar_daerah", "Instagram", "Jaringan Daerah", "Informasi Resmi", "Ready", "Tim Daerah", ["Operator"]),
+  A("@info_aksi", "Instagram", "Jaringan Nasional", "Informasi Resmi", "Unavailable", "Tim Digital", ["Viewer"], "5 hari lalu"),
+  A("@ruangpublik", "TikTok", "Komunitas", "Komunitas", "Ready", "Tim Komunitas", ["Operator", "Pengelola Akun"]),
+  A("@forum_mahasiswa", "TikTok", "Komunitas", "Komunitas", "Ready", "Tim Komunitas", ["Operator"]),
+  A("@suara_warga", "TikTok", "Komunitas", "Komunitas", "Ready", "Tim Komunitas", ["Operator"]),
+  A("@info_aksi", "TikTok", "Jaringan Nasional", "Informasi Resmi", "Ready", "Tim Digital", ["Operator", "Pengelola Akun"]),
+  A("@pantau_kota", "TikTok", "Jaringan Nasional", "Informasi Resmi", "Busy", "Tim Digital", ["Operator"], "3 hari lalu"),
+  A("@media_nusantara", "Facebook", "Jaringan Nasional", "Informasi Resmi", "Ready", "Tim Digital", ["Operator", "Pengelola Akun"]),
+  A("@kabar_daerah", "Facebook", "Jaringan Daerah", "Informasi Resmi", "Ready", "Tim Daerah", ["Operator"]),
+  A("@suara_warga", "Threads", "Komunitas", "Komunitas", "Ready", "Tim Komunitas", ["Operator"]),
+  A("@analisis_media", "YouTube", "Jaringan Nasional", "Analisis", "Ready", "Tim Analis", ["Viewer", "Operator", "Pengelola Akun"]),
 ];
 export const accountById = (id: string) => SOCIAL_ACCOUNTS.find((a) => a.id === id);
 export const GROUPS = [...new Set(SOCIAL_ACCOUNTS.map((a) => a.group))];
 export const LABELS = [...new Set(SOCIAL_ACCOUNTS.map((a) => a.label))];
+/** Dynamic variants for a live (possibly edited) account list, e.g. from AksiProvider. */
+export const groupsOf = (accounts: SocialAccount[]) => [...new Set(accounts.map((a) => a.group))];
+export const labelsOf = (accounts: SocialAccount[]) => [...new Set(accounts.map((a) => a.label))];
 /** Only Ready accounts may be targeted. */
 export const selectable = (a: Pick<SocialAccount, "status">) => a.status === "Ready";
 
@@ -165,6 +205,29 @@ export function scale(c: Pick<Campaign, "contentIds" | "accounts" | "platforms" 
 export function spreadPotential(c: Pick<Campaign, "contentIds" | "accounts" | "posts" | "timing">): "Rendah" | "Sedang" | "Tinggi" {
   const platforms = new Set(c.posts.map((p) => p.platform)).size;
   return c.contentIds.length >= 3 && c.accounts.length >= 8 && platforms >= 3 ? "Tinggi" : c.accounts.length >= 3 && platforms >= 2 ? "Sedang" : "Rendah";
+}
+
+// ---------- Revisi 14 — S69: Rencana Publikasi (pure derivation, no new form for the user) ----------
+export type RencanaPublikasiRow = { distribusi: string; target: string; jadwal: string; pic: string; status: string };
+/** Derives "who is going to publish this content, where, when" purely from existing Distribusi Sosial / Distribusi News records. */
+export function rencanaPublikasi(productionId: string, campaigns: Campaign[], orders: NewsOrder[]): RencanaPublikasiRow[] {
+  const rows: RencanaPublikasiRow[] = [];
+  for (const c of campaigns) {
+    const posts = c.posts.filter((p) => p.assetId === productionId);
+    for (const platform of [...new Set(posts.map((p) => p.platform))]) {
+      const post = posts.find((p) => p.platform === platform);
+      if (!post) continue;
+      const status = post.exec === "Published" ? "Dipublikasikan" : post.exec === "Failed" ? "Gagal — perlu ditinjau" : c.approval === "Disetujui" ? "Dijadwalkan" : c.status === "Perlu Perubahan" ? "Perlu Perubahan" : "Menunggu Persetujuan";
+      rows.push({ distribusi: c.name, target: platform, jadwal: `${dateLabel(post.date)}, ${post.time}`, pic: c.submittedBy ?? "Tim Digital", status });
+    }
+  }
+  for (const o of orders) {
+    if (o.contentId !== productionId) continue;
+    for (const ch of o.channels) {
+      rows.push({ distribusi: o.title ?? `Order ${o.id}`, target: `Kanal ${ch.channel}`, jadwal: ch.schedule ?? o.schedule, pic: o.submittedBy ?? "Tim Media", status: ch.status });
+    }
+  }
+  return rows;
 }
 
 // ---------- Seeds ----------
