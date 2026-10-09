@@ -27,6 +27,7 @@ function OrderDetail() {
     <PageShell eyebrow="Aksi · Distribusi News" title={`Order ${o.id}`} description={`${found?.output.type ?? "Konten"} · ${o.channels.length} kanal · ${o.schedule}`} actions={<Button asChild variant="outline"><Link to="/aksi/distribusi-news"><ArrowLeft />Kembali ke list</Link></Button>}>
       <Trail items={["Aksi", <Link key="l" to="/aksi/distribusi-news">Distribusi News</Link>, `Order ${o.id}`]} />
       <div className="grid gap-4">
+        {o.deadline && <p className="text-xs text-muted-foreground">Deadline publikasi: <span className="font-medium text-foreground">{o.deadline}</span></p>}
         <Lineage steps={[
           ...(prod?.situationName ? [{ label: "Situasi", value: prod.situationSlug ? <Link to="/situasi/$slug" params={{ slug: prod.situationSlug }}>{prod.situationName}</Link> : prod.situationName }] : []),
           ...(prod?.strategySlug ? [{ label: "Strategi", value: <Link to="/strategi/$slug" params={{ slug: prod.strategySlug }}>{prod.strategyTitle}</Link> }] : []),
@@ -48,10 +49,10 @@ function OrderDetail() {
         </Box>
         <Box title={`Kanal Tujuan · ${o.channels.filter((c) => c.status === "Selesai").length}/${o.channels.length} selesai`}>
           <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-xs">
-            <thead className="text-muted-foreground"><tr><th className="py-2 font-medium">Kanal</th><th className="py-2 font-medium">Status</th><th className="py-2 font-medium">URL tayang</th><th className="py-2" /></tr></thead>
+            <thead className="text-muted-foreground"><tr><th className="py-2 font-medium">Kanal</th><th className="py-2 font-medium">Rekomendasi Tayang</th><th className="py-2 font-medium">Status</th><th className="py-2 font-medium">URL tayang</th><th className="py-2" /></tr></thead>
             <tbody>{o.channels.map((c) => (
               <tr key={c.channel} className="border-t border-border">
-                <td className="py-2.5 font-medium">{newsChannelDomain(c.channel)}</td><td><StatusPill value={c.status} /></td>
+                <td className="py-2.5 font-medium">{newsChannelDomain(c.channel)}</td><td className="text-muted-foreground">{c.schedule ?? o.schedule}</td><td><StatusPill value={c.status} /></td>
                 <td className="max-w-64 truncate">{c.url ? <a href={c.url} target="_blank" rel="noreferrer" className="text-primary hover:underline">{c.url}</a> : "—"}</td>
                 <td className="text-right">{c.status === "Menunggu Verifikasi" && <div className="flex justify-end gap-1.5"><Button size="sm" onClick={() => setChannel(o.id, c.channel, "Selesai")}>Verifikasi</Button><Button size="sm" variant="outline" onClick={() => setChannel(o.id, c.channel, "Perlu Revisi")}>Minta Revisi</Button></div>}</td>
               </tr>))}</tbody>

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 import { PageShell } from "@/components/page-shell";
@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusPill, Stat, Trail } from "@/features/aksi/components";
 import { findOutput, useAksi } from "@/features/aksi/context";
-import { isEligible, NATIONAL_CHANNEL, NEWS_CHANNELS, newsChannelDomain, REGIONAL_CHANNELS, type NewsStatus } from "@/features/aksi/data";
+import { deadlineFor, isEligible, NATIONAL_CHANNEL, NEWS_CHANNELS, newsChannelDomain, recommendedScheduleFor, REGIONAL_CHANNELS, type NewsStatus } from "@/features/aksi/data";
 import { aksiHead } from "@/features/aksi/meta";
 
 export const Route = createFileRoute("/aksi/distribusi-news/")({
@@ -48,7 +48,9 @@ function Pemesan() {
   const [content, setContent] = useState("");
   const [channels, setChannels] = useState<string[]>([NATIONAL_CHANNEL]);
   const [schedule, setSchedule] = useState("Besok, 07:00 WIB");
+  const [channelSchedules, setChannelSchedules] = useState<Record<string, string>>({});
   const flip = (v: string) => setChannels((cur) => (cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]));
+  const applyRecommended = () => setChannelSchedules(Object.fromEntries(channels.map((c) => [c, recommendedScheduleFor(c)])));
 
   return <>
     <div className="mb-3 flex justify-end">
@@ -65,9 +67,18 @@ function Pemesan() {
               <label className="mb-2 flex items-center gap-2 text-xs font-medium"><Checkbox checked={channels.includes(NATIONAL_CHANNEL)} onCheckedChange={() => flip(NATIONAL_CHANNEL)} />{newsChannelDomain(NATIONAL_CHANNEL)}</label>
               <div className="grid max-h-56 grid-cols-2 gap-1 overflow-y-auto rounded-md border border-border p-2 sm:grid-cols-3">{REGIONAL_CHANNELS.map((r) => <label key={r} className="flex items-center gap-2 text-xs"><Checkbox checked={channels.includes(r)} onCheckedChange={() => flip(r)} /><span className="truncate" title={newsChannelDomain(r)}>{newsChannelDomain(r)}</span></label>)}</div>
             </div>
-            <div className="grid gap-1.5"><Label htmlFor="sch">Jadwal tayang</Label><Input id="sch" value={schedule} onChange={(e) => setSchedule(e.target.value)} /></div>
+            <div className="grid gap-1.5"><Label htmlFor="sch">Jadwal tayang (umum)</Label><Input id="sch" value={schedule} onChange={(e) => setSchedule(e.target.value)} /></div>
+            <div>
+              <div className="mb-2 flex items-center justify-between"><p className="text-xs font-medium">Rekomendasi Jadwal Tayang per Wilayah</p><Button size="sm" variant="outline" onClick={applyRecommended}><Sparkles />Terapkan Rekomendasi ke Semua Kanal</Button></div>
+              <p className="mb-2 text-[11px] text-muted-foreground">Berdasarkan wilayah kanal, zona waktu setempat, pola kunjungan audiens, jenis artikel, dan SLA kanal — estimasi berbasis data simulasi pada PoC.</p>
+              <div className="max-h-40 overflow-y-auto rounded-md border border-border">
+                <table className="w-full text-left text-xs"><thead className="text-muted-foreground"><tr><th className="px-2 py-1.5 font-medium">Kanal</th><th className="px-2 py-1.5 font-medium">Rekomendasi Tayang</th></tr></thead>
+                  <tbody>{channels.map((c) => <tr key={c} className="border-t border-border"><td className="px-2 py-1.5">{newsChannelDomain(c)}</td><td className="px-2 py-1.5">{channelSchedules[c] ?? recommendedScheduleFor(c)}</td></tr>)}</tbody>
+                </table>
+              </div>
+            </div>
           </div>
-          <DialogFooter><Button disabled={!content || !channels.length} onClick={() => { const pr = findOutput(productions, content); if (!pr) return; const id = createOrder({ productionId: pr.production.id, contentId: content, channels, schedule, notes: "" }); setOpen(false); navigate({ to: "/aksi/distribusi-news/$id", params: { id } }); }}>Buat Order</Button></DialogFooter>
+          <DialogFooter><Button disabled={!content || !channels.length} onClick={() => { const pr = findOutput(productions, content); if (!pr) return; const chans = channels.map((c) => ({ channel: c, schedule: channelSchedules[c] ?? recommendedScheduleFor(c) })); const id = createOrder({ productionId: pr.production.id, contentId: content, channels: chans, schedule, deadline: deadlineFor(channels[0] ?? NATIONAL_CHANNEL), notes: "" }); setOpen(false); navigate({ to: "/aksi/distribusi-news/$id", params: { id } }); }}>Buat Order</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
@@ -103,7 +114,7 @@ function Penerima() {
       {!inbox.length && <p className="rounded-lg border border-border bg-card p-6 text-center text-xs text-muted-foreground">Tidak ada order masuk untuk kanal ini.</p>}
       {inbox.map(({ o, c }) => (
         <section key={o.id} className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 md:flex-row md:items-center md:justify-between">
-          <div><p className="text-[11px] text-muted-foreground">Order {o.id} · {o.schedule}</p><h3 className="text-sm font-semibold">{findOutput(productions, o.contentId)?.output.type} · {productions.find((p) => p.id === o.productionId)?.title}</h3>{c.url && <p className="mt-1 truncate text-[11px] text-primary">{c.url}</p>}</div>
+          <div><p className="text-[11px] text-muted-foreground">Order {o.id} · Rekomendasi tayang: {c.schedule ?? o.schedule}{o.deadline ? ` · Deadline: ${o.deadline}` : ""}</p><h3 className="text-sm font-semibold">{findOutput(productions, o.contentId)?.output.type} · {productions.find((p) => p.id === o.productionId)?.title}</h3>{c.url && <p className="mt-1 truncate text-[11px] text-primary">{c.url}</p>}</div>
           <div className="flex flex-wrap items-center gap-2"><StatusPill value={c.status} />
             {c.status === "Dikirim" && <><Button size="sm" onClick={() => act(o.id, "Diterima Kanal")}>Terima</Button><Button size="sm" variant="ghost" onClick={() => act(o.id, "Ditolak")}>Tolak</Button></>}
             {(c.status === "Diterima Kanal" || c.status === "Perlu Revisi") && <Button size="sm" onClick={() => act(o.id, "Dalam Pengerjaan")}>Mulai Pengerjaan</Button>}

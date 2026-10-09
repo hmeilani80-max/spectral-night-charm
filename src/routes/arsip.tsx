@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useArsip } from "@/features/arsip/context";
-import { analyzeFieldReport, buildFieldReportItem, COMPLIANCE, JENIS, KLASIFIKASI, MODUL, PROVENANCE, search, suggestForUpload, type AiFieldAnalysis, type ArsipItem, type Filters, type Jenis, type Klasifikasi } from "@/features/arsip/data";
+import { analyzeFieldReport, buildFieldReportItem, COMPLIANCE, JENIS, KLASIFIKASI, MODUL, PROVENANCE, search, suggestForUpload, type AiFieldAnalysis, type ArsipItem, type Filters, type Jenis, type Klasifikasi, type VerificationFinding } from "@/features/arsip/data";
 
 export const Route = createFileRoute("/arsip")({
   head: () => ({
@@ -155,6 +155,20 @@ function Arsip() {
 
 function Empty() { return <div className="p-10 text-center"><Archive className="mx-auto size-6 text-muted-foreground" /><p className="mt-3 text-sm">Tidak ada hasil yang sesuai.</p></div>; }
 
+function VerifGroup({ label, tone, findings, byId, onOpen }: { label: string; tone: string; findings: VerificationFinding[]; byId: (id: string) => ArsipItem | undefined; onOpen: (i: ArsipItem) => void }) {
+  return (
+    <div className="rounded-md border border-border p-3">
+      <p className={`text-xs font-semibold ${tone}`}>{label} ({findings.length})</p>
+      <ul className="mt-2 space-y-1.5 text-[11px]">
+        {findings.length ? findings.map((f, k) => {
+          const src = f.sourceId ? byId(f.sourceId) : undefined;
+          return <li key={k}>{f.text}{src && <> — <button className="inline-flex items-center gap-1 text-primary hover:underline" onClick={() => onOpen(src)}>buka sumber<ExternalLink className="size-3" /></button></>}</li>;
+        }) : <li className="text-muted-foreground">Tidak ada.</li>}
+      </ul>
+    </div>
+  );
+}
+
 function FilterSelect({ label, value, options, onChange }: { label: string; value: string; options: readonly string[]; onChange: (v: string) => void }) {
   return <div className="grid gap-1"><span className="text-[11px] text-muted-foreground">{label}</span>
     <Select value={value} onValueChange={onChange}><SelectTrigger aria-label={label} className="h-9 bg-background"><SelectValue /></SelectTrigger>
@@ -202,6 +216,18 @@ function DetailDialog({ item, items, onOpen, onClose }: { item: ArsipItem; items
               {[["Jenis", item.label], ["Owner", item.owner], ["Unit", item.unit], ["Dibuat", item.created], ["Update terakhir", item.updated], ["Versi", item.version], ["Klasifikasi", item.klasifikasi], ["Retention", item.retention]].map(([k, v]) => <div key={k}><dt className="text-muted-foreground">{k}</dt><dd>{v}</dd></div>)}
             </dl>
             <div><h3 className="mb-2 text-xs font-semibold">Preview Konten</h3><ContentPreview item={item} /></div>
+            {item.verification && (
+              <div>
+                <h3 className="mb-2 text-xs font-semibold">Verifikasi & Keterkaitan Sumber</h3>
+                <p className="mb-2 text-[11px] text-muted-foreground">Laporan/data internal tidak secara otomatis dianggap sebagai fakta yang sudah terverifikasi — status berikut adalah hasil perbandingan dengan sumber lain.</p>
+                <div className="grid gap-3 md:grid-cols-3">
+                  <VerifGroup label="Didukung sumber lain" tone="text-chart-2" findings={item.verification.supported} byId={byId} onOpen={onOpen} />
+                  <VerifGroup label="Berbeda / bertentangan" tone="text-chart-4" findings={item.verification.conflicting} byId={byId} onOpen={onOpen} />
+                  <VerifGroup label="Belum terverifikasi" tone="text-chart-3" findings={item.verification.unverified} byId={byId} onOpen={onOpen} />
+                </div>
+                {item.verification.situationRef && <p className="mt-2 text-xs"><Link to="/situasi/$slug" params={{ slug: item.verification.situationRef }} className="inline-flex items-center gap-1 text-primary hover:underline">Lihat Situasi terkait<ExternalLink className="size-3" /></Link></p>}
+              </div>
+            )}
             <div><h3 className="mb-2 text-xs font-semibold">Provenance / Asal Informasi</h3>
               <ol className="grid gap-1 text-xs">{PROVENANCE.map((p, k) => { const node = byId(p.id)!; return (
                 <li key={p.id} className="grid justify-items-start gap-1">

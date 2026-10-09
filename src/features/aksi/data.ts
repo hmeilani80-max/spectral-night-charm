@@ -57,9 +57,34 @@ export function invalidateApproval<T extends Approvable>(item: T, at: string, ol
 }
 
 export type { Campaign } from "./sosial";
-export type ChannelOrder = { channel: string; status: NewsStatus; url?: string | undefined };
-export type NewsOrder = { id: string; productionId: string; contentId: string; channels: ChannelOrder[]; schedule: string; notes: string; status: NewsStatus; approval: ApprovalStatus | null;
+/** Revisi 9 — S56: each channel carries its own recommended/edited schedule (filled from zone-based recommendation, editable before the order is sent). */
+export type ChannelOrder = { channel: string; status: NewsStatus; url?: string | undefined; schedule?: string | undefined };
+export type NewsOrder = { id: string; productionId: string; contentId: string; channels: ChannelOrder[]; schedule: string; notes: string; status: NewsStatus; approval: ApprovalStatus | null; deadline?: string | undefined;
   title?: string | undefined; approvals?: ApprovalRecord[] | undefined; submittedBy?: string | undefined; submittedAt?: string | undefined; submittedDay?: SubmittedDay | undefined };
+
+/** Revisi 9 — S56: time-zone of each regional channel, driving the "Rekomendasi Jadwal Tayang per Wilayah". */
+export type TimeZone = "WIB" | "WITA" | "WIT";
+const WITA_REGIONS = new Set(["Bali", "Nusa Tenggara Barat", "Nusa Tenggara Timur", "Kalimantan Tengah", "Kalimantan Selatan", "Kalimantan Timur", "Kalimantan Utara", "Sulawesi Utara", "Gorontalo", "Sulawesi Tengah", "Sulawesi Barat", "Sulawesi Selatan", "Sulawesi Tenggara"]);
+const WIT_REGIONS = new Set(["Maluku", "Maluku Utara", "Papua", "Papua Barat", "Papua Barat Daya", "Papua Selatan", "Papua Tengah", "Papua Pegunungan"]);
+export function zoneFor(channel: string): TimeZone {
+  if (WITA_REGIONS.has(channel)) return "WITA";
+  if (WIT_REGIONS.has(channel)) return "WIT";
+  return "WIB";
+}
+/** Fixed dummy local time-of-day per zone (audience-visit pattern simulation), per S56 example. */
+const ZONE_TIME: Record<TimeZone, string> = { WIB: "10:00", WITA: "13:00", WIT: "14:00" };
+/** Revisi 9 — S56: recommended tayang date/time for a channel, based on its region's time zone — Nasional gets the earliest (national) slot. */
+export function recommendedScheduleFor(channel: string, date = "09 Okt"): string {
+  if (channel === NATIONAL_CHANNEL) return `${date}, 10:00 WIB`;
+  const zone = zoneFor(channel);
+  return `${date}, ${ZONE_TIME[zone]} ${zone}`;
+}
+/** Deadline publikasi: simulated as a few hours after the recommended slot, visible to the channel manager. */
+export function deadlineFor(channel: string, date = "09 Okt"): string {
+  const zone = zoneFor(channel);
+  const hour = Number(ZONE_TIME[zone].slice(0, 2)) + 3;
+  return `${date}, ${String(hour).padStart(2, "0")}:00 ${zone}`;
+}
 
 export const REGIONAL_CHANNELS = ["Aceh", "Sumatera Utara", "Sumatera Barat", "Riau", "Kepulauan Riau", "Jambi", "Sumatera Selatan", "Kepulauan Bangka Belitung", "Bengkulu", "Lampung", "DKI Jakarta", "Banten", "Jawa Barat", "Jawa Tengah", "DI Yogyakarta", "Jawa Timur", "Bali", "Nusa Tenggara Barat", "Nusa Tenggara Timur", "Kalimantan Barat", "Kalimantan Tengah", "Kalimantan Selatan", "Kalimantan Timur", "Kalimantan Utara", "Sulawesi Utara", "Gorontalo", "Sulawesi Tengah", "Sulawesi Barat", "Sulawesi Selatan", "Sulawesi Tenggara", "Maluku", "Maluku Utara", "Papua", "Papua Barat", "Papua Barat Daya", "Papua Selatan", "Papua Tengah", "Papua Pegunungan"];
 export const NATIONAL_CHANNEL = "Nasional";
@@ -211,7 +236,7 @@ export const initialProductions: ProductionItem[] = [
 
 const sixteen = [NATIONAL_CHANNEL, "DKI Jakarta", "Jawa Barat", "Jawa Tengah", "Jawa Timur", "Banten", "DI Yogyakarta", "Sumatera Utara", "Sumatera Selatan", "Lampung", "Kalimantan Timur", "Sulawesi Selatan", "Bali", "Nusa Tenggara Barat", "Riau", "Sulawesi Utara"];
 export const initialOrders: NewsOrder[] = [
-  { id: "DN-012", title: "Publikasi Artikel Demonstrasi", productionId: "PRD-018", contentId: "PRD-018", channels: sixteen.map((channel) => ({ channel, status: "Draft Order" })), schedule: "8–9 Oktober 2026", notes: "Penyesuaian headline dan konteks wilayah diperbolehkan.", status: "Menunggu Approval", approval: "Menunggu",
+  { id: "DN-012", title: "Publikasi Artikel Demonstrasi", productionId: "PRD-018", contentId: "PRD-018", channels: sixteen.map((channel) => ({ channel, status: "Draft Order" as const, schedule: recommendedScheduleFor(channel) })), schedule: "8–9 Oktober 2026", deadline: "09 Okt, 20:00 WIB", notes: "Penyesuaian headline dan konteks wilayah diperbolehkan.", status: "Menunggu Approval", approval: "Menunggu",
     submittedBy: "Tim Media", submittedAt: "31 menit lalu", submittedDay: "Hari ini", approvals: [{ at: "10:05", actor: "Tim Media", decision: "Diajukan" }] },
   { id: "DN-011", title: "Publikasi Edisi Pagi", productionId: "PRD-018", contentId: "PRD-018", channels: [
     { channel: "Jawa Barat", status: "Menunggu Verifikasi", url: "https://nusakanaljawabarat.com/berita/informasi-aksi" },

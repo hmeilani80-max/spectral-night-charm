@@ -99,13 +99,28 @@ export const timeline = [
 ];
 
 export const social = { planned: 24, published: 23, failed: 1, views: 486000, interactions: 31400, shares: 5200, cost: 18000000 };
-export const socialBreakdown = [
-  { platform: "X", published: 8, views: 148000, interactions: 9800 },
-  { platform: "Instagram", published: 8, views: 126000, interactions: 8600 },
-  { platform: "TikTok", published: 7, views: 212000, interactions: 13000 },
+
+// Revisi 10 — S62: metrik per platform. Watch Time hanya berlaku untuk platform/konten video.
+// Nilai yang tidak tersedia dibiarkan undefined (bukan 0) dan ditampilkan sebagai "Data Tidak Tersedia".
+export const NOT_AVAILABLE = "Data Tidak Tersedia";
+export type SocialPlatformMetric = { platform: string; published: number; views?: number; interactions?: number; shares?: number; watchTimeSec?: number; isVideoPlatform: boolean };
+export const socialBreakdown: SocialPlatformMetric[] = [
+  { platform: "X", published: 8, views: 148000, interactions: 9800, shares: 2100, isVideoPlatform: false },
+  { platform: "Instagram", published: 8, views: 126000, interactions: 8600, shares: 1400, isVideoPlatform: false },
+  { platform: "TikTok", published: 7, views: 212000, interactions: 13000, shares: 3200, watchTimeSec: 184000, isVideoPlatform: true },
+];
+
+export type SocialContentMetric = { id: string; title: string; platform: string; type: "Video" | "Post" | "Carousel"; published: string; views?: number; interactions?: number; shares?: number; watchTimeSec?: number };
+export const socialContentBreakdown: SocialContentMetric[] = [
+  { id: "SC-1", title: "Video Penjelasan Demonstrasi Nasional", platform: "TikTok", type: "Video", published: "8 Okt", views: 92000, interactions: 6100, shares: 1500, watchTimeSec: 184000 },
+  { id: "SC-2", title: "Carousel Informasi Demonstrasi Nasional", platform: "Instagram", type: "Carousel", published: "7 Okt", views: 54000, interactions: 3900, shares: 620 },
+  { id: "SC-3", title: "Thread Klarifikasi Demonstrasi Nasional", platform: "X", type: "Post", published: "8 Okt", views: undefined, interactions: 2600, shares: 410 },
 ];
 
 export const news = { target: 16, live: 14, inProgress: 2, verified: 14, cost: 32000000 };
+// Revisi 10 — S62: Website Visits & Page Views ditampilkan jika tersedia; belum terintegrasi pada PoC ini → undefined.
+export type NewsMetrics = { publishedArticles: number; verifiedUrls: number; websiteVisits?: number; pageViews?: number };
+export const newsMetrics: NewsMetrics = { publishedArticles: 14, verifiedUrls: 14, websiteVisits: undefined, pageViews: undefined };
 export const newsChannels = [
   { channel: "NusaKanal Nasional", status: "Tayang", time: "6 Okt 10:15" },
   { channel: "NusaKanal Jawa Barat", status: "Tayang", time: "6 Okt 11:20" },
@@ -141,6 +156,14 @@ export const sampleRecords: Record<string, { post: string; platform: string; tim
     { post: "Aksi lanjutan direncanakan di sejumlah kota.", platform: "X", time: "2 Okt 14:32" },
   ],
 };
+// Revisi 11 — S66: Jadwalkan Laporan Otomatis & daftar Laporan Terjadwal.
+export type ScheduledReport = { id: string; name: string; jenis: string; frekuensi: "Harian" | "Mingguan" | "Bulanan" | "Per Situasi"; penerima?: string };
+export const SCHEDULED_REPORTS: ScheduledReport[] = [
+  { id: "SCH-1", name: "Daily Situation Brief", jenis: "Ringkasan Pimpinan", frekuensi: "Harian" },
+  { id: "SCH-2", name: "Weekly Impact Report", jenis: "Laporan Analitik", frekuensi: "Mingguan" },
+  { id: "SCH-3", name: "Monthly Evaluation", jenis: "Laporan Lengkap", frekuensi: "Bulanan" },
+];
+
 export function recordsFor(name: string) {
   return sampleRecords[name] ?? [
     { post: `Percakapan terkait “${name}” pada periode current.`, platform: "X", time: "9 Okt 09:20" },

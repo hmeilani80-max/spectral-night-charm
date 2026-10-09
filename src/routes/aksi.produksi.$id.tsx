@@ -9,6 +9,7 @@ import { useAksi } from "@/features/aksi/context";
 import { approvalLabel, canSubmit, qualityChecks, SOURCES } from "@/features/aksi/data";
 import { aksiHead } from "@/features/aksi/meta";
 import { ChecksList, ProductionWorkspace } from "@/features/aksi/production-workspaces";
+import { rencanaPublikasi } from "@/features/aksi/sosial";
 
 export const Route = createFileRoute("/aksi/produksi/$id")({
   head: aksiHead("Workspace Produksi", "Generate, review, dan ajukan satu output konten ke Persetujuan."),
@@ -17,7 +18,7 @@ export const Route = createFileRoute("/aksi/produksi/$id")({
 
 function ProduksiDetail() {
   const { id } = Route.useParams();
-  const { productions, submit } = useAksi();
+  const { productions, campaigns, orders, submit } = useAksi();
   const p = productions.find((x) => x.id === id);
   if (!p) return <PageShell title="Produksi tidak ditemukan" description="Item ini tidak tersedia."><Button asChild variant="outline"><Link to="/aksi/produksi"><ArrowLeft />Kembali ke Produksi</Link></Button></PageShell>;
   const checks = qualityChecks(p);
@@ -55,7 +56,19 @@ function ProduksiDetail() {
           </dl></Box>
         </TabsContent>
 
-        <TabsContent value="produksi"><Box title={p.type}><ProductionWorkspace p={p} /></Box></TabsContent>
+        <TabsContent value="produksi" className="grid gap-4">
+          <Box title={p.type}><ProductionWorkspace p={p} /></Box>
+          <Box title="Rencana Publikasi">
+            {(() => {
+              const rows = rencanaPublikasi(p.id, campaigns, orders);
+              if (!rows.length) return <p className="text-xs text-muted-foreground">Belum memiliki rencana publikasi.</p>;
+              return <div className="overflow-x-auto"><table className="w-full min-w-[520px] text-left text-xs">
+                <thead className="text-muted-foreground"><tr><th className="py-1.5 font-medium">Distribusi</th><th className="py-1.5 font-medium">Target</th><th className="py-1.5 font-medium">Jadwal</th><th className="py-1.5 font-medium">PIC</th><th className="py-1.5 font-medium">Status</th></tr></thead>
+                <tbody>{rows.map((r, i) => <tr key={i} className="border-t border-border"><td className="py-2">{r.distribusi}</td><td className="py-2">{r.target}</td><td className="py-2">{r.jadwal}</td><td className="py-2">{r.pic}</td><td className="py-2"><StatusPill value={r.status} /></td></tr>)}</tbody>
+              </table></div>;
+            })()}
+          </Box>
+        </TabsContent>
 
         <TabsContent value="editorial" className="grid gap-4 lg:grid-cols-2">
           <Box title="Pemeriksaan Otomatis" action={checks.length > 0 && <StatusPill value={warnings ? "Perlu Revisi" : "Approved"} />}><ChecksList checks={checks} />{checks.length > 0 && <p className="mt-3 text-[11px] text-muted-foreground">{warnings ? "Ada catatan yang sebaiknya ditinjau sebelum diajukan." : "Aman untuk diajukan ke reviewer."}</p>}</Box>

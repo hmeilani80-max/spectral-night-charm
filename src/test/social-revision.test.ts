@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { initialProductions } from "@/features/aksi/data";
-import { accountById, buildPosts, canSubmitDistribution, captionFor, initialCampaigns, readinessChecks, recommendedPlatforms, RECOMMENDED_WINDOWS, type SocialAccount } from "@/features/aksi/sosial";
+import { accountById, buildPosts, canSubmitDistribution, captionFor, initialCampaigns, readinessChecks, recommendedPlatforms, recommendedWindowsFor, type SocialAccount } from "@/features/aksi/sosial";
 
 describe("Social distribution revision", () => {
   it("recommends TikTok, Instagram, YouTube and Facebook for video", () => {
@@ -25,10 +25,11 @@ describe("Social distribution revision", () => {
     expect(c).toBeDefined();
     if (!c) return;
     const accounts = c.accounts.map(accountById).filter((a): a is SocialAccount => !!a);
-    const posts = buildPosts(initialProductions.filter((p) => c.contentIds.includes(p.id)), accounts, c.purpose, { ...c.timing, from: "10:00", windows: RECOMMENDED_WINDOWS }, true);
-    expect(RECOMMENDED_WINDOWS).toEqual([{ from: "10:00", to: "12:00" }, { from: "16:00", to: "18:00" }]);
+    const windows = recommendedWindowsFor([...new Set(accounts.map((a) => a.platform))]);
+    const posts = buildPosts(initialProductions.filter((p) => c.contentIds.includes(p.id)), accounts, c.purpose, { ...c.timing, from: "09:00", windows }, true);
+    expect(windows).toEqual([{ from: "09:00", to: "11:00" }, { from: "11:00", to: "13:00" }, { from: "17:00", to: "20:00" }]);
     expect(posts).toHaveLength(18);
-    expect(posts.every((p) => (p.time >= "10:00" && p.time <= "12:00") || (p.time >= "16:00" && p.time <= "18:00"))).toBe(true);
+    expect(posts.every((p) => windows.some((w) => p.time >= w.from && p.time <= w.to))).toBe(true);
   });
   it("blocks carousel with only TikTok accounts", () => {
     const c = initialCampaigns[0];

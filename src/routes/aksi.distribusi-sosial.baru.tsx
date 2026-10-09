@@ -13,7 +13,7 @@ import { Box, Flow, StatusPill, Trail } from "@/features/aksi/components";
 import { useAksi } from "@/features/aksi/context";
 import { isEligible } from "@/features/aksi/data";
 import { aksiHead } from "@/features/aksi/meta";
-import { buildPosts, canSubmitDistribution, recommendedPlatforms, RECOMMENDED_WINDOWS, spreadPotential, GROUPS, LABELS, periodLabel, PURPOSES, readinessChecks, regeneratePost, scale, selectable, SOCIAL_ACCOUNTS, SOCIAL_PLATFORMS, type Post, type Timing } from "@/features/aksi/sosial";
+import { buildPosts, canSubmitDistribution, groupsOf, labelsOf, PLATFORM_WINDOWS, recommendedPlatforms, recommendedWindowsFor, spreadPotential, periodLabel, PURPOSES, readinessChecks, regeneratePost, scale, selectable, SOCIAL_PLATFORMS, type Post, type Timing } from "@/features/aksi/sosial";
 import { AssetThumb, ChecksView, PostMock, PostsBrowser } from "@/features/aksi/sosial-components";
 import { cn } from "@/lib/utils";
 
@@ -27,7 +27,7 @@ const flip = (list: string[], v: string) => (list.includes(v) ? list.filter((x) 
 const chip = (on: boolean) => cn("rounded-md border px-2.5 py-1 text-xs transition-colors", on ? "border-brand bg-brand/15 text-foreground" : "border-border text-muted-foreground hover:text-foreground");
 
 function NewDistribution() {
-  const { productions, createCampaign } = useAksi();
+  const { productions, createCampaign, accounts: SOCIAL_ACCOUNTS } = useAksi();
   const navigate = useNavigate();
   const approved = productions.filter((p) => isEligible(p, "Sosial"));
   const [step, setStep] = useState(0);
@@ -47,6 +47,8 @@ function NewDistribution() {
   const suggested = recommendedPlatforms(assets.map((a) => a.type));
   const [platformOverride, setPlatformOverride] = useState(false);
   const selectContent = (id: string) => { const ids = flip(contentIds, id); setContentIds(ids); if (!platformOverride) setPlatforms(recommendedPlatforms(approved.filter((a) => ids.includes(a.id)).map((a) => a.type))); };
+  const GROUPS = groupsOf(SOCIAL_ACCOUNTS);
+  const LABELS = labelsOf(SOCIAL_ACCOUNTS);
   const pool = SOCIAL_ACCOUNTS.filter((a) => platforms.includes(a.platform));
   const chosen = SOCIAL_ACCOUNTS.filter((a) => accounts.includes(a.id) && platforms.includes(a.platform));
   const key = JSON.stringify([contentIds, chosen.map((a) => a.id), timing, staggered, purpose]);
@@ -103,7 +105,13 @@ function NewDistribution() {
             <span className="grid flex-1 gap-0.5"><span className="flex items-center justify-between gap-2 font-medium">{a.handle}<StatusPill value={a.status} /></span><span className="text-muted-foreground">{a.platform} · {a.group} · {a.label}</span></span>
           </label>; })}</div>
         </Box>
-        <Box title="Rekomendasi Waktu Distribusi" action={<Button size="sm" variant="outline" disabled={!chosen.length} onClick={() => { setTiming({ ...timing, from: "10:00", to: "18:00", windows: RECOMMENDED_WINDOWS }); setStaggered(true); }}><Sparkles />Gunakan Rekomendasi</Button>}><div className="flex flex-wrap gap-3 text-sm font-semibold">{RECOMMENDED_WINDOWS.map((w) => <span key={w.from}>{w.from}–{w.to}</span>)}</div>{timing.windows && <p className="mt-2 text-xs text-chart-2">Rekomendasi digunakan</p>}</Box>
+        <Box title="Rekomendasi Jadwal Publikasi" action={<Button size="sm" variant="outline" disabled={!chosen.length} onClick={() => { setTiming({ ...timing, from: "09:00", to: "21:00", windows: recommendedWindowsFor([...new Set(chosen.map((a) => a.platform))]) }); setStaggered(true); }}><Sparkles />Gunakan Jadwal Rekomendasi</Button>}>
+          <p className="mb-3 text-[11px] text-muted-foreground">Rekomendasi waktu per platform berdasarkan pola aktivitas audiens, histori performa akun, dan tipe konten — estimasi berbasis data simulasi pada PoC.</p>
+          <div className="overflow-x-auto"><table className="w-full min-w-[420px] text-left text-xs"><thead className="text-muted-foreground"><tr><th className="py-1.5 font-medium">Platform</th><th className="py-1.5 font-medium">Rekomendasi Waktu</th></tr></thead>
+            <tbody>{PLATFORM_WINDOWS.map((w) => <tr key={w.platform} className="border-t border-border"><td className="py-2 font-medium">{w.platform}</td><td className="py-2">{w.from}–{w.to}</td></tr>)}</tbody>
+          </table></div>
+          {timing.windows && <p className="mt-3 text-xs text-chart-2">Jadwal rekomendasi digunakan — dapat diubah pada jam aktif di bawah.</p>}
+        </Box>
         <Box title="Waktu Distribusi">
           <div className="mb-3 flex gap-2">{(["Segera", "Jadwal"] as const).map((m) => <Button variant="outline" key={m} type="button" className={chip(timing.mode === m)} onClick={() => setTiming({ ...timing, mode: m })}>{m === "Segera" ? "Segera Setelah Disetujui" : "Jadwalkan"}</Button>)}</div>
           <div className="grid gap-3 sm:grid-cols-4">
