@@ -11,7 +11,10 @@ describe("dampak metrics", () => {
       expect(narrative.mentionsBefore).toBe(24300 * narrative.before / 100);
       expect(narrative.mentionsNow).toBe(18900 * narrative.now / 100);
     }
-    expect(narratives[0].mentionsNow - narratives[0].mentionsBefore).toBe(-5076);
+    const expansion = narratives.find((n) => n.name === "Aksi meluas ke banyak kota");
+    expect(expansion).toBeDefined();
+    if (!expansion) throw new Error("Missing expansion narrative");
+    expect(expansion.mentionsNow - expansion.mentionsBefore).toBe(-5076);
   });
   it("region status", () => {
     expect(direction(2800, 3400)).toBe("Meningkat");
