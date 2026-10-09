@@ -5,6 +5,7 @@ import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from "rec
 import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AccountDetailSheet, ActiveFilters, ManipulationContentSheet, ManipulationPatternPanel, MetricGrid, Panel, RecordSheet, SituationMeta, SituationNav, SummaryBlock, type ActiveFilter } from "@/features/situasi/components";
@@ -74,27 +75,23 @@ function Exploration(){
     <RecordSheet record={selected} onOpenChange={(open)=>!open&&setSelected(undefined)}/>
     <AccountDetailSheet account={selectedAccount?getAccountProfile(selectedAccount):undefined} onOpenChange={(open)=>!open&&setSelectedAccount(undefined)} />
     <ManipulationContentSheet pattern={selectedPattern} rows={selectedPattern?patternContents(selectedPattern.id):[]} onOpenChange={(open)=>!open&&setSelectedPattern(undefined)} />
-    {selectedComment && <RecordSheetForComment comment={selectedComment} onOpenChange={()=>setSelectedComment(undefined)} />}
+    <RecordSheetForComment comment={selectedComment} onOpenChange={(open)=>!open&&setSelectedComment(undefined)} />
   </PageShell>;
 }
 
-function RecordSheetForComment({ comment, onOpenChange }: { comment: (typeof comments)[number]; onOpenChange: () => void }) {
-  return <div role="dialog" aria-label="Detail Komentar" className="fixed inset-0 z-50 flex justify-end bg-black/40" onClick={onOpenChange}>
-    <div className="h-full w-full max-w-md overflow-y-auto bg-card p-6" onClick={(event)=>event.stopPropagation()}>
-      <h2 className="text-sm font-semibold">Detail Komentar & Posting Induk</h2>
-      <p className="mt-1 text-xs text-muted-foreground">Konteks komentar terhadap posting asal.</p>
-      <div className="mt-5 space-y-4">
-        <div className="rounded-md border border-border bg-muted/10 p-3"><span className="block text-[10px] uppercase text-muted-foreground">Posting Induk</span><p className="mt-1 text-sm leading-6">“{comment.parentPost}”</p></div>
-        <div className="rounded-md border border-primary/30 bg-primary/5 p-3"><span className="block text-[10px] uppercase text-primary">Komentar</span><p className="mt-1 text-sm leading-6">“{comment.content}”</p></div>
-        <dl className="grid grid-cols-2 gap-4 text-sm">
-          <div><dt className="text-xs text-muted-foreground">Akun</dt><dd className="mt-1 font-medium">{comment.actor}</dd></div>
-          <div><dt className="text-xs text-muted-foreground">Platform</dt><dd className="mt-1 font-medium">{comment.platform}</dd></div>
-          <div><dt className="text-xs text-muted-foreground">Sentimen</dt><dd className="mt-1 font-medium">{comment.sentiment}</dd></div>
-          <div><dt className="text-xs text-muted-foreground">Emosi</dt><dd className="mt-1 font-medium">{comment.emotion}</dd></div>
-          <div><dt className="text-xs text-muted-foreground">Waktu</dt><dd className="mt-1 font-medium">{comment.time}</dd></div>
-        </dl>
-        <Button variant="outline" className="w-full" onClick={onOpenChange}>Tutup</Button>
-      </div>
-    </div>
-  </div>;
+function RecordSheetForComment({ comment, onOpenChange }: { comment: (typeof comments)[number] | undefined; onOpenChange: (open: boolean) => void }) {
+  return <Sheet open={Boolean(comment)} onOpenChange={onOpenChange}><SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+    <SheetHeader><SheetTitle>Detail Komentar & Posting Induk</SheetTitle><SheetDescription>Konteks komentar terhadap posting asal.</SheetDescription></SheetHeader>
+    {comment && <div className="mt-6 space-y-4">
+      <div className="rounded-md border border-border bg-muted/10 p-3"><span className="block text-[10px] uppercase text-muted-foreground">Posting Induk</span><p className="mt-1 text-sm leading-6">“{comment.parentPost}”</p></div>
+      <div className="rounded-md border border-primary/30 bg-primary/5 p-3"><span className="block text-[10px] uppercase text-primary">Komentar</span><p className="mt-1 text-sm leading-6">“{comment.content}”</p></div>
+      <dl className="grid grid-cols-2 gap-4 text-sm">
+        <div><dt className="text-xs text-muted-foreground">Akun</dt><dd className="mt-1 font-medium">{comment.actor}</dd></div>
+        <div><dt className="text-xs text-muted-foreground">Platform</dt><dd className="mt-1 font-medium">{comment.platform}</dd></div>
+        <div><dt className="text-xs text-muted-foreground">Sentimen</dt><dd className="mt-1 font-medium">{comment.sentiment}</dd></div>
+        <div><dt className="text-xs text-muted-foreground">Emosi</dt><dd className="mt-1 font-medium">{comment.emotion}</dd></div>
+        <div><dt className="text-xs text-muted-foreground">Waktu</dt><dd className="mt-1 font-medium">{comment.time}</dd></div>
+      </dl>
+    </div>}
+  </SheetContent></Sheet>;
 }
