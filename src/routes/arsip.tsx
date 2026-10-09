@@ -284,3 +284,64 @@ function UploadDialog({ open, initialJenis, onClose, onSave }: { open: boolean; 
     </Dialog>
   );
 }
+
+function ChoiceDialog({ open, onClose, onPick }: { open: boolean; onClose: () => void; onPick: (c: "doc" | "field" | "dataset") => void }) {
+  const opts: { key: "doc" | "field" | "dataset"; title: string; desc: string }[] = [
+    { key: "doc", title: "Unggah Dokumen", desc: "Dokumen resmi atau file manual lainnya." },
+    { key: "field", title: "Input Laporan Lapangan", desc: "Laporan pengamatan langsung dengan bantuan AI." },
+    { key: "dataset", title: "Unggah Dataset", desc: "Data terstruktur (ekspor/CSV, dsb.)." },
+  ];
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>Tambah Data / Dokumen</DialogTitle><DialogDescription>Pilih jenis data yang ingin ditambahkan ke Arsip & Pengetahuan.</DialogDescription></DialogHeader>
+        <div className="grid gap-2">
+          {opts.map((o) => (
+            <button key={o.key} onClick={() => onPick(o.key)} className="rounded-md border border-border p-3 text-left text-sm hover:border-brand hover:bg-accent/40">
+              <p className="font-medium">{o.title}</p><p className="mt-0.5 text-xs text-muted-foreground">{o.desc}</p>
+            </button>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function FieldReportDialog({ open, onClose, onSave }: { open: boolean; onClose: () => void; onSave: (i: ArsipItem) => void }) {
+  const empty = { title: "", content: "", fileName: "", date: "", location: "", klas: "Internal" as Klasifikasi };
+  const [d, setD] = useState(empty);
+  const ready = d.title.trim() && (d.content.trim() || d.fileName);
+  const ai: AiFieldAnalysis | null = ready ? analyzeFieldReport({ title: d.title, content: d.content, location: d.location, date: d.date }) : null;
+  const save = () => {
+    if (!ai) return;
+    onSave(buildFieldReportItem({ title: d.title, content: d.content, fileName: d.fileName, date: d.date, location: d.location, klasifikasi: d.klas }, ai));
+    setD(empty);
+  };
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
+        <DialogHeader><DialogTitle>Input Laporan Lapangan</DialogTitle><DialogDescription>Owner/unit terisi otomatis berdasarkan pengguna yang login (simulasi).</DialogDescription></DialogHeader>
+        <div className="grid gap-3 text-xs">
+          <div className="grid gap-1"><Label htmlFor="fr-title">Judul laporan</Label><Input id="fr-title" value={d.title} onChange={(e) => setD({ ...d, title: e.target.value })} /></div>
+          <div className="grid gap-1"><Label htmlFor="fr-content">Isi laporan</Label><Textarea id="fr-content" rows={3} value={d.content} onChange={(e) => setD({ ...d, content: e.target.value })} placeholder="Tulis isi laporan, atau unggah file di bawah." /></div>
+          <div className="grid gap-1"><Label htmlFor="fr-file">Atau unggah file</Label><Input id="fr-file" type="file" onChange={(e) => setD({ ...d, fileName: e.target.files?.[0]?.name ?? "" })} /></div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="grid gap-1"><Label htmlFor="fr-date">Tanggal kejadian</Label><Input id="fr-date" type="date" value={d.date} onChange={(e) => setD({ ...d, date: e.target.value })} /></div>
+            <div className="grid gap-1"><Label htmlFor="fr-loc">Lokasi</Label><Input id="fr-loc" value={d.location} onChange={(e) => setD({ ...d, location: e.target.value })} /></div>
+          </div>
+          <div className="grid gap-1"><Label>Klasifikasi</Label><Select value={d.klas} onValueChange={(v) => setD({ ...d, klas: v as Klasifikasi })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{KLASIFIKASI.map((k) => <SelectItem key={k} value={k}>{k}</SelectItem>)}</SelectContent></Select></div>
+          <p className="text-[11px] text-muted-foreground">Owner/unit otomatis: <strong>Anda (Petugas Lapangan) · Direktorat Analisis</strong>.</p>
+          {ai && <div className="rounded-md border border-primary/30 bg-background/50 p-3">
+            <p className="flex items-center gap-1 font-medium"><Sparkles className="size-3 text-primary" />Bantuan AI (simulasi)</p>
+            <p className="mt-1 text-muted-foreground">{ai.summary}</p>
+            <dl className="mt-2 grid grid-cols-2 gap-1"><dt className="text-muted-foreground">Aktor</dt><dd>{ai.actors.join(", ")}</dd><dt className="text-muted-foreground">Lokasi/Waktu</dt><dd>{ai.location} · {ai.time}</dd><dt className="text-muted-foreground">Isu</dt><dd>{ai.issues.join(", ")}</dd><dt className="text-muted-foreground">Tag rekomendasi</dt><dd>{ai.tags.join(", ")}</dd><dt className="text-muted-foreground">Situasi relevan</dt><dd>{ai.relatedSituation}</dd></dl>
+            <p className="mt-2 font-medium">Perbandingan dengan sumber lain</p>
+            <ul className="mt-1 space-y-0.5">{ai.comparison.map((c) => <li key={c.label}><strong>{c.label}:</strong> {c.result}</li>)}</ul>
+            <p className="mt-2 text-[11px] text-chart-3">Laporan ini akan tersimpan sebagai "belum terverifikasi" sampai ada proses verifikasi silang.</p>
+          </div>}
+          <div className="flex justify-end gap-2"><Button variant="ghost" onClick={onClose}>Batal</Button><Button disabled={!ready} onClick={save}>Simpan ke Arsip</Button></div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
