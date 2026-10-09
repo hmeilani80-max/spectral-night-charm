@@ -84,11 +84,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "SINTESA — Sistem Pengelolaan dan Kendali Strategis" },
+      { title: "SINTESA — Sistem Pengelolaan dan Sistem Intelijen Terpadu dan Strategi Aksi" },
       { name: "description", content: "Workspace operasional untuk memahami situasi, menentukan strategi, menjalankan aksi, dan mengukur dampak." },
       { name: "author", content: "SINTESA" },
       { property: "og:title", content: "SINTESA" },
-      { property: "og:description", content: "Sistem Pengelolaan dan Kendali Strategis." },
+      { property: "og:description", content: "Sistem Pengelolaan dan Sistem Intelijen Terpadu dan Strategi Aksi." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
