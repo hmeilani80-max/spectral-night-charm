@@ -8,6 +8,7 @@ import {
   ClipboardCheck,
   Command,
   Newspaper,
+  Smartphone,
   PenSquare,
   Share2,
   LayoutDashboard,
@@ -29,6 +30,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { highEwsNotifications } from "@/features/situasi/data";
 import {
   Sidebar,
   SidebarContent,
