@@ -125,7 +125,7 @@ function Index() {
                 </li>
               ))}
             </ul>
-            <Button asChild variant="outline" className="mt-4 w-full justify-between"><Link to="/situasi">Lihat tren lengkap <ArrowRight /></Link></Button>
+            <Button asChild variant="outline" className="mt-4 w-full justify-between"><Link to="/situasi"> tren lengkap <ArrowRight /></Link></Button>
           </section>
 
           {/* Respons Berjalan */}
